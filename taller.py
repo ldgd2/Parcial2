@@ -3,6 +3,10 @@ import sys
 import os
 import time
 
+# Forzar UTF-8 para arte ASCII en consola de Windows
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # --- Detección de dependencias visuales ---
 HAS_RICH = False
 HAS_QUESTIONARY = False
@@ -25,7 +29,20 @@ try:
 except ImportError:
     pass
 
-from scripts import cmd_setup, cmd_db, cmd_run, cmd_deploy, cmd_test, cmd_config, cmd_network, cmd_dashboard, cmd_vps
+# Ensure 'backend' directory is in PYTHONPATH so 'app' imports work
+backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'backend'))
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
+
+# Propagate PYTHONPATH to any subprocess spawned by the CLI
+env_pythonpath = os.environ.get("PYTHONPATH", "")
+if backend_path not in env_pythonpath:
+    os.environ["PYTHONPATH"] = f"{backend_path}{os.pathsep}{env_pythonpath}" if env_pythonpath else backend_path
+
+from cli.packages.gestion_base_datos import facade as db_facade
+from cli.packages.gestion_configuracion import facade as config_facade
+from cli.packages.gestion_servidores_vps import facade as server_facade
+from cli.packages.pruebas_qa_dashboard import facade as qa_facade
 
 def print_banner():
     banner = """
@@ -101,14 +118,15 @@ def interactive_menu():
         category = questionary.select(
             "Selecciona una categoría de operación:",
             choices=[
-                "Red y Host (Nueva Configuración)",
-                "Configuración Inicial (.env)",
+                "Lanzar Backend Rápidamente ",
+                "Lanzar Frontend Rápidamente ",
+                "Lanzar Ambos Rápidamente ",
+                "Instalar Dependencias Rápidamente ",
+                questionary.Separator(),
                 "Base de Datos (SQLAlchemy/Alembic)",
-                "Ejecución de Servidores",
-                "Gestión VPS (Servicios Auto-Restart)",
-                "Pruebas y QA (IA/Whisper)",
-                "Instalación de Dependencias",
-                "Estadísticas y Ganancias (Dashboard Admin)",
+                "Configuración y Entorno (.env, Red, Dependencias)",
+                "Servidores y Despliegue (Local, VPS, Git)",
+                "Pruebas y Analíticas (QA, IA, Dashboard)",
                 "Salir"
             ],
             style=questionary.Style([
@@ -124,41 +142,54 @@ def interactive_menu():
             console.print("[bold yellow]Cerrando Navaja Suiza. ¡Hasta pronto![/bold yellow]")
             break
 
-        # Delegación modular
-        if "Red" in category:
-            cmd_network.interactive_menu()
-        elif "Configuración" in category:
-            cmd_config.interactive_menu()
+        # Accesos directos
+        if "Lanzar Backend" in category:
+            from cli.packages.gestion_servidores_vps.modules.lanzador import lanzador_logic
+            lanzador_logic.run_backend()
+            input("\nPresiona Enter para continuar...")
+        elif "Lanzar Frontend" in category:
+            from cli.packages.gestion_servidores_vps.modules.lanzador import lanzador_logic
+            lanzador_logic.run_frontend()
+            input("\nPresiona Enter para continuar...")
+        elif "Lanzar Ambos" in category:
+            from cli.packages.gestion_servidores_vps.modules.lanzador import lanzador_logic
+            lanzador_logic.run_all()
+            input("\nPresiona Enter para continuar...")
+        elif "Instalar Dependencias" in category:
+            from cli.packages.gestion_configuracion.modules.instalacion import instalacion_logic
+            instalacion_logic.install_deps()
+            input("\nPresiona Enter para continuar...")
+        # Delegación modular a Facades
         elif "Base" in category:
-            cmd_db.interactive_menu()
+            db_facade.menu.interactive_menu()
+        elif "Configuración" in category:
+            config_facade.menu.interactive_menu()
         elif "Servidores" in category:
-            cmd_run.interactive_menu()
-        elif "VPS" in category:
-            cmd_vps.interactive_menu()
+            server_facade.menu.interactive_menu()
         elif "Pruebas" in category:
-            cmd_test.interactive_menu()
-        elif "Instalación" in category:
-            cmd_setup.interactive_menu()
-        elif "Estadísticas" in category:
-            cmd_dashboard.interactive_menu()
+            qa_facade.menu.interactive_menu()
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] not in ["--help", "-h"]:
         parser = argparse.ArgumentParser(description="Navaja Suiza CLI")
         subparsers = parser.add_subparsers(dest="category")
         
-        cmd_setup.add_subparser(subparsers.add_parser("setup"))
-        cmd_config.add_subparser(subparsers.add_parser("config"))
-        cmd_db.add_subparser(subparsers.add_parser("db"))
-        cmd_run.add_subparser(subparsers.add_parser("run"))
-        cmd_deploy.add_subparser(subparsers.add_parser("deploy"))
-        cmd_test.add_subparser(subparsers.add_parser("test"))
-        cmd_dashboard.add_subparser(subparsers.add_parser("dashboard"))
+        db_facade.menu.add_subparsers(subparsers)
+        config_facade.menu.add_subparsers(subparsers)
+        server_facade.menu.add_subparsers(subparsers)
+        qa_facade.menu.add_subparsers(subparsers)
         
         args, _ = parser.parse_known_args()
         if args.category:
-            # Ejecución directa heredando el contexto
-            getattr(globals()[f"cmd_{args.category}"], "execute")(args)
+            # Ejecución directa heredando el contexto a través de las interfaces
+            if args.category in db_facade.menu.COMMANDS:
+                db_facade.menu.execute(args)
+            elif args.category in config_facade.menu.COMMANDS:
+                config_facade.menu.execute(args)
+            elif args.category in server_facade.menu.COMMANDS:
+                server_facade.menu.execute(args)
+            elif args.category in qa_facade.menu.COMMANDS:
+                qa_facade.menu.execute(args)
             return
 
     try:

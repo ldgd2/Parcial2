@@ -1,7 +1,7 @@
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.declarative import DeclarativeMeta
-from app.models.bitacora import Bitacora
+from app.packages.gestion_administrativa_reportes.modules.reportes_kpis.models.bitacora import Bitacora
 from app.core.context import get_user_context, get_ip_context
 from datetime import date, datetime, time
 from decimal import Decimal

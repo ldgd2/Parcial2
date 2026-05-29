@@ -7,10 +7,7 @@ from alembic import context
 
 # ─── Configuración de la App ──────────────────────────────────────
 from app.core.config import settings
-from app.core.database import Base
-
-# Importar todos los modelos para que Base.metadata los detecte 
-import app.models  # noqa: F401
+from app.db.base import Base
 
 # object that provides access to the values within the .ini file in use.
 config = context.config
