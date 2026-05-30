@@ -279,6 +279,16 @@ async def actualizar_estado_emergencia(
             f"Tu reporte '{emergencia.descripcion}' ahora está: {estado_nombre}",
             {"emergencia_id": str(emergencia_id), "tipo": "estado_change"}
         )
+        
+        # [CU15] WebSockets en Tiempo Real
+        from app.core.socket_manager import manager
+        room_id = f"emergencia_{emergencia_id}"
+        await manager.broadcast_to_room(room_id, {
+            "type": "status_update",
+            "estado": estado_nombre,
+            "message": f"El técnico actualizó el estado a {estado_nombre}"
+        })
+        
     except Exception as e:
         print(f"Error al enviar notificación: {e}")
 
@@ -570,6 +580,18 @@ async def finalizar_emergencia(
             )
         except Exception as e:
             print(f"Error enviando notificación de finalización: {e}")
+
+        # [CU15] Notificar finalización por WebSocket para solicitar calificación en vivo
+        try:
+            from app.core.socket_manager import manager
+            room_id = f"emergencia_{emergencia_id}"
+            await manager.broadcast_to_room(room_id, {
+                "type": "solicitar_calificacion",
+                "emergencia_id": emergencia_id,
+                "message": "Servicio finalizado. Por favor, califica al técnico."
+            })
+        except Exception as e:
+            print(f"Error WS finalizar_emergencia: {e}")
 
         return {
             "status": "ok", 

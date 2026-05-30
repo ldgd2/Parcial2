@@ -16,6 +16,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'core/notification/notification_controller.dart';
 import 'core/config/stripe_config.dart';
+import 'core/network/offline_sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,9 @@ void main() async {
   } catch (e) {
     debugPrint('⚠️ Stripe no pudo inicializarse: $e');
   }
+
+  // Inicializar servicio de sincronización offline (CU16)
+  OfflineSyncService().initialize();
 
   runApp(const TallerMovilApp());
 }

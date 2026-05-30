@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { SocketService } from './core/services/socket.service';
+import { OfflineSyncService } from './core/services/offline-sync.service';
 
 @Component({
   selector: 'app-root',
@@ -15,4 +17,10 @@ import { RouterModule } from '@angular/router';
 })
 export class AppComponent {
   title = 'frontend';
+
+  constructor(
+    private router: Router,
+    private socketService: SocketService,
+    private offlineSync: OfflineSyncService
+  ) {}
 }
