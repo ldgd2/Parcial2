@@ -6,7 +6,7 @@ class ApiClient {
   final LocalStorage localStorage;
 
   // URL del servidor local donde corre el backend de FastAPI
-  static const String serverUrl = 'http://185.214.134.23:8081';
+  static const String serverUrl = 'http://192.168.100.244:8000';
   static const String baseUrl = '$serverUrl/api/v1';
 
   ApiClient({required this.localStorage}) : dio = Dio(BaseOptions(baseUrl: baseUrl)) {

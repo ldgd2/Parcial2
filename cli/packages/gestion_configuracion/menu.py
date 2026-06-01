@@ -70,7 +70,7 @@ def interactive_menu():
             "Categoría de Configuración:",
             choices=[
                 "1. Inicialización (.env, Dependencias, Redis)",
-                "2. Credenciales y Entorno (DB, JWT)",
+                "2. Variables de Entorno (.env Completo, DB, JWT, APIs)",
                 "3. Red y Proxy (Nginx, DNS, Firewall)",
                 "Volver"
             ]
@@ -91,16 +91,21 @@ def interactive_menu():
             if target in ("deps", "all"): instalacion_logic.install_deps()
             if target in ("redis", "all"): instalacion_logic.setup_redis()
             
-        elif "Credenciales" in category_opt:
+        elif "Variables de Entorno" in category_opt:
             opt = questionary.select(
                 "Operación de Config:",
-                choices=["DB (Credenciales PostgreSQL)", "JWT (Secret Key)", "All (Configuración completa)", "Volver"]
+                choices=[
+                    "Asistente Completo (Configurar TODO el .env de principio a fin)",
+                    "DB (Credenciales PostgreSQL)", 
+                    "JWT (Secret Key)", 
+                    "Volver"
+                ]
             ).ask()
             if opt == "Volver" or opt is None: continue
             
             target = opt.split()[0].lower()
-            if target in ("db", "all"):
-                cprint("\n[bold magenta]--- CONFIGURACION INDEPENDIENTE DE BASE DE DATOS ---[/bold magenta]", "\n--- CONFIGURACION INDEPENDIENTE DE BASE DE DATOS ---")
+            if target in ("db", "asistente"):
+                cprint("\n[bold magenta]--- CONFIGURACION DE BASE DE DATOS ---[/bold magenta]", "\n--- CONFIGURACION DE BASE DE DATOS ---")
                 user = questionary.text("Usuario (DB_USER)", default="postgres").ask()
                 password = questionary.text("Contrasena (DB_PASSWORD)", default="root").ask()
                 host = questionary.text("Host (DB_HOST)", default="localhost").ask()
@@ -109,40 +114,131 @@ def interactive_menu():
                 entornos_logic.config_db(user, password, host, port, dbname)
                 cprint(f"[bold green]Configuracion de Base de Datos guardada.[/bold green]", "Configuracion Guardada.")
                 
-            if target in ("jwt", "all"):
+            if target in ("jwt", "asistente"):
                 cprint("\n[bold magenta]--- GENERADOR JWT SECRET KEY ---[/bold magenta]", "\n--- GENERADOR JWT SECRET KEY ---")
                 genrate = questionary.confirm("Generar una nueva llave segura aleatoria?", default=True).ask()
                 if genrate:
                     entornos_logic.config_jwt()
                     cprint(f"[bold green]Nueva llave generada y guardada exitosamente.[/bold green]", "Nueva llave generada exitosamente.")
             
+            if target == "asistente":
+                cprint("\n[bold magenta]--- CONFIGURACION DE APIS EXTERNAS ---[/bold magenta]", "\n--- CONFIGURACION DE APIS ---")
+                openrouter = questionary.text("OpenRouter API Key (OPENROUTER_API_KEY):").ask()
+                if openrouter: entornos_logic.update_env_variable(".env", "OPENROUTER_API_KEY", openrouter)
+                
+                stripe = questionary.text("Stripe Secret Key (STRIPE_SECRET_KEY):").ask()
+                if stripe: entornos_logic.update_env_variable(".env", "STRIPE_SECRET_KEY", stripe)
+                
+                cprint("\n[bold magenta]--- CONFIGURACION DE RED E IP ---[/bold magenta]", "\n--- RED ---")
+                local_ip = red_logic.get_local_ip()
+                
+                current_host = "localhost"
+                current_port = "8000"
+                if os.path.exists(".env"):
+                    try:
+                        with open(".env", "r") as f:
+                            for line in f:
+                                if line.startswith("APP_HOST="): current_host = line.split("=")[1].strip()
+                                if line.startswith("APP_PORT_BACKEND="): current_port = line.split("=")[1].strip()
+                    except: pass
+
+                host_choice = questionary.select(
+                    "¿Qué dirección Host deseas utilizar para el sistema?",
+                    choices=[
+                        "Local Host (localhost / 127.0.0.1)",
+                        f"IP Local de Red ({local_ip})",
+                        f"Mantener actual ({current_host})",
+                        "Personalizada (Escribir manualmente)"
+                    ]
+                ).ask()
+                
+                if host_choice:
+                    target_host = "localhost"
+                    if "IP Local" in host_choice:
+                        target_host = local_ip
+                    elif "Mantener" in host_choice:
+                        target_host = current_host
+                    elif "Personalizada" in host_choice:
+                        target_host = questionary.text("Introduce la IP o Host deseado:", default=current_host).ask()
+                        
+                    target_port = questionary.text("Introduce el puerto del Backend:", default=current_port).ask()
+                    
+                    red_logic.update_env_variable("APP_HOST", target_host)
+                    red_logic.update_env_variable("APP_PORT_BACKEND", target_port)
+                    from cli.packages.gestion_servidores_vps.modules.lanzador.lanzador_logic import sync_ip_to_clients
+                    sync_ip_to_clients(target_host)
+                    cprint(f"[bold green]Red configurada y sincronizada a {target_host}:{target_port}[/bold green]", "Red lista.")
+                
+                cprint("\n[bold green]¡CONFIGURACIÓN TOTAL DEL .ENV COMPLETADA CON ÉXITO![/bold green]", "Hecho.")
         elif "Red" in category_opt:
+            # Leer configuración actual para tener defaults
+            from cli.packages.gestion_servidores_vps.modules.lanzador.lanzador_logic import get_app_host, sync_ip_to_clients
+            
             opt = questionary.select(
                 "Operación de Red:",
-                choices=["Sync (Sincronizar IP en .env y Frontend)", "Volver"]
+                choices=[
+                    "Sincronizar (Aplica la IP actual del .env a Angular y Flutter)",
+                    "Reconfigurar IP (Cambiar la IP en .env y sincronizar)", 
+                    "Volver"
+                ]
             ).ask()
             if opt == "Volver" or opt is None: continue
             
-            local_ip = red_logic.get_local_ip()
-            host_choice = questionary.select(
-                "¿Qué dirección Host deseas utilizar para el sistema?",
-                choices=[
-                    "Local Host (localhost / 127.0.0.1)",
-                    f"IP Local de Red ({local_ip})",
-                    "Personalizada (Escribir manualmente)"
-                ]
-            ).ask()
-            
-            if not host_choice: continue
-            
-            target_host = "localhost"
-            if "IP Local" in host_choice:
-                target_host = local_ip
-            elif "Personalizada" in host_choice:
-                target_host = questionary.text("Introduce la IP o Host deseado:").ask()
+            if "Sincronizar" in opt:
+                # Extrae el host leyendo .env manualmente o usando la lógica actual
+                current_host = "localhost"
+                try:
+                    if os.path.exists(".env"):
+                        with open(".env", 'r') as f:
+                            for line in f:
+                                if line.startswith("APP_HOST="):
+                                    current_host = line.split("=")[1].strip()
+                                    break
+                except: pass
+                sync_ip_to_clients(current_host)
+                cprint(f"[bold green]Archivos sincronizados usando la IP del .env: {current_host}[/bold green]", "Red sincronizada.")
                 
-            target_port = questionary.text("Introduce el puerto del Backend (default: 8000):", default="8000").ask()
-            red_logic.configure_network_logic(target_host, target_port)
-            cprint(f"[bold green]Sincronización de red completada con éxito para host: {target_host}:{target_port}[/bold green]", "Red sincronizada.")
+            elif "Reconfigurar" in opt:
+                local_ip = red_logic.get_local_ip()
+                
+                # Obtener la IP y puerto actual del .env como defaults
+                current_host = "localhost"
+                current_port = "8000"
+                if os.path.exists(".env"):
+                    try:
+                        with open(".env", "r") as f:
+                            for line in f:
+                                if line.startswith("APP_HOST="): current_host = line.split("=")[1].strip()
+                                if line.startswith("APP_PORT_BACKEND="): current_port = line.split("=")[1].strip()
+                    except: pass
+                
+                host_choice = questionary.select(
+                    "¿Qué dirección Host deseas utilizar para el sistema?",
+                    choices=[
+                        "Local Host (localhost / 127.0.0.1)",
+                        f"IP Local de Red ({local_ip})",
+                        f"Mantener actual ({current_host})",
+                        "Personalizada (Escribir manualmente)"
+                    ]
+                ).ask()
+                
+                if not host_choice: continue
+                
+                target_host = "localhost"
+                if "IP Local" in host_choice:
+                    target_host = local_ip
+                elif "Mantener" in host_choice:
+                    target_host = current_host
+                elif "Personalizada" in host_choice:
+                    target_host = questionary.text("Introduce la IP o Host deseado:", default=current_host).ask()
+                    
+                target_port = questionary.text("Introduce el puerto del Backend:", default=current_port).ask()
+                
+                # Actualiza .env
+                red_logic.update_env_variable("APP_HOST", target_host)
+                red_logic.update_env_variable("APP_PORT_BACKEND", target_port)
+                # Sincroniza Angular y Flutter reusando el modulo de lanzador
+                sync_ip_to_clients(target_host)
+                cprint(f"[bold green]Sincronización y reconfiguración completada con éxito para host: {target_host}:{target_port}[/bold green]", "Red sincronizada.")
             
         input("\nPresiona Enter para continuar...")

@@ -11,6 +11,7 @@ class Taller(Base):
     direccion = Column(String(500), nullable=False)
     latitud = Column(Float, nullable=True)
     longitud = Column(Float, nullable=True)
+    calificacion_promedio = Column(Float, nullable=False, default=5.0, server_default="5.0")
     estado = Column(String(20), nullable=False, default="ACTIVO")
     id_admin = Column(Integer, ForeignKey("usuario.id", name="fk_taller_admin", use_alter=True), nullable=True) # El admin que lo creó
 

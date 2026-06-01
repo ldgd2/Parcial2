@@ -42,6 +42,7 @@ class Emergencia(Base):
     evidencias = relationship("Evidencia", back_populates="emergencia", cascade="all, delete-orphan")
     historial = relationship("HistorialEstado", back_populates="emergencia", cascade="all, delete-orphan")
     resumen_ia = relationship("ResumenIA", back_populates="emergencia", uselist=False, cascade="all, delete-orphan")
+    cotizaciones = relationship("Cotizacion", back_populates="emergencia", cascade="all, delete-orphan")
     
     # Técnicos asignados (Muchos a Muchos)
     tecnicos_asignados = relationship("Tecnico", secondary="asignacion_tecnico_emergencia", back_populates="emergencias_asignadas")

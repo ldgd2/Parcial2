@@ -1,7 +1,6 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
 import { ApiService } from '../../../core/api/api.service';
 import { toast } from 'ngx-sonner';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +9,16 @@ import { SocketService } from '../../../core/services/socket.service';
 import { Subscription } from 'rxjs';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import * as L from 'leaflet';
+import { 
+  LucideAngularModule, 
+  Home, Menu, User, Settings, AlertTriangle, Hammer, Users, 
+  History, ClipboardList, LogOut, ArrowLeft, Clock, MapPin, 
+  Wrench, ShieldAlert, Send, Sun, Moon, ChevronsLeft, ChevronsRight,
+  LayoutDashboard, Briefcase, Factory, Eye, Globe, Plus, Bell,
+  ArrowRight, Camera, Mail, KeyRound, Loader2, CheckSquare, Check, Image as ImageIcon, Tag, X, Radio, Video, Info, MessageSquare,
+  TrendingUp, DollarSign, FileText, Calendar, Calculator
+} from 'lucide-angular';
+
 import { ConfigService } from '../../../core/config/config.service';
 
 @Component({
@@ -58,6 +67,13 @@ import { ConfigService } from '../../../core/config/config.service';
                     class="bg-emerald-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-emerald-500 shadow-lg">
               Finalizar
             </button>
+            <button *ngIf="emergency?.idTaller === currentWorkshop && emergency?.estado_actual !== 'FINALIZADA' && emergency?.estado_actual !== 'CANCELADO'"
+                    (click)="openCotizacionModal()"
+                    class="bg-orange-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-orange-500 flex items-center gap-2">
+              <lucide-icon name="calculator" size="14"></lucide-icon>
+              Cotizar
+            </button>
+
             <button *ngIf="(emergency?.estado_actual === 'ATENDIDO' || emergency?.estado_actual === 'FINALIZADA') && emergency?.pago"
                     (click)="downloadFactura()"
                     class="bg-blue-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-blue-500 flex items-center gap-2">
@@ -105,14 +121,36 @@ import { ConfigService } from '../../../core/config/config.service';
             </div>
           </div>
           <div class="lg:col-span-4 bg-[#080808] p-10 space-y-10">
-             <section class="space-y-4">
-                <h3 class="text-[9px] font-bold uppercase tracking-widest text-zinc-600">Vehículo</h3>
-                <div class="bg-zinc-950 border border-zinc-900 p-6">
-                   <div class="text-sm font-bold">{{ emergency.vehiculo?.marca }} {{ emergency.vehiculo?.modelo }}</div>
-                   <div class="text-[10px] font-mono text-zinc-500 mt-1">{{ emergency.vehiculo?.placa }}</div>
-                </div>
-             </section>
-          </div>
+              <section class="space-y-4">
+                 <h3 class="text-[9px] font-bold uppercase tracking-widest text-zinc-600">Vehículo</h3>
+                 <div class="bg-zinc-950 border border-zinc-900 p-6">
+                    <div class="text-sm font-bold">{{ emergency.vehiculo?.marca }} {{ emergency.vehiculo?.modelo }}</div>
+                    <div class="text-[10px] font-mono text-zinc-500 mt-1">{{ emergency.vehiculo?.placa }}</div>
+                 </div>
+              </section>
+
+              <!-- Seccion Cotizaciones -->
+              <section class="space-y-4" *ngIf="cotizaciones.length > 0">
+                 <h3 class="text-[9px] font-bold uppercase tracking-widest text-orange-500">Cotizaciones Emitidas</h3>
+                 <div class="space-y-3">
+                   <div *ngFor="let cot of cotizaciones" class="bg-zinc-950 border border-orange-900/50 p-4 relative">
+                     <div class="flex justify-between items-start mb-2">
+                       <span class="text-[10px] font-bold uppercase tracking-wider text-white">#{{ cot.id }}</span>
+                       <span class="text-[8px] px-2 py-0.5 border uppercase font-bold"
+                             [ngClass]="{'border-yellow-500 text-yellow-500': cot.estado === 'PENDIENTE', 'border-emerald-500 text-emerald-500': cot.estado === 'ACEPTADA', 'border-red-500 text-red-500': cot.estado === 'RECHAZADA'}">
+                         {{ cot.estado }}
+                       </span>
+                     </div>
+                     <p class="text-[11px] text-zinc-400 mb-2">{{ cot.descripcion_servicio }}</p>
+                     <div class="text-xs font-mono text-orange-400 font-bold flex justify-between">
+                       <span>Total:</span>
+                       <span>$ {{ (cot.costo_mano_obra + cot.costo_repuestos) | number:'1.2-2' }}</span>
+                     </div>
+                   </div>
+                 </div>
+              </section>
+           </div>
+
         </div>
       </ng-container>
 
@@ -284,7 +322,54 @@ import { ConfigService } from '../../../core/config/config.service';
          </div>
       </div>
 
+      <!-- Modal Cotizacion -->
+      <div *ngIf="showCotizacionModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm overflow-y-auto">
+         <div class="bg-zinc-950 border border-orange-900 w-full max-w-xl my-8">
+            <div class="p-6 border-b border-zinc-900 flex justify-between items-center">
+               <h2 class="font-bold text-xs uppercase tracking-widest text-orange-500">Generar Cotización</h2>
+               <button (click)="showCotizacionModal = false"><lucide-icon name="x" size="18"></lucide-icon></button>
+            </div>
+            <div class="p-6 space-y-4">
+               <div>
+                  <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Descripción del Servicio</label>
+                  <textarea [(ngModel)]="newCotizacion.descripcion_servicio" rows="3" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500"></textarea>
+               </div>
+               <div class="grid grid-cols-2 gap-4">
+                 <div>
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Mano de Obra ($)</label>
+                    <input type="number" [(ngModel)]="newCotizacion.costo_mano_obra" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                 </div>
+                 <div>
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Repuestos ($)</label>
+                    <input type="number" [(ngModel)]="newCotizacion.costo_repuestos" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-4">
+                 <div>
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Tiempo Est. (Horas)</label>
+                    <input type="number" [(ngModel)]="newCotizacion.tiempo_estimado_horas" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                 </div>
+               </div>
+               <div>
+                  <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Condiciones / Notas (Opcional)</label>
+                  <textarea [(ngModel)]="newCotizacion.condiciones" rows="2" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500"></textarea>
+               </div>
+               
+               <div class="pt-4 border-t border-zinc-900 mt-6 flex flex-col gap-4">
+                  <div class="flex justify-between items-center text-[11px] font-mono font-bold text-orange-400">
+                     <span>TOTAL ESTIMADO:</span>
+                     <span class="text-lg">$ {{ (newCotizacion.costo_mano_obra + newCotizacion.costo_repuestos) | number:'1.2-2' }}</span>
+                  </div>
+                  <button (click)="enviarCotizacion()" class="w-full bg-orange-700 py-4 font-bold text-[10px] uppercase tracking-widest transition-colors hover:bg-orange-600 text-white">
+                    Enviar al Cliente
+                  </button>
+               </div>
+            </div>
+         </div>
+      </div>
+
     </div>
+
   `,
   styles: [`
     #emergency-map { height: 100%; width: 100%; transition: opacity 0.5s; background: #000; }
@@ -329,6 +414,17 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
 
   private map: L.Map | null = null;
   private routeLayer: L.GeoJSON | null = null;
+
+  // Cotizaciones
+  cotizaciones: any[] = [];
+  showCotizacionModal = false;
+  newCotizacion = {
+    descripcion_servicio: '',
+    costo_mano_obra: 0,
+    costo_repuestos: 0,
+    tiempo_estimado_horas: 1,
+    condiciones: ''
+  };
 
   // Chat logic
   showChatModal = false;
@@ -400,6 +496,7 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.emergency = res;
         this.cargarPago(); // CU05 — Cargar pago si ya existe
+        this.cargarCotizaciones();
         
         // 2. Cargar coordenadas del taller para el HUD/Mapa
         this.api.get<any>(`/talleres/${this.currentWorkshop}`).subscribe({
@@ -602,6 +699,46 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
       error: () => { 
         this.pagoExistente = null; 
       }
+    });
+  }
+
+  // ─── CU17: Gestionar Cotizaciones ────────────────────────────────
+  cargarCotizaciones() {
+    if (!this.emergency || !this.emergency.id) return;
+    this.api.get<any[]>(`/cotizaciones/emergencia/${this.emergency.id}`).subscribe({
+      next: (res) => {
+        this.cotizaciones = res;
+      },
+      error: () => {
+        console.warn('No se pudieron cargar las cotizaciones');
+      }
+    });
+  }
+
+  openCotizacionModal() {
+    this.newCotizacion = {
+      descripcion_servicio: '',
+      costo_mano_obra: 0,
+      costo_repuestos: 0,
+      tiempo_estimado_horas: 1,
+      condiciones: ''
+    };
+    this.showCotizacionModal = true;
+  }
+
+  enviarCotizacion() {
+    if (!this.newCotizacion.descripcion_servicio || this.newCotizacion.costo_mano_obra < 0) {
+      toast.error('Complete la descripción y asigne un costo válido.');
+      return;
+    }
+    
+    this.api.post(`/cotizaciones/${this.emergency.id}`, this.newCotizacion).subscribe({
+      next: (res) => {
+        toast.success('Cotización enviada al cliente.');
+        this.showCotizacionModal = false;
+        this.cargarCotizaciones();
+      },
+      error: (err) => toast.error('Error al enviar cotización', { description: err.error?.detail })
     });
   }
 

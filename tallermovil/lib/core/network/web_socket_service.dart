@@ -16,7 +16,7 @@ class WebSocketService {
       final rol = await LocalStorage().getRol();
       
       // En entorno de desarrollo (ej. emulador Android)
-      final baseUrl = 'ws://192.168.0.114:8000';
+      final baseUrl = 'ws://192.168.100.244:8000';
       final wsUrl = Uri.parse('$baseUrl/api/v1/ws/auxilio/$emergenciaId?user_id=$userId&role=$rol');
       
       _channel = WebSocketChannel.connect(wsUrl);

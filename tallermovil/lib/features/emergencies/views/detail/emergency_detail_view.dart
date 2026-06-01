@@ -16,6 +16,8 @@ import '../../../../shared/components/buttons/t_button.dart';
 import '../../../../shared/components/loaders/t_loader.dart';
 import '../../../chat/ui/chat_view.dart';
 import '../../../payments/views/payment_selection_view.dart';
+import '../../data/cotizacion_service.dart';
+import 'quote_review_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyDetailView extends StatefulWidget {
@@ -32,7 +34,9 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
   bool isPlaying = false;
 
   Map<String, dynamic> _emergencyData = {};
+  List<Map<String, dynamic>> _cotizaciones = [];
   bool _isLoading = true;
+  String _sortOption = 'Menor Precio';
 
   StreamSubscription? _socketSubscription;
 
@@ -57,9 +61,14 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
       final storage = LocalStorage();
       final apiClient = ApiClient(localStorage: storage);
       final response = await apiClient.dio.get('/emergencias/${widget.emergency['id']}');
+      
+      final cotService = CotizacionService(apiClient: apiClient);
+      final cotList = await cotService.getCotizaciones(widget.emergency['id']);
+
       if (mounted) {
         setState(() {
           _emergencyData = response.data;
+          _cotizaciones = cotList;
           _isLoading = false;
         });
       }
@@ -299,6 +308,157 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
               TSpacing.verticalLarge(),
             ],
 
+            // Cotizaciones (Marketplace)
+            if (_cotizaciones.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TText.h3('Ofertas de Talleres (${_cotizaciones.length})'),
+                  DropdownButton<String>(
+                    value: _sortOption,
+                    dropdownColor: AppColors.surface,
+                    style: const TextStyle(color: Colors.white),
+                    underline: Container(height: 1, color: AppColors.primary),
+                    onChanged: (String? newValue) {
+                      if (newValue != null && mounted) {
+                        setState(() {
+                          _sortOption = newValue;
+                        });
+                      }
+                    },
+                    items: <String>['Menor Precio', 'Mejor Calificación', 'Más Rápido']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+              TSpacing.verticalSmall(),
+              SizedBox(
+                height: 230,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _cotizaciones.length,
+                  itemBuilder: (context, index) {
+                    // Sorting localmente la copia
+                    final sortedQuotes = List<Map<String, dynamic>>.from(_cotizaciones);
+                    sortedQuotes.sort((a, b) {
+                      if (_sortOption == 'Menor Precio') {
+                        final totalA = (a['costo_mano_obra'] ?? 0) + (a['costo_repuestos'] ?? 0);
+                        final totalB = (b['costo_mano_obra'] ?? 0) + (b['costo_repuestos'] ?? 0);
+                        return totalA.compareTo(totalB);
+                      } else if (_sortOption == 'Mejor Calificación') {
+                        final califA = a['taller']?['calificacion_promedio'] ?? 0.0;
+                        final califB = b['taller']?['calificacion_promedio'] ?? 0.0;
+                        return califB.compareTo(califA); // Mayor a menor
+                      } else if (_sortOption == 'Más Rápido') {
+                        // Comparamos el ETA
+                        final etaA = _calculateEta(a);
+                        final etaB = _calculateEta(b);
+                        return etaA.compareTo(etaB);
+                      }
+                      return 0;
+                    });
+
+                    final cot = sortedQuotes[index];
+                    final double manoObra = (cot['costo_mano_obra'] ?? 0).toDouble();
+                    final double repuestos = (cot['costo_repuestos'] ?? 0).toDouble();
+                    final double total = manoObra + repuestos;
+                    
+                    int etaMinutos = _calculateEta(cot);
+                    final double calificacion = cot['taller']?['calificacion_promedio'] ?? 5.0;
+                    
+                    return Container(
+                      width: 280,
+                      margin: const EdgeInsets.only(right: 16.0),
+                      child: TCard(
+                        color: cot['estado'] == 'ACEPTADA' ? AppColors.successBg.withValues(alpha: 0.1) : AppColors.surface,
+                        padding: 16.0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      TText.h3(
+                                        cot['taller']?['nombre'] ?? 'Taller Desconocido',
+                                        color: cot['estado'] == 'ACEPTADA' ? AppColors.success : Colors.white,
+                                        maxLines: 1,
+                                      ),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.star, color: Colors.amber, size: 14),
+                                          const SizedBox(width: 4),
+                                          Text(calificacion.toStringAsFixed(1), style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                _buildStatusBadge(cot['estado']),
+                              ],
+                            ),
+                            TSpacing.verticalSmall(),
+                            TText.body(
+                              cot['descripcion_servicio'] ?? '',
+                              maxLines: 2,
+                            ),
+                            const Spacer(),
+                            if (etaMinutos > 0)
+                              Row(
+                                children: [
+                                  const Icon(Icons.electric_moped, size: 14, color: AppColors.primary),
+                                  const SizedBox(width: 4),
+                                  TText.label('Llega en aprox. $etaMinutos min'),
+                                ],
+                              ),
+                            const Divider(color: AppColors.border),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TText.label('Total Estimado:'),
+                                TText.h2('\$${total.toStringAsFixed(2)}', color: AppColors.primary),
+                              ],
+                            ),
+                            TSpacing.verticalSmall(),
+                            if (cot['estado'] == 'PENDIENTE')
+                              TButton(
+                                label: 'Revisar y Aceptar',
+                                variant: TButtonVariant.primary,
+                                onPressed: () async {
+                                  final changed = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => QuoteReviewView(quote: cot, emergencyId: e['id']))
+                                  );
+                                  if (changed == true) {
+                                    _refreshData();
+                                  }
+                                },
+                              )
+                            else if (cot['estado'] == 'ACEPTADA')
+                              TButton(
+                                label: 'Oferta Ganadora',
+                                variant: TButtonVariant.outline,
+                                icon: Icons.check_circle,
+                                onPressed: () {},
+                              )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              TSpacing.verticalLarge(),
+            ],
+
             // Información del Vehículo
             TText.h3('Vehículo Afectado'),
             TSpacing.verticalSmall(),
@@ -485,6 +645,21 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
       default:
         return TBadge.info(status);
     }
+  }
+
+  int _calculateEta(Map<String, dynamic> cot) {
+    int etaMinutos = 999;
+    final lat = _emergencyData['latitud'] as double?;
+    final lng = _emergencyData['longitud'] as double?;
+    if (cot['taller'] != null && cot['taller']['latitud'] != null && lat != null) {
+      final distanciaHelper = const Distance();
+      final km = distanciaHelper.as(LengthUnit.Kilometer, 
+          LatLng(lat, lng!), 
+          LatLng(cot['taller']['latitud'], cot['taller']['longitud']));
+      etaMinutos = (km * 2).ceil();
+      if (etaMinutos < 5) etaMinutos = 5; 
+    }
+    return etaMinutos;
   }
 }
 

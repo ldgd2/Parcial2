@@ -25,6 +25,7 @@ from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.cat
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.evidencia import Evidencia
 from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.models.asignacion_tecnico_emergencia import AsignacionTecnicoEmergencia
 from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.models.asignacion_especialidad import AsignacionEspecialidad
+from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.models.cotizacion import Cotizacion
 
 # Paquete 3: IA y Automatizacion
 from app.packages.inteligencia_artificial_automatizacion.modules.motor_ia.models.resumen_ia import ResumenIA
