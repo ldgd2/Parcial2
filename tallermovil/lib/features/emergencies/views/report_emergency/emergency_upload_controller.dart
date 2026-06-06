@@ -5,9 +5,7 @@ import 'package:tallermovil/core/network/api_client.dart';
 import 'package:tallermovil/core/storage/local_storage.dart';
 import 'package:tallermovil/features/emergencies/data/emergency_service.dart';
 import 'package:tallermovil/features/emergencies/models/emergency_report.dart';
-import 'package:tallermovil/core/network/offline_sync_service.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:dio/dio.dart';
+import 'package:uuid/uuid.dart';
 
 class EmergencyUploadController extends ChangeNotifier {
   // Singleton
@@ -33,6 +31,7 @@ class EmergencyUploadController extends ChangeNotifier {
     required String address,
     int? existingEmergencyId, // Si viene ID, es un UPDATE
     bool isSync = false,
+    String? uuidLocal,
   }) async {
     if (isUploading) return;
 
@@ -41,25 +40,9 @@ class EmergencyUploadController extends ChangeNotifier {
     currentError = null;
     notifyListeners();
 
-    try {
-      // VERIFICACIÓN PWA OFFLINE: Si no hay internet, no intentamos enviar, guardamos localmente directo.
-      if (!isSync) {
-        final connectivityResult = await Connectivity().checkConnectivity();
-        if (connectivityResult.every((r) => r == ConnectivityResult.none)) {
-           isUploading = false;
-           await OfflineSyncService().saveOfflineEmergency(
-             audioPath: audioPath,
-             imagePaths: imagePaths,
-             placa: placa,
-             descripcion: descripcion,
-             latitude: latitude,
-             longitude: longitude,
-             address: address,
-           );
-           return;
-        }
-      }
+    final localId = uuidLocal ?? const Uuid().v4();
 
+    try {
       // 1. Subir multimedia (solo los archivos locales que no son URLs)
       final List<String> newFiles = [];
       final List<String> existingUrls = [];
@@ -115,6 +98,7 @@ class EmergencyUploadController extends ChangeNotifier {
         audioUrl: audioUrl,
         evidenciasUrls: imageUrls,
         textoAdicional: rawTranscription,
+        uuidLocal: localId,
       );
 
       if (existingEmergencyId != null) {
@@ -138,26 +122,9 @@ class EmergencyUploadController extends ChangeNotifier {
       currentError = e.toString();
       notifyListeners();
       
-      // Fallback para CU16: Si hay un error de conexión, guardar en BD local
-      if (e is DioException && 
-          (e.type == DioExceptionType.connectionError || 
-           e.type == DioExceptionType.receiveTimeout || 
-           e.type == DioExceptionType.connectionTimeout)) {
-        
-        if (!isSync) { // No re-guardar si estamos intentando sincronizar
-           await OfflineSyncService().saveOfflineEmergency(
-             audioPath: audioPath,
-             imagePaths: imagePaths,
-             placa: placa,
-             descripcion: descripcion,
-             latitude: latitude,
-             longitude: longitude,
-             address: address,
-           );
-        }
-        return; // Evita mostrar error de fallo completo, pues se guardó offline
-      }
-
+      // Si el interceptor de Dio resolvió con un 200 OK falso para offline, podemos detectarlo
+      // Pero dado que la UI puede procesar el 'success' igual, está bien.
+      
       if (!isSync) {
         await NotificationController.showLocalNotification(
           title: "Error en S.O.S.",

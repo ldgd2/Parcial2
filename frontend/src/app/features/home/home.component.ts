@@ -1,182 +1,209 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../environments/environment';
 import { RouterModule, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [CommonModule, RouterModule, LucideAngularModule],
+  animations: [
+    trigger('fadeInUp', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(30px)' }),
+        animate('0.6s cubic-bezier(0.16, 1, 0.3, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ]),
+    trigger('staggerList', [
+      transition(':enter', [
+        query('.stagger-item', [
+          style({ opacity: 0, transform: 'translateY(20px)' }),
+          stagger(100, [
+            animate('0.5s ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ],
   template: `
-    <div class="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#FF5733] selection:text-white font-sans overflow-x-hidden">
+    <div class="min-h-screen bg-[#050505] text-white selection:bg-[#FF5733] selection:text-white font-sans overflow-x-hidden">
       
       <!-- TOP NAVIGATION -->
-      <nav class="border-b border-[#222222] bg-[#0a0a0a]/90 backdrop-blur-md sticky top-0 z-50">
+      <nav class="border-b border-[#222222] bg-[#050505]/90 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-2.5 h-2.5 bg-[#FF5733]"></div>
+            <div class="w-2.5 h-2.5 bg-[#FF5733] shadow-[0_0_10px_#FF5733]"></div>
             <span class="font-mono text-xs font-bold tracking-widest uppercase text-white">FIELDWORK <span class="text-zinc-600">_OS</span></span>
           </div>
           <div class="flex items-center gap-4">
-            <button (click)="irALogin()" class="bg-white text-black px-6 py-2.5 font-bold text-[9px] tracking-widest uppercase hover:bg-zinc-200 transition-colors">
-              ACCESO AL SISTEMA
+            <button (click)="irALogin()" class="text-zinc-400 hover:text-white font-bold text-[10px] tracking-widest uppercase transition-colors mr-4">
+              INICIAR SESIÓN
             </button>
-            <button class="w-10 h-10 border border-[#222222] flex items-center justify-center text-zinc-400 hover:text-white hover:border-white transition-all">
-              <lucide-icon name="sun" size="16"></lucide-icon>
+            <button (click)="irARegistro()" class="bg-[#FF5733] text-white px-6 py-2.5 font-bold text-[10px] tracking-widest uppercase hover:bg-[#e04c2c] transition-colors shadow-[0_0_15px_rgba(255,87,51,0.3)]">
+              CREAR TALLER
             </button>
           </div>
         </div>
       </nav>
 
       <!-- HERO SECTION -->
-      <main class="relative px-6 py-24 lg:py-32 max-w-[1600px] mx-auto">
+      <main class="relative px-6 py-24 lg:py-32 max-w-[1600px] mx-auto" @fadeInUp>
          <!-- BG glow decorative -->
-         <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#FF5733]/5 blur-[120px] rounded-full pointer-events-none"></div>
+         <div class="absolute top-10 left-1/4 w-[600px] h-[600px] bg-[#FF5733]/10 blur-[150px] rounded-full pointer-events-none"></div>
 
          <div class="max-w-4xl relative z-10">
            <div class="inline-flex items-center gap-3 px-3 py-1.5 border border-[#222222] bg-[#111111] mb-8">
-             <div class="w-1.5 h-1.5 bg-[#FF5733]"></div>
-             <span class="font-mono text-[9px] font-bold uppercase tracking-[.25em] text-zinc-300">SISTEMA DE DESPACHO ACTIVO</span>
+             <div class="w-1.5 h-1.5 bg-[#FF5733] animate-pulse"></div>
+             <span class="font-mono text-[9px] font-bold uppercase tracking-[.25em] text-zinc-300">PLATAFORMA INTELIGENTE DE EMERGENCIA</span>
            </div>
            
-           <h1 class="text-5xl md:text-6xl lg:text-[80px] font-extrabold tracking-tighter uppercase leading-[0.95] mb-8 text-white">
-             LA EMERGENCIA NO<br/>ESPERA. TU TALLER<br/>TAMPOCO.
+           <h1 class="text-5xl md:text-7xl lg:text-[90px] font-extrabold tracking-tighter uppercase leading-[0.95] mb-8 text-white">
+             CONTROL ABSOLUTO<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-600">DEL CAMPO AL TALLER.</span>
            </h1>
            
-           <p class="text-zinc-400 text-base md:text-lg lg:text-xl max-w-2xl leading-relaxed mb-12">
-             FieldWork es el entorno de alta precisión para gestores de talleres mecánicos. Recibe incidencias en tiempo real, evalúa la criticidad y asigna técnicos antes de que el motor se enfríe.
+           <p class="text-zinc-400 text-base md:text-xl max-w-2xl leading-relaxed mb-12">
+             El primer sistema operativo (SaaS) diseñado para la gestión de incidencias mecánicas, despachos en tiempo real y asignación inteligente de técnicos. Deja atrás el caos, asume el control.
            </p>
            
            <div class="flex flex-col sm:flex-row gap-4">
-             <button (click)="irALogin()" class="bg-[#FF5733] text-white px-8 py-4 font-bold text-[11px] uppercase tracking-[.2em] shadow-lg shadow-[#FF5733]/20 hover:brightness-110 transition-all flex items-center justify-center gap-3">
-               INICIAR SESIÓN <lucide-icon name="arrow-right" size="14"></lucide-icon>
+             <button (click)="irARegistro()" class="bg-[#FF5733] text-white px-8 py-5 font-bold text-[12px] uppercase tracking-[.2em] shadow-lg shadow-[#FF5733]/20 hover:brightness-110 hover:shadow-[#FF5733]/40 transition-all flex items-center justify-center gap-3">
+               COMIENZA GRATIS <lucide-icon name="arrow-right" size="16"></lucide-icon>
              </button>
-             <button class="bg-transparent border border-[#333333] text-white px-8 py-4 font-bold text-[11px] uppercase tracking-[.2em] hover:bg-[#111111] transition-all flex items-center justify-center">
-               VER DOCUMENTACIÓN
+             <button (click)="descargarApp()" class="bg-transparent border border-[#333333] text-white px-8 py-5 font-bold text-[12px] uppercase tracking-[.2em] hover:bg-[#111111] transition-all flex items-center justify-center gap-3">
+               DESCARGAR APP <lucide-icon name="download" size="16"></lucide-icon>
              </button>
            </div>
          </div>
       </main>
 
-      <!-- PROCESS SECTION -->
-      <section class="border-t border-b border-[#222222] bg-[#0a0a0a]">
-        <div class="max-w-[1600px] mx-auto px-6 py-32">
-          <div class="mb-20">
-            <span class="font-mono text-[10px] uppercase tracking-[.25em] text-[#FF5733] font-bold block mb-4">EL PROCESO</span>
-            <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight uppercase text-white">DEL CAMPO AL TALLER EN SEGUNDOS.</h2>
+      <!-- CARACTERISTICAS -->
+      <section class="border-t border-[#222222] bg-[#0a0a0a] relative overflow-hidden">
+        <div class="max-w-[1600px] mx-auto px-6 py-24 lg:py-32" @staggerList>
+          <div class="text-center max-w-3xl mx-auto mb-20 stagger-item">
+            <span class="font-mono text-[10px] uppercase tracking-[.25em] text-[#FF5733] font-bold block mb-4">¿CÓMO FUNCIONA?</span>
+            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight uppercase text-white">FLUJO DE TRABAJO IMPLACABLE.</h2>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border border-[#222222]">
-            <!-- Step 1 -->
-            <div class="p-10 md:p-14 border-b md:border-b-0 md:border-r border-[#222222] bg-[#0d0d0d] hover:bg-[#111111] transition-colors">
-               <div class="w-12 h-12 border border-[#333333] flex items-center justify-center mb-8">
-                 <lucide-icon name="camera" size="18" class="text-[#FF5733]"></lucide-icon>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="p-10 border border-[#222222] bg-[#111111] hover:border-[#FF5733]/50 transition-colors stagger-item group">
+               <div class="w-14 h-14 bg-[#FF5733]/10 border border-[#FF5733]/30 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                 <lucide-icon name="map-pin" size="24" class="text-[#FF5733]"></lucide-icon>
                </div>
-               <h3 class="text-xl font-bold mb-4 tracking-tight">1. Captura del Problema</h3>
-               <p class="text-zinc-500 text-sm leading-relaxed">
-                 El cliente registra la emergencia mediante una simple foto y descripción. El sistema extrae los metadatos y ubica la incidencia en tiempo real.
+               <h3 class="text-2xl font-bold mb-4 tracking-tight">Geolocalización</h3>
+               <p class="text-zinc-400 text-sm leading-relaxed">
+                 Tus clientes reportan la emergencia y el sistema captura las coordenadas GPS exactas. Despacha la ayuda sin perder tiempo pidiendo direcciones.
                </p>
             </div>
-            <!-- Step 2 -->
-            <div class="p-10 md:p-14 border-b md:border-b-0 md:border-r border-[#222222] bg-[#0c0c0c] hover:bg-[#111111] transition-colors">
-               <div class="w-12 h-12 border border-[#333333] flex items-center justify-center mb-8">
-                 <lucide-icon name="alert-triangle" size="18" class="text-[#FF5733]"></lucide-icon>
+            
+            <div class="p-10 border border-[#222222] bg-[#111111] hover:border-[#FF5733]/50 transition-colors stagger-item group">
+               <div class="w-14 h-14 bg-[#FF5733]/10 border border-[#FF5733]/30 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                 <lucide-icon name="cpu" size="24" class="text-[#FF5733]"></lucide-icon>
                </div>
-               <h3 class="text-xl font-bold mb-4 tracking-tight">2. Evaluación de Prioridad</h3>
-               <p class="text-zinc-500 text-sm leading-relaxed">
-                 FieldWork cataloga automáticamente el nivel de urgencia, desde una revisión rutinaria hasta una falla catastrófica (Código Rojo).
+               <h3 class="text-2xl font-bold mb-4 tracking-tight">Asignación IA</h3>
+               <p class="text-zinc-400 text-sm leading-relaxed">
+                 Nuestro motor analiza la especialidad requerida (ej. Motor, Eléctrico) y asigna al técnico más cercano y disponible de tu flota automáticamente.
                </p>
             </div>
-            <!-- Step 3 -->
-            <div class="p-10 md:p-14 bg-[#0a0a0a] hover:bg-[#111111] transition-colors">
-               <div class="w-12 h-12 border border-[#333333] flex items-center justify-center mb-8">
-                 <lucide-icon name="check-square" size="18" class="text-[#FF5733]"></lucide-icon>
+
+            <div class="p-10 border border-[#222222] bg-[#111111] hover:border-[#FF5733]/50 transition-colors stagger-item group">
+               <div class="w-14 h-14 bg-[#FF5733]/10 border border-[#FF5733]/30 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                 <lucide-icon name="shield-check" size="24" class="text-[#FF5733]"></lucide-icon>
                </div>
-               <h3 class="text-xl font-bold mb-4 tracking-tight">3. Asignación Directa</h3>
-               <p class="text-zinc-500 text-sm leading-relaxed">
-                 El gestor de taller toma la emergencia desde el tablero. Todo el contexto técnico se envía inmediatamente a la tableta del mecánico encargado.
+               <h3 class="text-2xl font-bold mb-4 tracking-tight">Multitenancy</h3>
+               <p class="text-zinc-400 text-sm leading-relaxed">
+                 Diseñado para empresas. Gestiona múltiples sucursales, técnicos y administradores bajo un mismo entorno aislado y seguro.
                </p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- TRANSFORMATION SECTION -->
-      <section class="max-w-[1600px] mx-auto px-6 py-32 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-        <div>
-          <span class="font-mono text-[10px] uppercase tracking-[.25em] text-[#FF5733] font-bold block mb-4">TRANSFORMACIÓN</span>
-          <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight uppercase leading-tight mb-8 text-white">DE CAOS AL CONTROL MILIMÉTRICO.</h2>
-          <p class="text-zinc-400 text-lg leading-relaxed mb-12">
-             Olvida las notas escritas a mano, los mensajes de voz incomprensibles y las fotos borrosas. FieldWork estructura el desastre en un expediente técnico inmutable.
-          </p>
-          
-          <ul class="space-y-6">
-            <li class="flex items-center gap-4 text-zinc-300">
-               <lucide-icon name="check" size="18" class="text-[#FF5733]"></lucide-icon>
-               <span class="font-medium tracking-wide">Estandarización de partes afectadas</span>
-            </li>
-            <li class="flex items-center gap-4 text-zinc-300">
-               <lucide-icon name="check" size="18" class="text-[#FF5733]"></lucide-icon>
-               <span class="font-medium tracking-wide">Registro de tiempo hasta resolución</span>
-            </li>
-            <li class="flex items-center gap-4 text-zinc-300">
-               <lucide-icon name="check" size="18" class="text-[#FF5733]"></lucide-icon>
-               <span class="font-medium tracking-wide">Exportación a formatos de aseguradoras</span>
-            </li>
-          </ul>
-        </div>
-        
-        <!-- VISUAL CUES: ANTES vs DESPUES -->
-        <div class="border border-[#222222] bg-[#0c0c0c] flex flex-col md:flex-row">
-           <!-- ANTES -->
-           <div class="flex-1 p-8 border-b md:border-b-0 md:border-r border-[#222222] relative overflow-hidden bg-[#0d0d0d] min-h-[350px]">
-              <span class="absolute top-4 left-4 bg-red-950/50 text-red-500 border border-red-900/50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest font-mono">ANTES</span>
-              
-              <!-- Messy Mockups -->
-              <div class="mt-12 opacity-40 rotate-[15deg] translate-y-10 translate-x-4">
-                 <div class="bg-[#1a1512] border border-[#ff8c00]/20 w-48 h-32 p-4 rounded-sm shadow-xl absolute z-10 -left-10">
-                    <div class="w-full h-2 bg-[#ff8c00]/20 mb-3 rounded-full"></div>
-                    <div class="w-3/4 h-2 bg-[#ff8c00]/20 mb-3 rounded-full"></div>
-                    <div class="w-1/2 h-2 bg-[#ff8c00]/20 rounded-full"></div>
-                 </div>
-                 <div class="bg-[#151515] border border-[#666] w-32 h-44 rounded-sm shadow-2xl relative z-20 left-16 top-10 flex items-center justify-center">
-                    <lucide-icon name="image" class="text-zinc-700" size="32"></lucide-icon>
-                 </div>
-              </div>
-           </div>
-           
-           <!-- DESPUES -->
-           <div class="flex-1 p-8 relative min-h-[350px] bg-[#0a0a0a]">
-              <span class="absolute top-4 left-4 bg-[#FF5733]/10 text-[#FF5733] border border-[#FF5733]/20 px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest font-mono">DESPUÉS</span>
-              
-              <!-- Clean Mockup -->
-              <div class="mt-12 bg-[#111111] border border-[#333333] w-full max-w-[240px] shadow-2xl mx-auto rounded-sm p-4 flex flex-col gap-4">
-                 <div class="flex justify-between items-center border-b border-[#222222] pb-3">
-                    <div class="w-16 h-2 bg-zinc-400 rounded-full"></div>
-                    <div class="w-8 h-2 bg-[#FF5733] rounded-sm"></div>
-                 </div>
-                 <div class="flex gap-4">
-                    <div class="w-12 h-16 bg-[#1a1a1a] rounded-sm border border-[#222222]"></div>
-                    <div class="flex-1 space-y-2 pt-1">
-                       <div class="w-full h-2 bg-zinc-700/50 rounded-full"></div>
-                       <div class="w-2/3 h-2 bg-zinc-700/50 rounded-full"></div>
-                    </div>
-                 </div>
-                 <div class="border-t border-[#222222] pt-4 mt-2 grid grid-cols-2 gap-2">
-                    <div class="h-1.5 bg-[#222222] rounded-full"></div>
-                    <div class="h-1.5 bg-[#222222] rounded-full"></div>
-                 </div>
-              </div>
-           </div>
-        </div>
+      <!-- PRICING / PLANES -->
+      <section class="border-t border-[#222222] bg-[#050505] relative py-24 lg:py-32">
+         <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiMzMzMiLz48L3N2Zz4=')] opacity-[0.15]"></div>
+         
+         <div class="max-w-[1600px] mx-auto px-6 relative z-10" @staggerList>
+            <div class="text-center max-w-3xl mx-auto mb-20 stagger-item">
+              <span class="font-mono text-[10px] uppercase tracking-[.25em] text-[#FF5733] font-bold block mb-4">ESCALABILIDAD</span>
+              <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight uppercase text-white">ELIGE TU ARSENAL.</h2>
+              <p class="mt-6 text-zinc-400 text-lg">Planes diseñados para talleres de un solo hombre hasta flotas corporativas.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+               
+               <!-- PLAN GRATIS -->
+               <div class="border border-[#222222] bg-[#0a0a0a] p-10 flex flex-col hover:-translate-y-2 transition-transform duration-300 stagger-item">
+                  <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-2">Gratuito</h3>
+                  <div class="flex items-baseline gap-2 mb-6">
+                    <span class="text-4xl font-extrabold">$0</span>
+                    <span class="text-zinc-500 font-mono text-sm">/ mes</span>
+                  </div>
+                  <p class="text-zinc-400 text-sm mb-8 flex-1">Perfecto para mecánicos independientes que quieren empezar a digitalizarse.</p>
+                  
+                  <ul class="space-y-4 mb-8 font-mono text-xs text-zinc-300">
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> 1 Taller / Sucursal</li>
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Hasta 3 Técnicos</li>
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Gestión básica de clientes</li>
+                    <li class="flex items-center gap-3 text-zinc-600"><lucide-icon name="x" size="14"></lucide-icon> Reportes Avanzados</li>
+                  </ul>
+                  
+                  <button (click)="irARegistro(1)" class="w-full py-4 border border-[#333333] hover:bg-[#111111] font-bold text-[10px] uppercase tracking-[.2em] transition-colors">Seleccionar</button>
+               </div>
+
+               <!-- PLAN PRO (Destacado) -->
+               <div class="border-2 border-[#FF5733] bg-[#111111] p-10 flex flex-col hover:-translate-y-2 transition-transform duration-300 relative stagger-item shadow-[0_0_40px_rgba(255,87,51,0.1)]">
+                  <div class="absolute top-0 right-0 bg-[#FF5733] text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1">RECOMENDADO</div>
+                  <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-2">Profesional</h3>
+                  <div class="flex items-baseline gap-2 mb-6">
+                    <span class="text-4xl font-extrabold">$49</span>
+                    <span class="text-zinc-500 font-mono text-sm">/ mes</span>
+                  </div>
+                  <p class="text-zinc-400 text-sm mb-8 flex-1">Para talleres establecidos con flujo constante de emergencias y equipo.</p>
+                  
+                  <ul class="space-y-4 mb-8 font-mono text-xs text-zinc-300">
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Hasta 3 Sucursales</li>
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Hasta 15 Técnicos</li>
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Reportes y Analíticas (KPIs)</li>
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Soporte Prioritario</li>
+                  </ul>
+                  
+                  <button (click)="irARegistro(2)" class="w-full py-4 bg-[#FF5733] text-white font-bold text-[10px] uppercase tracking-[.2em] hover:bg-[#e04c2c] transition-colors shadow-lg">Seleccionar</button>
+               </div>
+
+               <!-- PLAN ENTERPRISE -->
+               <div class="border border-[#222222] bg-[#0a0a0a] p-10 flex flex-col hover:-translate-y-2 transition-transform duration-300 stagger-item">
+                  <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-2">Corporativo</h3>
+                  <div class="flex items-baseline gap-2 mb-6">
+                    <span class="text-4xl font-extrabold">$149</span>
+                    <span class="text-zinc-500 font-mono text-sm">/ mes</span>
+                  </div>
+                  <p class="text-zinc-400 text-sm mb-8 flex-1">Cadenas de servicio automotriz con cobertura nacional o regional.</p>
+                  
+                  <ul class="space-y-4 mb-8 font-mono text-xs text-zinc-300">
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Sucursales Ilimitadas</li>
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Técnicos Ilimitados</li>
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Acceso API (Webhook)</li>
+                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Marca Blanca (White-label)</li>
+                  </ul>
+                  
+                  <button (click)="irARegistro(3)" class="w-full py-4 border border-[#333333] hover:bg-[#111111] font-bold text-[10px] uppercase tracking-[.2em] transition-colors">Seleccionar</button>
+               </div>
+
+            </div>
+         </div>
       </section>
 
       <!-- PRE-FOOTER / CTA -->
-      <footer class="border-t border-[#222222] py-16 px-6 flex flex-col items-center justify-center bg-[#050505]">
-         <div class="w-3 h-3 bg-[#FF5733] mb-6"></div>
-         <h2 class="text-zinc-500 font-mono text-[10px] tracking-[.3em] uppercase mb-4 text-center">Protocolo Operacional Preparado</h2>
-         <p class="text-zinc-700 text-xs mb-8 text-center uppercase tracking-widest">_OS_ONLINE / SYSTEMS_NOMINAL</p>
-         <button (click)="irALogin()" class="text-zinc-400 border-b border-[#FF5733] pb-1 hover:text-[#FF5733] transition-colors text-[10px] uppercase tracking-[.2em] font-bold">ACCEDER A TERMINAL -></button>
+      <footer class="border-t border-[#222222] py-20 px-6 flex flex-col items-center justify-center bg-[#000]">
+         <div class="w-3 h-3 bg-[#FF5733] mb-6 animate-pulse"></div>
+         <h2 class="text-zinc-500 font-mono text-[10px] tracking-[.3em] uppercase mb-4 text-center">Protocolo Operacional</h2>
+         <p class="text-zinc-700 text-xs mb-8 text-center uppercase tracking-widest">SYSTEMS_NOMINAL</p>
+         <div class="flex gap-4">
+           <button (click)="irALogin()" class="text-zinc-400 border-b border-[#333] pb-1 hover:text-white transition-colors text-[10px] uppercase tracking-[.2em] font-bold">LOGIN</button>
+           <button (click)="irARegistro()" class="text-[#FF5733] border-b border-[#FF5733]/30 pb-1 hover:border-[#FF5733] transition-colors text-[10px] uppercase tracking-[.2em] font-bold">CREAR CUENTA</button>
+         </div>
       </footer>
     </div>
   `
@@ -187,4 +214,17 @@ export class HomeComponent {
   irALogin() {
     this.router.navigate(['/auth/login']);
   }
+
+  irARegistro(planId?: number) {
+    if(planId) {
+       this.router.navigate(['/auth/register'], { queryParams: { plan: planId } });
+    } else {
+       this.router.navigate(['/auth/register']);
+    }
+  }
+
+  descargarApp() {
+    window.location.href = `${environment.apiUrl}/apps/download/latest`;
+  }
 }
+

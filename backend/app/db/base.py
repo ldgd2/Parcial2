@@ -15,6 +15,10 @@ from app.packages.gestion_usuarios_seguridad.modules.tecnicos.models.tecnico imp
 from app.packages.gestion_usuarios_seguridad.modules.tecnicos.models.tecnico_especialidad import TecnicoEspecialidad
 from app.packages.gestion_usuarios_seguridad.modules.tecnicos.models.especialidad import Especialidad
 from app.packages.gestion_usuarios_seguridad.modules.tenants.models.taller import Taller
+from app.packages.gestion_usuarios_seguridad.modules.tenants.models.sucursal import Sucursal
+
+from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.suscripcion import PlanSuscripcion
+from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.permisos import Permiso, Rol, PlanPermiso, RolPermiso
 
 # Paquete 2: Gestion Emergencias y Solicitudes
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.emergencia import Emergencia
@@ -23,6 +27,7 @@ from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.est
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.prioridad import Prioridad
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.categoria_problema import CategoriaProblema
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.evidencia import Evidencia
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.calificacion import Calificacion
 from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.models.asignacion_tecnico_emergencia import AsignacionTecnicoEmergencia
 from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.models.asignacion_especialidad import AsignacionEspecialidad
 from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.models.cotizacion import Cotizacion
@@ -36,6 +41,10 @@ from app.packages.inteligencia_artificial_automatizacion.modules.notificaciones.
 from app.packages.gestion_administrativa_reportes.modules.pagos.models.pago import Pago
 from app.packages.gestion_administrativa_reportes.modules.pagos.models.metodo_pago import MetodoPago
 from app.packages.gestion_administrativa_reportes.modules.reportes_kpis.models.bitacora import Bitacora
+from app.packages.gestion_administrativa_reportes.modules.apps.models.app_version import AppVersion
+
+# Sistema Core
+from app.db.idempotency_key import IdempotencyKey
 
 # Exponer Base para alembic/env.py
 __all__ = ["Base"]

@@ -4,12 +4,27 @@ from app.packages.gestion_usuarios_seguridad.modules.tecnicos.models.tecnico imp
 from app.packages.gestion_usuarios_seguridad.modules.tecnicos.schemas.tecnico import TecnicoCreate, TecnicoUpdate
 from app.core.security import hash_password
 from sqlalchemy.exc import IntegrityError
-from app.packages.gestion_usuarios_seguridad.modules.tecnicos.repositories.tecnico_repo import TecnicoRepository
+from sqlalchemy import select, func
+from app.packages.gestion_usuarios_seguridad.modules.tenants.models.taller import Taller
+from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.suscripcion import PlanSuscripcion
 
 async def crear_tecnico(data: TecnicoCreate, db: AsyncSession) -> Tecnico:
-    repo = TecnicoRepository(db)
     
-    if await repo.get_by_correo(data.correo):
+    # Validacion limite de suscripcion
+    if data.idTaller:
+        taller = await Taller.get_by_cod(db, data.idTaller)
+        if taller and taller.plan_id:
+            plan = await db.get(PlanSuscripcion, taller.plan_id)
+            if plan:
+                stmt_count = select(func.count(Tecnico.id)).where(Tecnico.idTaller == data.idTaller, Tecnico.estado == 'ACTIVO')
+                count = (await db.execute(stmt_count)).scalar()
+                if count >= plan.max_tecnicos:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Límite de técnicos ({plan.max_tecnicos}) alcanzado para el plan {plan.nombre}."
+                    )
+
+    if await Tecnico.get_by_correo(db, data.correo):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Técnico ya registrado con este correo.",
@@ -17,7 +32,7 @@ async def crear_tecnico(data: TecnicoCreate, db: AsyncSession) -> Tecnico:
     
     try:
         data.contrasena = hash_password(data.contrasena)
-        tecnico = await repo.create(obj_in=data.model_dump())
+        tecnico = await Tecnico.create(db, obj_in=data.model_dump())
         await db.commit()
     except IntegrityError:
         await db.rollback()
@@ -30,19 +45,16 @@ async def crear_tecnico(data: TecnicoCreate, db: AsyncSession) -> Tecnico:
         raise HTTPException(status_code=500, detail=str(e))
     
     # Re-recuperar con especialidades para serialización async
-    return await repo.get_with_especialidades(tecnico.id)
+    return await Tecnico.get_with_especialidades(db, tecnico.id)
 
 async def obtener_tecnico_by_id(tecnico_id: int, db: AsyncSession) -> Tecnico:
-    repo = TecnicoRepository(db)
-    return await repo.get_with_especialidades(tecnico_id)
+    return await Tecnico.get_with_especialidades(db, tecnico_id)
 
 async def obtener_tecnicos_taller(idTaller: str, db: AsyncSession):
-    repo = TecnicoRepository(db)
-    return await repo.get_by_taller_with_especialidades(idTaller)
+    return await Tecnico.get_by_taller_with_especialidades(db, idTaller)
 
 async def actualizar_tecnico(tecnico_id: int, data: TecnicoUpdate, db: AsyncSession) -> Tecnico:
-    repo = TecnicoRepository(db)
-    tecnico = await repo.get(tecnico_id) # get from base repository
+    tecnico = await Tecnico.get(db, tecnico_id) # get from base repository
     if not tecnico:
         raise HTTPException(status_code=404, detail="Técnico no encontrado")
     
@@ -51,28 +63,26 @@ async def actualizar_tecnico(tecnico_id: int, data: TecnicoUpdate, db: AsyncSess
     if "contrasena" in update_data and update_data["contrasena"]:
         update_data["contrasena"] = hash_password(update_data["contrasena"])
         
-    await repo.update(db_obj=tecnico, obj_in=update_data)
+    await tecnico.update(db, obj_in=update_data)
     await db.commit()
-    return await repo.get_with_especialidades(tecnico_id)
+    return await Tecnico.get_with_especialidades(db, tecnico_id)
 
 async def desactivar_tecnico(tecnico_id: int, db: AsyncSession):
-    repo = TecnicoRepository(db)
-    tecnico = await repo.get(tecnico_id)
+    tecnico = await Tecnico.get(db, tecnico_id)
     if not tecnico:
         raise HTTPException(status_code=404, detail="Técnico no encontrado")
     
-    tecnico = await repo.update(db_obj=tecnico, obj_in={"estado": "INACTIVO"})
+    tecnico = await tecnico.update(db, obj_in={"estado": "INACTIVO"})
     await db.commit()
     return tecnico
 
 
 async def actualizar_especialidades_tecnico(tecnico_id: int, especialidades_ids: list, db: AsyncSession) -> Tecnico:
     """CU13 — Gestionar Rol: asigna/reemplaza especialidades del técnico."""
-    repo = TecnicoRepository(db)
-    tecnico = await repo.get(tecnico_id)
+    tecnico = await Tecnico.get(db, tecnico_id)
     if not tecnico:
         raise HTTPException(status_code=404, detail="Técnico no encontrado")
     
-    await repo.update_especialidades(tecnico_id, especialidades_ids)
+    await Tecnico.update_especialidades(db, tecnico_id, especialidades_ids)
     await db.commit()
-    return await repo.get_with_especialidades(tecnico_id)
+    return await Tecnico.get_with_especialidades(db, tecnico_id)

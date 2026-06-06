@@ -32,3 +32,16 @@ class RegisterAdminRequest(BaseModel):
     direccion_taller: str
     latitud_taller: Optional[float] = None
     longitud_taller: Optional[float] = None
+    plan_id: Optional[int] = None
+
+class PlanInfo(BaseModel):
+    nombre: str
+    precio_mensual: float
+    max_sucursales: int
+    max_tecnicos: int
+
+class AuthMeResponse(BaseModel):
+    usuario: dict
+    taller: dict
+    plan: PlanInfo
+    permisos: list[str]

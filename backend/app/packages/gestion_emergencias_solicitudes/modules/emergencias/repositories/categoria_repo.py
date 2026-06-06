@@ -16,7 +16,7 @@ class CategoriaProblemaRepository(BaseRepository[CategoriaProblema, CategoriaPro
     def __init__(self, db: AsyncSession):
         super().__init__(CategoriaProblema, db)
 
-    async def get_by_especialidades(self, especialidades_ids: List[int]) -> List[CategoriaProblema]:
+    async def get_by_especialidades(self, especialidades_ids: list[int]) -> list[CategoriaProblema]:
         result = await self.db.execute(
             select(CategoriaProblema).where(CategoriaProblema.idEspecialidad.in_(especialidades_ids))
         )

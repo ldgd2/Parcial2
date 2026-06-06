@@ -94,12 +94,48 @@ class _QuoteReviewViewState extends State<QuoteReviewView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      TText.h3('Propuesta #${q['id']}'),
+                      Expanded(
+                        child: TText.h3('Propuesta #${q['id']}'),
+                      ),
                       _buildStatusBadge(q['estado']),
                     ],
                   ),
                   TSpacing.verticalSmall(),
                   TText.body(q['descripcion_servicio'] ?? 'Sin descripción'),
+                  const Divider(color: AppColors.border, height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.build_circle, color: AppColors.primary, size: 20),
+                          TSpacing.horizontalSmall(),
+                          TText.h3(q['taller']?['nombre'] ?? 'Taller asignado'),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 20),
+                          TSpacing.horizontalSmall(),
+                          TText.h3((q['taller']?['calificacion_promedio'] ?? 5.0).toStringAsFixed(1)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  TSpacing.verticalSmall(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      onPressed: () => _mostrarValoracionesTaller(context, q['idTaller'], q['taller']?['nombre'] ?? 'Taller'),
+                      icon: const Icon(Icons.reviews, size: 16),
+                      label: const Text('Ver valoraciones de este taller'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        alignment: Alignment.centerLeft,
+                        padding: EdgeInsets.zero
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -195,6 +231,87 @@ class _QuoteReviewViewState extends State<QuoteReviewView> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: bg.withValues(alpha: 0.2), border: Border.all(color: bg)),
       child: Text(status, style: TextStyle(color: bg, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  void _mostrarValoracionesTaller(BuildContext context, String idTaller, String nombreTaller) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, controller) {
+            return Column(
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 24),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                ),
+                TText.h2('Reseñas de $nombreTaller'),
+                TSpacing.verticalMedium(),
+                Expanded(
+                  child: FutureBuilder<List<dynamic>>(
+                    future: ApiClient(localStorage: LocalStorage()).dio.get('/calificaciones/publicas/$idTaller').then((res) => res.data as List<dynamic>),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: TText.body('Error al cargar reseñas.', color: AppColors.danger));
+                      }
+                      final reviews = snapshot.data ?? [];
+                      if (reviews.isEmpty) {
+                        return Center(child: TText.body('Este taller aún no tiene reseñas públicas.'));
+                      }
+
+                      return ListView.separated(
+                        controller: controller,
+                        padding: const EdgeInsets.all(24),
+                        itemCount: reviews.length,
+                        separatorBuilder: (_, __) => const Divider(color: AppColors.border, height: 32),
+                        itemBuilder: (context, index) {
+                          final r = reviews[index];
+                          final pts = (r['puntuacion_taller'] ?? 5).toDouble();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  TText.h3(r['cliente_nombre'] ?? 'Cliente Anónimo'),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                                      TSpacing.horizontalSmall(),
+                                      TText.h3(pts.toStringAsFixed(1)),
+                                    ],
+                                  )
+                                ],
+                              ),
+                              TSpacing.verticalSmall(),
+                              TText.body(r['comentario'] ?? 'Sin comentario', color: AppColors.textSecondary),
+                              TSpacing.verticalSmall(),
+                              Text(r['fecha']?.substring(0, 10) ?? '', style: const TextStyle(fontSize: 10, color: Colors.white38)),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -22,7 +22,7 @@ class TecnicoUpdate(BaseModel):
 class TecnicoOut(TecnicoBase):
     id: int
     estado: str
-    especialidades: List[EspecialidadOut] = []
+    especialidades: list[EspecialidadOut] = []
 
     class Config:
         from_attributes = True

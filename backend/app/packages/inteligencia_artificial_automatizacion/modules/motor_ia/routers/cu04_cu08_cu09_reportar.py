@@ -1,3 +1,4 @@
+from typing import Optional
 """
 CU04 — Reportar Emergencia
 CU08 — Clasificación Automática de Incidentes (IA / Whisper + OpenRouter)
@@ -77,7 +78,7 @@ async def analizar_audio_ia(
     summary="Subir evidencias estáticas y transcribir audio",
 )
 async def upload_multimedia(
-    files: List[UploadFile] = File(...),
+    files: list[UploadFile] = File(...),
     current=Depends(require_role("cliente")),
 ):
     """

@@ -68,6 +68,7 @@ def interactive_menu():
                 "1. Lanzador Local (Dev)",
                 "2. Despliegue Producción (Nginx)",
                 "3. Gestión VPS (Daemons/Systemd)",
+                "4. Compilar y Publicar App Móvil (APK)",
                 "Volver"
             ]
         ).ask()
@@ -134,5 +135,8 @@ def interactive_menu():
             elif "Editar" in choice:
                 port_back = questionary.text("Nuevo puerto para BACKEND:", default="8000").ask()
                 vps_logic.edit_network_config(port_back)
-                
+        elif "Compilar" in category_opt:
+            from .modules.compilar_app_logic import compilar_y_publicar
+            compilar_y_publicar()
+            
         input("\nPresiona Enter para continuar...")

@@ -45,6 +45,14 @@ async def hard_reset_db():
     
     try:
         async with engine.begin() as conn:
+            # Drop all tenant schemas dynamically
+            print(">> Buscando esquemas de tenants...")
+            result = await conn.execute(text("SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'public') AND schema_name NOT LIKE 'pg_%'"))
+            tenant_schemas = [row[0] for row in result.all()]
+            for ts in tenant_schemas:
+                print(f">> Ejecutando DROP SCHEMA {ts} CASCADE...")
+                await conn.execute(text(f"DROP SCHEMA {ts} CASCADE;"))
+                
             # Borrado absoluto del cascade public schema para PostgreSQL
             print(">> Ejecutando DROP SCHEMA public CASCADE...")
             await conn.execute(text("DROP SCHEMA public CASCADE;"))

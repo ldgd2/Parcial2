@@ -9,6 +9,7 @@ class EmergencyReport {
   final String? audioUrl;
   final List<String> evidenciasUrls;
   final String? textoAdicional;
+  final String? uuidLocal;
 
   EmergencyReport({
     required this.descripcion,
@@ -19,7 +20,24 @@ class EmergencyReport {
     this.audioUrl,
     this.evidenciasUrls = const [],
     this.textoAdicional,
+    this.uuidLocal,
   });
+
+  factory EmergencyReport.fromJson(Map<String, dynamic> json) {
+    return EmergencyReport(
+      descripcion: json['descripcion'] ?? '',
+      direccion: json['direccion'] ?? '',
+      latitud: (json['latitud'] as num?)?.toDouble() ?? 0.0,
+      longitud: (json['longitud'] as num?)?.toDouble() ?? 0.0,
+      placaVehiculo: json['placaVehiculo'] ?? '',
+      audioUrl: json['audio_url'],
+      evidenciasUrls: json['evidencias_urls'] != null 
+          ? List<String>.from(json['evidencias_urls']) 
+          : [],
+      textoAdicional: json['texto_adicional'],
+      uuidLocal: json['uuid_local'],
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -31,6 +49,7 @@ class EmergencyReport {
       'audio_url': audioUrl,
       'evidencias_urls': evidenciasUrls,
       'texto_adicional': textoAdicional,
+      'uuid_local': uuidLocal,
       'hora': DateFormat('HH:mm:ss').format(DateTime.now()),
     };
   }

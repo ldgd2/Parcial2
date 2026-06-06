@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../core/services/auth.service';
 import { LucideAngularModule } from 'lucide-angular';
 import { ApiService } from '../../core/api/api.service';
 import { FormsModule } from '@angular/forms';
@@ -216,12 +217,14 @@ interface Tecnico {
   `
 })
 export class TecnicosComponent implements OnInit {
+  auth = inject(AuthService);
+
   tecnicos: Tecnico[] = [];
   loading = true;
   saving = false;
   showModal = false;
   editingId: number | null = null;
-  currentWorkshop = localStorage.getItem('cod_taller') || 'TALLER_01';
+  currentWorkshop = this.auth.currentUser()?.taller?.cod || 'TALLER_01';
 
   // Rol modal (CU13)
   showRolModal = false;

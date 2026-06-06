@@ -19,7 +19,7 @@ class EmergenciaCreateSchema(BaseModel):
     direccion: str
     hora: datetime.time
     placaVehiculo: str
-    evidencias_urls: List[str] = []
+    evidencias_urls: list[str] = []
     audio_url: Optional[str] = None
 
 class EmergenciaUpdateSchema(BaseModel):
@@ -49,7 +49,7 @@ class EmergenciaRepository(BaseRepository[Emergencia, EmergenciaCreateSchema, Em
         result = await self.db.execute(stmt)
         return result.unique().scalar_one_or_none()
 
-    async def get_by_cliente(self, cliente_id: int) -> List[Emergencia]:
+    async def get_by_cliente(self, cliente_id: int) -> list[Emergencia]:
         stmt = (
             select(Emergencia)
             .options(*self._get_detalle_options())
@@ -59,7 +59,7 @@ class EmergenciaRepository(BaseRepository[Emergencia, EmergenciaCreateSchema, Em
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_by_taller(self, taller_cod: str) -> List[Emergencia]:
+    async def get_by_taller(self, taller_cod: str) -> list[Emergencia]:
         stmt = (
             select(Emergencia)
             .options(*self._get_detalle_options())
@@ -70,8 +70,8 @@ class EmergenciaRepository(BaseRepository[Emergencia, EmergenciaCreateSchema, Em
         return list(result.scalars().all())
 
     async def get_disponibles_para_taller(
-        self, especialidades_taller: List[int], estados_validos: List[int]
-    ) -> List[Emergencia]:
+        self, especialidades_taller: list[int], estados_validos: list[int]
+    ) -> list[Emergencia]:
         stmt = (
             select(Emergencia)
             .join(CategoriaProblema)

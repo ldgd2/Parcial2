@@ -51,3 +51,15 @@ async def logout():
     (blacklist) de JWT, aquí se agregaría el jti a Redis.
     """
     return {"message": "Sesión cerrada correctamente. Descarte el token en el cliente."}
+
+from app.packages.gestion_usuarios_seguridad.modules.auth.schemas.auth import AuthMeResponse
+
+@router.get("/me", response_model=AuthMeResponse, summary="Obtener detalles del usuario y sus permisos/suscripción actual")
+async def get_me(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retorna el estado de la cuenta, plan de suscripción actual y la lista consolidada de permisos.
+    """
+    return await auth_service.get_me(current_user, db)

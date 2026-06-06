@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CU18 - Revisión de Cotización (Mobile App)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        
+        .mobile-frame {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            max-height: 850px;
+            background: #121212;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #333;
+        }
+
+        .app-bar {
+            background-color: #1e1e1e;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .t-card {
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .t-card-surface {
+            background-color: rgba(30, 30, 30, 0.5);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #f97316; /* Primary color */
+            color: white;
+            border: none;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: #f97316;
+            border: 1px solid #f97316;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border: 1px solid #eab308;
+            background-color: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .snackbar {
+            position: absolute;
+            bottom: -50px;
+            left: 16px;
+            right: 16px;
+            background-color: #22c55e;
+            color: white;
+            padding: 16px;
+            border-radius: 4px;
+            transition: bottom 0.3s;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-frame">
+        <div class="app-bar">
+            <span class="material-icons" style="margin-right: 16px; color: white;">arrow_back</span>
+            <h1 style="font-size: 20px; font-weight: 500;">Revisión de Cotización</h1>
+        </div>
+
+        <div style="padding: 24px; overflow-y: auto; flex: 1;">
+            
+            <div class="t-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <h3 style="font-size: 18px; font-weight: 500;">Propuesta #1</h3>
+                    <div class="status-badge" id="badge">PENDIENTE</div>
+                </div>
+                <p style="color: #e0e0e0; line-height: 1.5;">Cambio de batería a domicilio con diagnóstico completo.</p>
+            </div>
+
+            <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 12px;">Desglose de Costos</h3>
+            <div class="t-card t-card-surface">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="color: #e0e0e0;">Mano de Obra:</span>
+                    <span style="color: #e0e0e0;">$50.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                    <span style="color: #e0e0e0;">Repuestos:</span>
+                    <span style="color: #e0e0e0;">$120.00</span>
+                </div>
+                <hr style="border-color: #333; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <h2 style="font-size: 20px; font-weight: 500;">Total Estimado:</h2>
+                    <h2 style="font-size: 20px; font-weight: 500; color: #f97316;">$170.00</h2>
+                </div>
+            </div>
+
+            <div class="t-card" style="display: flex; align-items: center; gap: 16px;">
+                <span class="material-icons" style="color: #f97316;">timer</span>
+                <span style="color: #e0e0e0;">Tiempo estimado de entrega: 1 horas</span>
+            </div>
+
+            <div id="action-buttons" style="margin-top: 40px;">
+                <button class="btn btn-primary" onclick="acceptQuote()" style="margin-bottom: 16px;">
+                    <span class="material-icons">check_circle</span>
+                    Aceptar Cotización
+                </button>
+                
+                <button class="btn btn-outline" onclick="this.parentElement.style.display='none'">
+                    <span class="material-icons">cancel</span>
+                    Rechazar
+                </button>
+            </div>
+            
+        </div>
+
+        <div class="snackbar" id="snackbar">Cotización ACEPTADA exitosamente</div>
+    </div>
+
+    <script>
+        function acceptQuote() {
+            if (confirm("Estás a punto de confirmar el servicio con Taller Rápido por un total de $170.00. ¿Deseas proceder?")) {
+                document.getElementById('action-buttons').style.display = 'none';
+                
+                const badge = document.getElementById('badge');
+                badge.innerText = 'ACEPTADA';
+                badge.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+                badge.style.borderColor = '#22c55e';
+                badge.style.color = '#22c55e';
+                
+                const snack = document.getElementById('snackbar');
+                snack.style.bottom = '16px';
+                setTimeout(() => snack.style.bottom = '-50px', 3000);
+            }
+        }
+    </script>
+</body>
+</html>

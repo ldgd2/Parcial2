@@ -34,6 +34,6 @@ class ClienteOut(BaseModel):
     id: int
     nombre: str
     correo: str
-    vehiculos: List[VehiculoOut] = []
+    vehiculos: list[VehiculoOut] = []
 
     model_config = {"from_attributes": True}

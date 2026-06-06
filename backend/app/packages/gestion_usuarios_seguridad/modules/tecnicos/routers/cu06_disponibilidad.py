@@ -24,7 +24,7 @@ router = APIRouter(prefix="/talleres", tags=["GPS — Talleres / Disponibilidad 
 
 @router.get(
     "/mis-talleres",
-    response_model=List[TallerOut],
+    response_model=list[TallerOut],
     summary="Listar talleres del administrador logueado",
 )
 async def mis_talleres(
@@ -36,7 +36,7 @@ async def mis_talleres(
 
 @router.get(
     "/activos",
-    response_model=List[TallerOut],
+    response_model=list[TallerOut],
     summary="Listar talleres activos (público)",
 )
 async def talleres_activos(db: AsyncSession = Depends(get_db)):
@@ -102,7 +102,7 @@ async def desactivar_taller(
 )
 async def asignar_especialidades(
     cod: str,
-    especialidades_ids: List[int],
+    especialidades_ids: list[int],
     current=Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ):

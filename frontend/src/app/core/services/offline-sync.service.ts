@@ -4,10 +4,13 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { toast } from 'ngx-sonner';
 
-export interface OfflineEmergency {
+export interface OfflineRequest {
   id?: number;
+  url: string;
+  method: string;
   payload: any;
-  files?: { file: Blob; name: string }[];
+  files?: { file: Blob; name: string; fieldName: string }[];
+  headers?: { [key: string]: string };
   createdAt: number;
 }
 
@@ -21,8 +24,8 @@ export class OfflineSyncService {
   constructor(private http: HttpClient) {
     this.dbPromise = openDB('taller-pwa-db', 1, {
       upgrade(db) {
-        if (!db.objectStoreNames.contains('offline-emergencies')) {
-          db.createObjectStore('offline-emergencies', { keyPath: 'id', autoIncrement: true });
+        if (!db.objectStoreNames.contains('offline-requests')) {
+          db.createObjectStore('offline-requests', { keyPath: 'id', autoIncrement: true });
         }
       },
     });
@@ -33,37 +36,40 @@ export class OfflineSyncService {
   private setupListeners() {
     window.addEventListener('online', () => {
       console.log('[PWA] Conexión recuperada. Iniciando sincronización...');
-      this.syncPendingEmergencies();
+      this.syncPendingRequests();
     });
   }
 
-  async saveOfflineEmergency(payload: any, files?: File[]) {
+  async saveOfflineRequest(url: string, method: string, payload: any, headers?: any, files?: {file: File, fieldName: string}[]) {
     const db = await this.dbPromise;
     
-    // Convert File objects to Blobs for IndexedDB storage
     const storedFiles = files?.map(f => ({
-      file: new Blob([f], { type: f.type }),
-      name: f.name
+      file: new Blob([f.file], { type: f.file.type }),
+      name: f.file.name,
+      fieldName: f.fieldName
     }));
 
-    const emergencyData: OfflineEmergency = {
+    const requestData: OfflineRequest = {
+      url,
+      method,
+      headers,
       payload,
       files: storedFiles,
       createdAt: Date.now()
     };
 
-    await db.add('offline-emergencies', emergencyData);
-    toast.info('Modo Offline: Emergencia guardada. Se enviará al recuperar conexión.');
+    await db.add('offline-requests', requestData);
+    toast.info('Se enviará tu petición cuando haya conexión');
   }
 
-  async syncPendingEmergencies() {
+  async syncPendingRequests() {
     if (this.isSyncing || !navigator.onLine) return;
 
     this.isSyncing = true;
     try {
       const db = await this.dbPromise;
-      const tx = db.transaction('offline-emergencies', 'readwrite');
-      const store = tx.objectStore('offline-emergencies');
+      const tx = db.transaction('offline-requests', 'readwrite');
+      const store = tx.objectStore('offline-requests');
       const pending = await store.getAll();
 
       if (pending.length === 0) {
@@ -71,49 +77,39 @@ export class OfflineSyncService {
         return;
       }
 
-      toast.loading(`Sincronizando ${pending.length} emergencias offline...`);
+      toast.loading(`Sincronizando ${pending.length} peticiones offline...`);
 
       for (const item of pending) {
         try {
-          let audioUrl = null;
-          let imageUrls: string[] = [];
+          let bodyData: any = item.payload;
 
-          // 1. Upload files first if they exist
+          // Si había archivos (es un form-data)
           if (item.files && item.files.length > 0) {
             const formData = new FormData();
-            item.files.forEach((f: any) => {
-              formData.append('files', f.file, f.name);
-            });
-
-            // Assuming there's a multimedia upload endpoint similar to Flutter
-            const uploadRes: any = await this.http.post(`${environment.apiUrl}/gestion-emergencia/upload-multimedia`, formData).toPromise();
             
-            if (uploadRes && uploadRes.archivos) {
-              uploadRes.archivos.forEach((a: any) => {
-                if (a.url.endsWith('.m4a') || a.url.endsWith('.aac') || a.url.endsWith('.wav')) {
-                  audioUrl = a.url;
-                } else {
-                  imageUrls.push(a.url);
-                }
-              });
+            // Añadir payload original
+            if (item.payload) {
+              Object.keys(item.payload).forEach(k => formData.append(k, item.payload[k]));
             }
+            
+            item.files.forEach((f: any) => {
+              formData.append(f.fieldName, f.file, f.name);
+            });
+            bodyData = formData;
           }
 
-          // 2. Modify payload with URLs
-          const finalPayload = {
-            ...item.payload,
-            audio_url: audioUrl || item.payload.audio_url,
-            evidencias_urls: imageUrls.length > 0 ? imageUrls : item.payload.evidencias_urls
-          };
+          const httpHeaders: any = { ...item.headers };
 
-          // 3. Send final payload
-          await this.http.post(`${environment.apiUrl}/gestion-emergencia`, finalPayload).toPromise();
+          // Enviar petición original reconstruida
+          await this.http.request(item.method, item.url, {
+            body: bodyData,
+            headers: httpHeaders
+          }).toPromise();
 
-          // 4. Remove from IndexedDB on success
+          // Remover de IndexedDB si fue exitoso
           await store.delete(item.id!);
         } catch (err) {
-          console.error(`Error sincronizando emergencia offline ${item.id}`, err);
-          // Keep it in DB if it failed to retry later
+          console.error(`Error sincronizando petición offline ${item.id}`, err);
         }
       }
       

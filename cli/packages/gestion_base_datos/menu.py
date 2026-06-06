@@ -48,11 +48,18 @@ def add_subparsers(subparsers):
     subparsers_db.add_parser("diag_serialization", help="Verifica si los datos de la DB se serializan bien a Pydantic")
     subparsers_db.add_parser("fix_specialties", help="Asegura que todos los talleres tengan todas las especialidades (Fix)")
     
+    # Seeders
+    subparsers_db.add_parser("seeder", help="Crea datos base: estados, prioridades, especialidades, talleres, técnicos y clientes")
+    subparsers_db.add_parser("crear-emergencias", help="Crea emergencias consumiendo la API (requiere backend corriendo)")
+    subparsers_db.add_parser("crear-emergencias-mock", help="Crea emergencias mapeadas manualmente (sin IA, para pruebas rápidas de Talleres)")
+    
     parser_disable_c = subparsers_db.add_parser("disable-cliente", help="Desactiva logicamente a un cliente por CLI")
     parser_disable_c.add_argument("correo", help="Correo del cliente a desactivar")
     
     parser_disable_t = subparsers_db.add_parser("disable-taller", help="Desactiva logicamente a un taller por CLI")
     parser_disable_t.add_argument("cod", help="Codigo del Taller a desactivar (ej. TAL001)")
+    
+    subparsers_db.add_parser("add-root-user", help="Crea interactivamente un Super Administrador (Root)")
 
 def execute(args):
     target = args.target
@@ -140,6 +147,25 @@ def execute(args):
         elif target == "disable-taller":
             subprocess.run([python_cmd, "-c", f"import asyncio; import sys; sys.path.append('..'); from cli.packages.gestion_base_datos.modules.db_tools.crud import desactivar_taller; asyncio.run(desactivar_taller('{args.cod}'))"])
 
+        elif target == "universal-seeder":
+            # --- INYECTAR PYTHONPATH PARA SUBPROCESOS ---
+            current_dir = os.path.dirname(__file__)
+            root_dir = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+            backend_dir = os.path.join(root_dir, "backend")
+            
+            env = os.environ.copy()
+            if "PYTHONPATH" in env:
+                env["PYTHONPATH"] = f"{backend_dir}{os.pathsep}{root_dir}{os.pathsep}{env['PYTHONPATH']}"
+            else:
+                env["PYTHONPATH"] = f"{backend_dir}{os.pathsep}{root_dir}"
+            # --------------------------------------------
+            # WIZARD INTERACTIVO
+            # --------------------------------------------
+            subprocess.run([python_cmd, "-m", "cli.packages.gestion_base_datos.modules.seeders.wizard"], check=False, cwd=root_dir, env=env)
+            
+        elif target == "add-root-user":
+            subprocess.run([python_cmd, os.path.join("..", "cli", "packages", "gestion_base_datos", "modules", "db_tools", "seed_root.py")])
+
             
     except subprocess.CalledProcessError as e:
         cprint(f"\n[bold red][ERROR] Al ejecutar el comando en DB:[/bold red] {e}", f"\n[ERROR] Al ejecutar el comando en DB: {e}")
@@ -154,7 +180,8 @@ def interactive_menu():
     while True:
         choices = [
             "Init (Tablas iniciales)", 
-            "Seed (Datos base)", 
+            "Seeder Universal (Wizard Interactivo)",
+            "Agregar Super Usuario Root",
             "Sync (Auto-Migrate + Upgrade)",
             "Upgrade (Aplicar cambios)", 
             "Stamp (Fix Desincronización)",
@@ -171,6 +198,8 @@ def interactive_menu():
         
         if "Debug Serialización" in opt: target = "diag_serialization"
         elif "Fix Especialidades" in opt: target = "fix_specialties"
+        elif "Seeder Universal" in opt: target = "universal-seeder"
+        elif "Agregar Super Usuario Root" in opt: target = "add-root-user"
         else: target = opt.split()[0].lower()
         msg = None
     

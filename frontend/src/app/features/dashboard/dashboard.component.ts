@@ -1,208 +1,308 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-
-// UI
-import { EmergencyCardComponent } from '../../shared/ui/emergency-card/emergency-card.component';
-import { ApiService } from '../../core/api/api.service';
+import { ReportesService, KpiResponse } from '../../core/services/reportes.service';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { LucideAngularModule } from 'lucide-angular';
-import { toast } from 'ngx-sonner';
-import { SocketService } from '../../core/services/socket.service';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [
-    CommonModule, 
-    RouterModule, 
-    FormsModule,
-    LucideAngularModule,
-    EmergencyCardComponent
-  ],
+  imports: [CommonModule, FormsModule, BaseChartDirective, LucideAngularModule],
   template: `
-    <div class="p-8 lg:p-12 flex flex-col gap-12 max-w-[1800px] mx-auto animate-in fade-in duration-700">
-      
-      <!-- FIELDWORK OS HEADER -->
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-zinc-900 pb-8">
+    <div class="p-8 lg:p-12 min-h-screen bg-[#050505] text-white">
+      <!-- HEADER -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 border-b border-zinc-900 pb-8 animate-in fade-in slide-in-from-top-4">
         <div>
-          <h1 class="text-4xl font-bold tracking-tight mb-3 uppercase">Tablero de Control</h1>
-          <div class="flex items-center gap-4">
-            <p class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-500">
-              Vigilancia de emergencias en tiempo real
-            </p>
-            <div class="h-px w-24 bg-zinc-800"></div>
-            <span class="font-mono text-[10px] text-primary animate-pulse tracking-widest font-bold">LIVE_FEED</span>
+          <h1 class="text-4xl font-bold tracking-tight mb-2 uppercase">Inteligencia Operacional</h1>
+          <div class="flex items-center gap-3">
+             <div class="w-2 h-2 bg-primary"></div>
+             <p class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-500">Analítica de Desempeño</p>
           </div>
         </div>
 
-        <!-- Filters -->
-        <div class="flex items-center bg-[#050505] border border-zinc-800 p-1">
-          <button (click)="filter = 'all'" 
-                  [class]="filter === 'all' ? 'bg-zinc-900 text-white' : 'text-zinc-600'" 
+        <!-- RANGE SELECTOR -->
+        <div class="flex items-center gap-px bg-zinc-900 border border-zinc-800 p-1">
+          <button (click)="setRange('diario')" 
+                  [class]="range === 'diario' ? 'bg-[#050505] text-primary' : 'bg-transparent text-zinc-600'" 
                   class="px-5 py-2 font-bold text-[9px] uppercase tracking-[.2em] transition-all hover:text-white">
-            Todas
+            Diario
           </button>
-          <button (click)="filter = 'PENDIENTE'" 
-                  [class]="filter === 'PENDIENTE' ? 'bg-zinc-900 text-white' : 'text-zinc-600'" 
+          <button (click)="setRange('semanal')" 
+                  [class]="range === 'semanal' ? 'bg-[#050505] text-primary' : 'bg-transparent text-zinc-600'" 
                   class="px-5 py-2 font-bold text-[9px] uppercase tracking-[.2em] transition-all hover:text-white">
-            Pendientes
+            Semanal
           </button>
-          <button (click)="filter = 'BLOQUEADO'" 
-                  [class]="filter === 'BLOQUEADO' ? 'bg-zinc-900 text-white' : 'text-zinc-600'" 
+          <button (click)="setRange('mensual')" 
+                  [class]="range === 'mensual' ? 'bg-[#050505] text-primary' : 'bg-transparent text-zinc-600'" 
                   class="px-5 py-2 font-bold text-[9px] uppercase tracking-[.2em] transition-all hover:text-white">
-            En Análisis
+            Mensual
           </button>
         </div>
       </div>
 
-      <!-- STATS GRID -->
-      <div class="grid grid-cols-1 md:grid-cols-4 bg-zinc-900 gap-px border border-zinc-800 shadow-2xl">
-        <div class="bg-[#050505] p-8 flex flex-col justify-between hover:bg-zinc-950 transition-colors">
-          <span class="font-mono text-[9px] uppercase tracking-[.25em] text-zinc-500 mb-6 flex items-center gap-2">
-            <div class="w-1.5 h-1.5 bg-zinc-600"></div> Total Incidencias
-          </span>
-          <span class="font-mono text-4xl font-bold tracking-tighter">{{ stats.total }}</span>
-        </div>
-        <div class="bg-[#050505] p-8 flex flex-col justify-between border-l border-zinc-900">
-          <span class="font-mono text-[9px] uppercase tracking-[.25em] text-red-500 mb-6 flex items-center gap-2">
-            <div class="w-1.5 h-1.5 bg-red-500 animate-pulse"></div> Nivel Crítico
-          </span>
-          <span class="font-mono text-4xl font-bold tracking-tighter text-red-500">{{ stats.critical }}</span>
-        </div>
-        <div class="bg-[#050505] p-8 flex flex-col justify-between border-l border-zinc-900">
-          <span class="font-mono text-[9px] uppercase tracking-[.25em] text-zinc-500 mb-6 flex items-center gap-2">
-            <div class="w-1.5 h-1.5 bg-emerald-500"></div> Disponibles
-          </span>
-          <span class="font-mono text-4xl font-bold tracking-tighter">{{ stats.pending }}</span>
-        </div>
-        <div class="bg-[#050505] p-8 flex flex-col justify-between border-l border-zinc-900">
-          <span class="font-mono text-[9px] uppercase tracking-[.25em] text-zinc-500 mb-6 flex items-center gap-2">
-            <div class="w-1.5 h-1.5 bg-primary"></div> Eficiencia Red
-          </span>
-          <span class="font-mono text-4xl font-bold tracking-tighter text-primary">99.8%</span>
-        </div>
+      <div *ngIf="loading" class="flex justify-center p-20 animate-pulse">
+         <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
 
-      <!-- MAIN EMERGENCY LISTING -->
-      <div>
-        <div class="flex items-center justify-between mb-8">
-          <h2 class="font-bold text-xs tracking-[.4em] uppercase text-zinc-600">
-            Monitor de Incidencias Geográficas
-          </h2>
-          <div class="flex gap-1">
-             <div class="w-8 h-1 bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]"></div>
-             <div class="w-8 h-1 bg-emerald-500/40"></div>
-             <div class="w-8 h-1 bg-emerald-500/60"></div>
+      <div *ngIf="!loading && data" class="animate-in fade-in duration-700 slide-in-from-bottom-4 space-y-8">
+        
+        <!-- STATS GRID -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-px bg-zinc-900 border border-zinc-800 shadow-2xl">
+          
+          <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+              <lucide-icon name="radio" size="14" class="text-primary animate-pulse"></lucide-icon> Sol. Activas
+            </span>
+            <span class="font-mono text-3xl font-bold">{{ data.kpis.total_activas }}</span>
+          </div>
+
+          <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+              <lucide-icon name="check-circle" size="14" class="text-emerald-500"></lucide-icon> Atendidas
+            </span>
+            <span class="font-mono text-3xl font-bold text-emerald-500">{{ data.kpis.total_atendidas }}</span>
+          </div>
+
+          <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+              <lucide-icon name="clock" size="14" class="text-amber-500"></lucide-icon> T. Asignación
+            </span>
+            <span class="font-mono text-3xl font-bold">{{ data.kpis.tiempo_promedio_asignacion }}<span class="text-xs text-zinc-600 font-normal">m</span></span>
+          </div>
+
+          <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+              <lucide-icon name="clock" size="14" class="text-orange-500"></lucide-icon> T. Llegada
+            </span>
+            <span class="font-mono text-3xl font-bold">{{ data.kpis.tiempo_promedio_llegada }}<span class="text-xs text-zinc-600 font-normal">m</span></span>
+          </div>
+
+          <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+              <lucide-icon name="clock" size="14" class="text-primary"></lucide-icon> T. Resolución
+            </span>
+            <span class="font-mono text-3xl font-bold">{{ data.kpis.tiempo_respuesta_minutos }}<span class="text-xs text-zinc-600 font-normal">m</span></span>
+          </div>
+
+          <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+              <lucide-icon name="shield-check" size="14" class="text-blue-500"></lucide-icon> Cump. SLA
+            </span>
+            <span class="font-mono text-3xl font-bold">{{ data.kpis.tasa_cumplimiento_sla }}<span class="text-xs text-zinc-600 font-normal">%</span></span>
           </div>
         </div>
 
-        <div *ngIf="loading" class="p-20 flex flex-col items-center justify-center gap-4">
-           <div class="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-           <p class="font-mono text-[9px] uppercase tracking-widest text-zinc-600">Sincronizando feed sismológico...</p>
+        <!-- CHARTS AREA ROW 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-[#050505] border border-zinc-800 p-8 shadow-xl">
+            <h3 class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-400 mb-6 flex items-center gap-2">
+              <div class="w-1 h-3 bg-emerald-500"></div> Tendencia de Solicitudes
+            </h3>
+            <div class="h-[300px]">
+              <canvas baseChart
+                [data]="lineChartData"
+                [options]="lineChartOptions"
+                [type]="'line'">
+              </canvas>
+            </div>
+          </div>
+          
+          <div class="bg-[#050505] border border-zinc-800 p-8 shadow-xl">
+            <h3 class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-400 mb-6 flex items-center gap-2">
+              <div class="w-1 h-3 bg-primary"></div> Incidentes por Tipo
+            </h3>
+            <div class="h-[300px] flex items-center justify-center relative">
+              <canvas baseChart
+                [data]="polarChartData"
+                [options]="polarChartOptions"
+                [type]="'polarArea'">
+              </canvas>
+            </div>
+          </div>
         </div>
 
-        <div *ngIf="!loading && filteredEmergencies.length === 0" 
-             class="border border-zinc-900 bg-zinc-950/30 p-24 text-center flex flex-col items-center shadow-inner">
-          <lucide-icon name="alert-triangle" size="32" class="text-zinc-800 mb-6"></lucide-icon>
-          <h3 class="font-bold text-lg mb-2 uppercase tracking-widest">Sin Incidencias Disponibles</h3>
-          <p class="text-zinc-500 text-xs font-mono uppercase tracking-tight max-w-xs">El sector está limpio o fuera de rango operativo.</p>
+        <!-- CHARTS AREA ROW 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-[#050505] border border-zinc-800 p-8 shadow-xl">
+            <h3 class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-400 mb-6 flex items-center gap-2">
+              <div class="w-1 h-3 bg-blue-500"></div> Top 5 Zonas (Incidentes)
+            </h3>
+            <div class="h-[300px]">
+              <canvas baseChart
+                [data]="barChartData"
+                [options]="barChartOptions"
+                [type]="'bar'">
+              </canvas>
+            </div>
+          </div>
+
+          <div class="bg-[#050505] border border-zinc-800 p-8 shadow-xl flex flex-col">
+            <h3 class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-400 mb-6 flex items-center gap-2">
+              <div class="w-1 h-3 bg-yellow-500"></div> Ranking de Sucursales (Eficiencia)
+            </h3>
+            <div class="flex-1 overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-zinc-800">
+                    <th class="py-3 px-4 font-mono text-[10px] uppercase tracking-widest text-zinc-500">Rank</th>
+                    <th class="py-3 px-4 font-mono text-[10px] uppercase tracking-widest text-zinc-500">Sucursal</th>
+                    <th class="py-3 px-4 font-mono text-[10px] uppercase tracking-widest text-zinc-500">Atendidas</th>
+                    <th class="py-3 px-4 font-mono text-[10px] uppercase tracking-widest text-zinc-500 text-right">T. Promedio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of data.analitica.ranking_sucursales; let i = index" class="border-b border-zinc-900/50 hover:bg-zinc-900/20 transition-colors">
+                    <td class="py-3 px-4">
+                      <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs"
+                           [ngClass]="i === 0 ? 'bg-yellow-500/20 text-yellow-500' : (i === 1 ? 'bg-zinc-300/20 text-zinc-300' : (i === 2 ? 'bg-orange-500/20 text-orange-500' : 'text-zinc-600'))">
+                        {{ i + 1 }}
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 font-bold text-sm">{{ item.sucursal }}</td>
+                    <td class="py-3 px-4 text-zinc-400">{{ item.atendidas }}</td>
+                    <td class="py-3 px-4 text-right">
+                      <span class="text-primary font-mono font-bold">{{ item.eficiencia_promedio_min | number:'1.0-1' }} m</span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="data.analitica.ranking_sucursales.length === 0">
+                    <td colspan="4" class="py-10 text-center text-zinc-600 font-mono text-xs">NO HAY DATA PARA EL PERIODO</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        <div *ngIf="!loading && filteredEmergencies.length > 0" 
-             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-zinc-900 border border-zinc-800 shadow-2xl">
-          <app-emergency-card 
-            *ngFor="let emg of filteredEmergencies" 
-            [data]="mapToCardFormat(emg)"
-            (onAssign)="handleClaim($event)">
-          </app-emergency-card>
-        </div>
       </div>
     </div>
-  `,
-  styles: []
+  `
 })
-export class DashboardComponent implements OnInit, OnDestroy {
-  emergencies: any[] = [];
-  filter: 'all' | 'PENDIENTE' | 'BLOQUEADO' = 'all';
+export class DashboardComponent implements OnInit {
+  private reportesService = inject(ReportesService);
+  
+  range: 'diario' | 'semanal' | 'mensual' = 'mensual';
+  data?: KpiResponse;
   loading = true;
-  private socketSub?: Subscription;
 
-  constructor(
-    private api: ApiService, 
-    private router: Router,
-    private socketService: SocketService
-  ) {}
+  // Line Chart (Tendencia)
+  public lineChartData: ChartConfiguration<'line'>['data'] = {
+    datasets: [
+      { data: [], label: 'Atendidas', borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#10b981' },
+      { data: [], label: 'Activas', borderColor: '#FF5733', backgroundColor: 'transparent', fill: false, tension: 0.4, borderWidth: 2, borderDash: [5, 5], pointRadius: 3, pointBackgroundColor: '#FF5733' }
+    ],
+    labels: []
+  };
+  public lineChartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'top', align: 'end', labels: { color: '#a1a1aa', font: { size: 9, family: 'monospace' }, boxWidth: 10 } },
+      tooltip: { backgroundColor: '#0a0a0a', titleFont: { size: 12 }, bodyFont: { size: 11 }, padding: 12, cornerRadius: 4, borderColor: '#27272a', borderWidth: 1 }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#52525b', font: { size: 9, family: 'monospace' } } },
+      y: { grid: { color: '#18181b' }, ticks: { color: '#52525b', font: { size: 9, family: 'monospace' }, stepSize: 1 } }
+    }
+  };
+
+  // Polar Area Chart (Categorias)
+  public polarChartData: ChartConfiguration<'polarArea'>['data'] = {
+    labels: [],
+    datasets: [{
+      data: [],
+      backgroundColor: [
+        'rgba(16, 185, 129, 0.7)',
+        'rgba(59, 130, 246, 0.7)',
+        'rgba(245, 158, 11, 0.7)',
+        'rgba(239, 68, 68, 0.7)',
+        'rgba(139, 92, 246, 0.7)'
+      ],
+      borderColor: '#050505',
+      borderWidth: 2
+    }]
+  };
+  public polarChartOptions: ChartOptions<'polarArea'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { color: '#a1a1aa', font: { size: 9, family: 'monospace' }, padding: 15, boxWidth: 10 } },
+      tooltip: { backgroundColor: '#0a0a0a', bodyFont: { size: 11 }, padding: 12, cornerRadius: 4, borderColor: '#27272a', borderWidth: 1 }
+    },
+    scales: {
+      r: {
+        grid: { color: '#18181b' },
+        ticks: { display: false, backdropColor: 'transparent' }
+      }
+    }
+  };
+
+  // Bar Chart (Zonas)
+  public barChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: [],
+    datasets: [{
+      data: [],
+      label: 'Incidentes',
+      backgroundColor: 'rgba(59, 130, 246, 0.8)',
+      borderColor: 'rgba(59, 130, 246, 1)',
+      borderWidth: 1,
+      borderRadius: 4
+    }]
+  };
+  public barChartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { backgroundColor: '#0a0a0a', bodyFont: { size: 11 }, padding: 12, cornerRadius: 4, borderColor: '#27272a', borderWidth: 1 }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 10 } } },
+      y: { grid: { color: '#18181b' }, ticks: { color: '#52525b', font: { size: 9, family: 'monospace' }, stepSize: 1 } }
+    }
+  };
 
   ngOnInit() {
-    this.refreshData();
-    
-    // Connect to WebSocket for real-time updates
-    const workshopId = localStorage.getItem('cod_taller') || 'anonymous';
-    this.socketService.connect(workshopId);
-    
-    this.socketSub = this.socketService.getMessages().subscribe(msg => {
-      if (msg.type === 'db_update' && (msg.table === 'emergencia' || msg.table === 'pago')) {
-        console.log('Real-time update received:', msg);
-        this.refreshData();
-        toast.info(`Cambio detectado en ${msg.table}: Actualizando tablero...`);
-      }
-    });
+    this.loadData();
   }
 
-  ngOnDestroy() {
-    if (this.socketSub) this.socketSub.unsubscribe();
+  setRange(newRange: 'diario' | 'semanal' | 'mensual') {
+    if (this.range === newRange) return;
+    this.range = newRange;
+    this.loadData();
   }
 
-  refreshData() {
-    // API endpoint corrected for management-admin
-    this.api.get<any[]>('/gestion-emergencia/disponibles').subscribe({
+  loadData() {
+    this.loading = true;
+    this.reportesService.getKpis(this.range).subscribe({
       next: (res) => {
-        this.emergencies = res;
+        this.data = res;
+        this.updateCharts(res);
         this.loading = false;
       },
       error: (e) => {
-        console.error('Error loading emergencies', e);
+        console.error('Error loading KPIs', e);
         this.loading = false;
       }
     });
   }
 
-  get filteredEmergencies() {
-    return this.emergencies.filter(emg => {
-      if (this.filter === 'all') return true;
-      if (this.filter === 'BLOQUEADO') return emg.is_locked;
-      return emg.estado_actual === this.filter && !emg.is_locked;
+  updateCharts(res: KpiResponse) {
+    // 1. Tendencia Line Chart
+    this.lineChartData.labels = res.grafica.map(g => {
+      const d = new Date(g.fecha + 'T12:00:00'); // Prevent timezone shift
+      return `${d.getDate()}/${d.getMonth() + 1}`;
     });
-  }
+    this.lineChartData.datasets[0].data = res.grafica.map(g => g.atendidas);
+    this.lineChartData.datasets[1].data = res.grafica.map(g => g.activas);
 
-  get stats() {
-    return {
-      total: this.emergencies.length,
-      critical: this.emergencies.filter(e => e.idPrioridad >= 4).length,
-      pending: this.emergencies.filter(e => e.estado_actual === 'PENDIENTE' && !e.is_locked).length
-    };
-  }
+    // 2. Polar Area (Tipos)
+    this.polarChartData.labels = res.analitica.incidentes_por_tipo.map(i => i.tipo);
+    this.polarChartData.datasets[0].data = res.analitica.incidentes_por_tipo.map(i => i.cantidad);
 
-  mapToCardFormat(emg: any) {
-    const vehiculo = emg.vehiculo || {};
-    return {
-      id: `EMG-${emg.id}`,
-      title: emg.descripcion,
-      summary: emg.resumen_ia?.resumen,
-      status: (emg.is_locked ? 'assigned' : 'pending') as 'assigned' | 'pending',
-      priority: emg.idPrioridad,
-      location: emg.direccion,
-      timeElapsed: 'REC_V_01',
-      vehicle: `${vehiculo.marca || 'N/A'} ${vehiculo.modelo || 'MOD_0'} [${emg.placaVehiculo}]`,
-      client: vehiculo.idCliente
-    };
-  }
-
-  handleClaim(id: string) {
-    const rawId = id.replace('EMG-', '');
-    // Navigate to detail for full analysis
-    this.router.navigate(['/app/emergency', rawId]);
+    // 3. Bar Chart (Zonas)
+    this.barChartData.labels = res.analitica.zonas_incidentes.map(z => z.zona);
+    this.barChartData.datasets[0].data = res.analitica.zonas_incidentes.map(z => z.cantidad);
   }
 }

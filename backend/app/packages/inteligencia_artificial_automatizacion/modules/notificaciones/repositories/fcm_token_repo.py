@@ -21,7 +21,7 @@ class FCMTokenRepository(BaseRepository[FCMToken, FCMTokenCreate, FCMTokenUpdate
     async def delete_by_token(self, token: str) -> None:
         await self.db.execute(delete(self.model).where(self.model.token == token))
         
-    async def get_by_user_or_client(self, user_id: int) -> List[FCMToken]:
+    async def get_by_user_or_client(self, user_id: int) -> list[FCMToken]:
         stmt = select(self.model).where(
             or_(
                 self.model.idUsuario == user_id, 

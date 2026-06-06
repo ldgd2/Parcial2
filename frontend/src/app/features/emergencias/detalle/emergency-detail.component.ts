@@ -90,18 +90,31 @@ import { ConfigService } from '../../../core/config/config.service';
       </div>
 
       <ng-container *ngIf="!loading && emergency">
-        <!-- MAP SECTION -->
-        <div class="relative w-full h-[400px] border-b border-zinc-900 overflow-hidden">
-           <div id="emergency-map" class="absolute inset-0 z-0 bg-black"></div>
-           <div class="absolute inset-x-0 bottom-0 p-8 flex justify-between items-end z-10 pointer-events-none">
-              <div class="bg-black/80 backdrop-blur-md border border-zinc-800 p-6 pointer-events-auto">
-                 <div class="flex items-center gap-3 mb-2">
-                   <lucide-icon name="map-pin" class="text-primary" size="14"></lucide-icon>
-                   <span class="font-bold text-[10px] uppercase tracking-widest text-white">{{ emergency.direccion }}</span>
-                 </div>
-              </div>
-           </div>
-        </div>
+         <!-- MAP SECTION -->
+         <div class="relative w-full h-[400px] border-b border-zinc-900 overflow-hidden">
+            <div id="emergency-map" class="absolute inset-0 z-0 bg-black"></div>
+            <div class="absolute inset-x-0 bottom-0 p-8 flex justify-between items-end z-10 pointer-events-none">
+               <div class="bg-black/80 backdrop-blur-md border border-zinc-800 p-6 pointer-events-auto flex items-center gap-6">
+                  <div>
+                    <div class="flex items-center gap-3 mb-2">
+                      <lucide-icon name="map-pin" class="text-primary" size="14"></lucide-icon>
+                      <span class="font-bold text-[10px] uppercase tracking-widest text-white">{{ emergency.direccion }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="border-l border-zinc-800 pl-6 flex gap-6" *ngIf="telemetry.distance">
+                     <div>
+                        <div class="text-[8px] uppercase tracking-[.2em] text-zinc-500 mb-1">Distancia</div>
+                        <div class="font-mono text-sm text-primary">{{ telemetry.distance }} km</div>
+                     </div>
+                     <div>
+                        <div class="text-[8px] uppercase tracking-[.2em] text-zinc-500 mb-1">ETA</div>
+                        <div class="font-mono text-sm text-primary">{{ telemetry.eta || telemetry.duration + ' min' }}</div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
 
         <!-- CONTENT -->
         <div class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-px bg-zinc-900">
@@ -145,6 +158,11 @@ import { ConfigService } from '../../../core/config/config.service';
                      <div class="text-xs font-mono text-orange-400 font-bold flex justify-between">
                        <span>Total:</span>
                        <span>$ {{ (cot.costo_mano_obra + cot.costo_repuestos) | number:'1.2-2' }}</span>
+                     </div>
+                     <div *ngIf="cot.estado === 'PENDIENTE' && !emergency.idTaller" class="mt-4 pt-3 border-t border-zinc-900 flex justify-end">
+                       <button (click)="aceptarCotizacion(cot.id)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-[9px] font-bold uppercase tracking-widest transition-colors">
+                         Aceptar Cotización
+                       </button>
                      </div>
                    </div>
                  </div>
@@ -389,10 +407,12 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
   
   // Workshop Coords (Dynamic)
   private workshopCoords: [number, number] = [-16.5, -68.15];
+  private techCoords: [number, number] | null = null;
   
   telemetry = {
     distance: '',
-    duration: ''
+    duration: '',
+    eta: ''
   };
 
   // CU05 — Pago
@@ -414,6 +434,8 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
 
   private map: L.Map | null = null;
   private routeLayer: L.GeoJSON | null = null;
+  private emgMarker: L.Marker | null = null;
+  private dynamicMarker: L.Marker | null = null;
 
   // Cotizaciones
   cotizaciones: any[] = [];
@@ -455,18 +477,36 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
 
     if (this.socketSub) this.socketSub.unsubscribe();
     this.socketSub = this.socketService.getMessages().subscribe(msg => {
-      // Verificar si es un mensaje de chat para esta emergencia específica
+      // Chat message
       if (msg.type === 'chat_message' && msg.idEmergencia == this.emergency?.id) {
-        // Evitar duplicados (por si el mensaje que enviamos nosotros también llega por socket)
         const exists = this.chatMessages.some(m => m.id === msg.id);
         if (!exists) {
           this.chatMessages.push(msg);
           this.scrollToBottom();
-          // Si el modal no está abierto, podríamos mostrar una notificación
           if (!this.showChatModal) {
             toast.info('Nuevo mensaje del cliente');
           }
         }
+      }
+      
+      // GPS Update (Tracking del técnico)
+      if (msg.type === 'gps_update' && this.emergency?.estado_actual === 'EN_CAMINO') {
+        const lat = parseFloat(msg.lat);
+        const lng = parseFloat(msg.lng);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          this.techCoords = [lat, lng];
+          this.telemetry.eta = msg.eta;
+          this.telemetry.distance = msg.distance_km ? msg.distance_km.toString() : this.telemetry.distance;
+          
+          this.updateMapMarker();
+          this.calculateRoute(); // Recalcular ruta desde técnico
+        }
+      }
+      
+      // Status Update
+      if (msg.type === 'status_update') {
+         toast.info(`El estado ha cambiado a: ${msg.estado}`);
+         this.loadDetail();
       }
     });
   }
@@ -535,7 +575,10 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
         attributionControl: false
       }).setView([this.emergency.latitud, this.emergency.longitud], 13);
 
-      L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(this.map);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 20
+      }).addTo(this.map);
 
       // Emergency Icon
       const emgIcon = L.divIcon({
@@ -553,22 +596,45 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
         iconAnchor: [7, 7]
       });
 
-      L.marker([this.emergency.latitud, this.emergency.longitud], { icon: emgIcon }).addTo(this.map);
-      L.marker(this.workshopCoords, { icon: tlrIcon }).addTo(this.map);
+      // Technician Icon
+      const techIcon = L.divIcon({
+        className: 'custom-icon',
+        html: `<div style="background-color: #10b981; width: 14px; height: 14px; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 20px #10b981;"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      });
 
-      // Fit bounds to show both
-      const bounds = L.latLngBounds([this.workshopCoords, [this.emergency.latitud, this.emergency.longitud]]);
-      this.map.fitBounds(bounds, { padding: [100, 100] });
+      this.emgMarker = L.marker([this.emergency.latitud, this.emergency.longitud], { icon: emgIcon }).addTo(this.map);
+      
+      // Mostrar Taller o Técnico según estado
+      if (this.emergency.estado_actual === 'EN_CAMINO' && this.techCoords) {
+         this.dynamicMarker = L.marker(this.techCoords, { icon: techIcon }).addTo(this.map);
+         const bounds = L.latLngBounds([this.techCoords, [this.emergency.latitud, this.emergency.longitud]]);
+         this.map.fitBounds(bounds, { padding: [100, 100] });
+      } else {
+         this.dynamicMarker = L.marker(this.workshopCoords, { icon: tlrIcon }).addTo(this.map);
+         const bounds = L.latLngBounds([this.workshopCoords, [this.emergency.latitud, this.emergency.longitud]]);
+         this.map.fitBounds(bounds, { padding: [100, 100] });
+      }
 
     } catch (e) {
       console.error("Map initialization failed", e);
     }
   }
 
+  private updateMapMarker() {
+      if (!this.map || !this.dynamicMarker || !this.techCoords) return;
+      this.dynamicMarker.setLatLng(this.techCoords);
+  }
+
   private calculateRoute() {
     if (!this.emergency || !this.map) return;
 
-    const start = `${this.workshopCoords[1]},${this.workshopCoords[0]}`;
+    let start = `${this.workshopCoords[1]},${this.workshopCoords[0]}`;
+    if (this.emergency.estado_actual === 'EN_CAMINO' && this.techCoords) {
+      start = `${this.techCoords[1]},${this.techCoords[0]}`;
+    }
+
     const end = `${this.emergency.longitud},${this.emergency.latitud}`;
     const url = `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
 
@@ -739,6 +805,16 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
         this.cargarCotizaciones();
       },
       error: (err) => toast.error('Error al enviar cotización', { description: err.error?.detail })
+    });
+  }
+
+  aceptarCotizacion(cotizacionId: number) {
+    this.api.put(`/cotizaciones/${cotizacionId}/estado`, { estado: 'ACEPTADA' }).subscribe({
+      next: () => {
+        toast.success('Cotización Aceptada. El taller ha sido asignado.');
+        this.loadDetail(); // Recarga todo para actualizar estado a ASIGNADO y ocultar botones
+      },
+      error: (err) => toast.error('Error al aceptar cotización', { description: err.error?.detail })
     });
   }
 

@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, JSON, DateTime, ForeignKey
 from sqlalchemy.sql import func
-from app.db.session import Base
-
-class Bitacora(Base):
+from app.db.generic_model import GenericModel
+class Bitacora(GenericModel):
     __tablename__ = "bitacora"
+    __table_args__ = {"schema": "public"}
 
     id = Column(Integer, primary_key=True, index=True)
     idUsuario = Column(Integer, nullable=True) # ID de Usuario o Cliente (sin FK estricta para evitar conflictos)

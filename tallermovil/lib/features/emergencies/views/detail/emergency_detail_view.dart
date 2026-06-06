@@ -19,6 +19,8 @@ import '../../../payments/views/payment_selection_view.dart';
 import '../../data/cotizacion_service.dart';
 import 'quote_review_view.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'live_tracking_screen.dart';
+import 'rating_dialog.dart';
 
 class EmergencyDetailView extends StatefulWidget {
   final Map<String, dynamic> emergency;
@@ -212,6 +214,29 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
             ),
             TSpacing.verticalLarge(),
 
+            // MAPA EN VIVO PARA EL CLIENTE
+            if (['ASIGNADO', 'EN_CAMINO', 'ARREGLADO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
+               TButton(
+                 label: 'Rastrear Técnico en Vivo',
+                 icon: Icons.map,
+                 variant: TButtonVariant.primary,
+                 onPressed: () {
+                   Navigator.push(
+                     context,
+                     MaterialPageRoute(
+                       builder: (_) => LiveTrackingScreen(
+                         emergenciaId: e['id'],
+                         destLat: e['latitud'] ?? 0.0,
+                         destLng: e['longitud'] ?? 0.0,
+                         statusInicial: e['estado_actual'] ?? 'PENDIENTE',
+                       ),
+                     ),
+                   ).then((_) => _refreshData());
+                 },
+               ),
+               TSpacing.verticalLarge(),
+            ],
+
             // SECCIÓN DE PAGO (Solo si está finalizado y TIENE MONTO)
             if ((['ATENDIDO', 'FINALIZADA'].contains(e['estado_actual']?.toString().toUpperCase()) || e['idPago'] != null) && (e['monto_pago'] ?? e['pago']?['monto']) != null) ...[
               TText.h3('Factura y Pago del Servicio'),
@@ -297,6 +322,8 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
                       TSpacing.verticalSmall(),
                       Center(child: TText.h3('SERVICIO PAGADO')),
                       Center(child: TText.body('El pago se realizó correctamente.')),
+                      TSpacing.verticalMedium(),
+                      _RatingSection(emergency: e),
                     ] else ...[
                       Center(child: TText.label('El servicio ha finalizado. Por favor, procede al pago.')),
                       TSpacing.verticalMedium(),
@@ -712,6 +739,58 @@ class _PaymentButtonState extends State<_PaymentButton> {
         }
       },
       variant: TButtonVariant.primary,
+    );
+  }
+}
+
+class _RatingSection extends StatefulWidget {
+  final Map<String, dynamic> emergency;
+  const _RatingSection({required this.emergency});
+
+  @override
+  State<_RatingSection> createState() => _RatingSectionState();
+}
+
+class _RatingSectionState extends State<_RatingSection> {
+  bool _isLoading = false;
+
+  Future<void> _openRating() async {
+    setState(() => _isLoading = true);
+    Map<String, dynamic>? existingRating;
+    try {
+      final apiClient = ApiClient(localStorage: LocalStorage());
+      final res = await apiClient.dio.get('/calificaciones/mi-calificacion/${widget.emergency['id']}');
+      if (res.statusCode == 200) {
+        existingRating = res.data;
+      }
+    } catch (e) {
+      // 404 means no rating yet, which is fine
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+
+    if (mounted) {
+      final changed = await showDialog(
+        context: context,
+        builder: (_) => RatingDialog(
+          idEmergencia: widget.emergency['id'],
+          calificacionExistente: existingRating,
+        ),
+      );
+      if (changed == true) {
+        setState(() {}); // refresh if needed
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TButton(
+      label: 'Calificar Servicio',
+      icon: Icons.star_rate,
+      variant: TButtonVariant.primary,
+      isLoading: _isLoading,
+      onPressed: _openRating,
     );
   }
 }

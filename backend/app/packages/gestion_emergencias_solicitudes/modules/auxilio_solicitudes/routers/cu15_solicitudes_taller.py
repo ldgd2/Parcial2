@@ -21,7 +21,7 @@ router = APIRouter(prefix="/talleres", tags=["Comercio — Solicitudes Taller (C
 
 @router.get(
     "/{cod}/solicitudes",
-    response_model=List[EmergenciaOut],
+    response_model=list[EmergenciaOut],
     summary="CU15 — Ver historial de solicitudes asignadas al taller",
 )
 async def solicitudes_taller(
@@ -75,3 +75,20 @@ async def finalizar_emergencia(
     taller_cod = current.get("taller")
     print(f"DEBUG FINALIZAR: user_id={current.get('user_id')}, role={current.get('role')}, taller={taller_cod}")
     return await emergencia_service.finalizar_emergencia(emergencia_id, data, taller_cod, db)
+
+@router.post(
+    "/solicitudes/{emergencia_id}/rechazar",
+    summary="CU15 — Taller rechaza la emergencia asignada",
+)
+async def rechazar_emergencia(
+    emergencia_id: int,
+    current=Depends(require_role("tecnico", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    CU15: El taller rechaza una emergencia después de que se le fue asignada 
+    (o la cotización fue aceptada). La emergencia vuelve a buscar taller 
+    y la cotización se cancela.
+    """
+    taller_cod = current.get("taller")
+    return await emergencia_service.rechazar_emergencia_taller(emergencia_id, taller_cod, db)

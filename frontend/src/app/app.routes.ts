@@ -22,6 +22,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
+        path: 'radar',
+        loadComponent: () => import('./features/radar/radar.component').then(m => m.RadarComponent)
+      },
+      {
         path: 'emergency/:id',
         loadComponent: () => import('./features/emergencias/detalle/emergency-detail.component').then(m => m.EmergencyDetailComponent)
       },
@@ -34,6 +38,22 @@ export const routes: Routes = [
         loadComponent: () => import('./features/talleres/detalle/taller-detail.component').then(m => m.TallerDetailComponent)
       },
       {
+        path: 'saas-admin/tenants',
+        loadComponent: () => import('./features/saas-admin/tenants-list/tenants-list.component').then(m => m.TenantsListComponent)
+      },
+      {
+        path: 'reportes/historial-vehicular',
+        loadComponent: () => import('./features/reportes/historial-vehicular/historial-vehicular.component').then(m => m.HistorialVehicularComponent)
+      },
+      {
+        path: 'calificaciones',
+        loadComponent: () => import('./features/reportes/calificaciones/calificaciones.component').then(m => m.CalificacionesComponent)
+      },
+      {
+        path: 'usuarios',
+        loadComponent: () => import('./features/admin-tenant/usuarios-tenant/usuarios-tenant.component').then(m => m.UsuariosTenantComponent)
+      },
+      {
         path: 'tecnicos',
         loadComponent: () => import('./features/tecnicos/tecnicos.component').then(m => m.TecnicosComponent)
       },
@@ -44,6 +64,10 @@ export const routes: Routes = [
       {
         path: 'reportes',
         loadComponent: () => import('./features/reportes/reportes.component').then(m => m.WorkshopReportsComponent)
+      },
+      {
+        path: 'suscripcion',
+        loadComponent: () => import('./features/suscripcion/suscripcion.component').then(m => m.SuscripcionComponent)
       },
       {
         path: '',

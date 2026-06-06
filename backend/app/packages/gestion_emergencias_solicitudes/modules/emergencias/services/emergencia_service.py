@@ -11,21 +11,13 @@ from sqlalchemy import select, desc
 
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.emergencia import Emergencia
 from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.models.vehiculo import Vehiculo
+from app.packages.gestion_usuarios_seguridad.modules.tenants.models.taller import Taller
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.estado import Estado
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.emergencia_repo import EmergenciaRepository
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.schemas.emergencia import EmergenciaCreate, EmergenciaOut, ActualizarEstadoRequest
 from app.core.config import settings
 
 # Repositories
-from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.emergencia_repo import EmergenciaRepository
-from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.estado_repo import EstadoRepository
-from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.prioridad_repo import PrioridadRepository
-from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.categoria_repo import CategoriaProblemaRepository
-from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.evidencia_repo import EvidenciaRepository
-from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.historial_repo import HistorialEstadoRepository
-from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.repositories.asignacion_repo import AsignacionTecnicoEmergenciaRepository
-from app.packages.inteligencia_artificial_automatizacion.modules.motor_ia.repositories.resumen_ia_repo import ResumenIARepository
-from app.packages.gestion_administrativa_reportes.modules.pagos.repositories.pago_repo import PagoRepository
-from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.repositories.vehiculo_repo import VehiculoRepository
-from app.packages.gestion_usuarios_seguridad.modules.tenants.repositories.taller_repo import TallerRepository
 from app.packages.inteligencia_artificial_automatizacion.modules.motor_ia.services.ai_service import analizar_transcripcion_whisper
 from typing import List
 import math
@@ -39,9 +31,20 @@ async def reportar_emergencia(
     cliente_id: int,
     db: AsyncSession,
 ) -> EmergenciaOut:
+    import uuid
+    # 1. Idempotencia: Verificar si ya existe una emergencia con este uuid_local
+    if data.uuid_local:
+        result = await db.execute(select(Emergencia).where(Emergencia.uuid_local == data.uuid_local))
+        existente = result.scalar_one_or_none()
+        if existente:
+            print(f"[Offline Sync] Emergencia {data.uuid_local} ya estaba registrada. Devolviendo existente.")
+            return await obtener_emergencia_detalle(existente.id, db)
+    else:
+        # Generar un UUID único en el backend si el cliente no lo envía
+        data.uuid_local = str(uuid.uuid4())
+
     # Validar que el vehículo pertenece al cliente y obtener datos para la IA
-    vehiculo_repo = VehiculoRepository(db)
-    vehiculo = await vehiculo_repo.get_by_placa(data.placaVehiculo)
+    vehiculo = await Vehiculo.get_by_placa(db, data.placaVehiculo)
     if vehiculo is None or vehiculo.idCliente != cliente_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -63,11 +66,9 @@ async def reportar_emergencia(
     if data.descripcion or data.texto_adicional or data.evidencias_urls:
         try:
             # Obtener catálogos para el prompt de IA
-            categoria_repo = CategoriaProblemaRepository(db)
-            prioridad_repo = PrioridadRepository(db)
             
-            categorias = await categoria_repo.get_all()
-            prioridades = await prioridad_repo.get_all()
+            categorias = await CategoriaProblema.get_all(db, )
+            prioridades = await Prioridad.get_all(db, )
             
             categorias_activas = [{"id": r.id, "nombre": r.descripcion} for r in categorias]
             prioridades_activas = [{"id": r.id, "nombre": r.descripcion} for r in prioridades]
@@ -113,8 +114,7 @@ async def reportar_emergencia(
             # Si la IA falla, usamos los defaults y seguimos sin interrumpir la emergencia crítica
 
     # Crear emergencia
-    repo = EmergenciaRepository(db)
-    emergencia = await repo.create(obj_in={
+    emergencia = await Emergencia.create(db, obj_in={
         "descripcion": data.descripcion,
         "texto_adicional": data.texto_adicional,
         "direccion": data.direccion,
@@ -128,13 +128,13 @@ async def reportar_emergencia(
         "idCliente": cliente_id,
         "placaVehiculo": data.placaVehiculo,
         "audio_url": data.audio_url,
+        "uuid_local": data.uuid_local,
         "es_valida": True # Se actualizará abajo si la IA lo dice
     })
     await db.flush()
 
     # CU05: Crear pago inicial en 0 para evitar nulos (Modo Failsafe)
-    pago_repo = PagoRepository(db)
-    await pago_repo.create(obj_in={
+    await Pago.create(db, obj_in={
         "monto": 0.0,
         "monto_comision": 0.0,
         "cliente_id": cliente_id,
@@ -144,9 +144,8 @@ async def reportar_emergencia(
     await db.flush()
 
     # Guardar Evidencias (Fotos)
-    evidencia_repo = EvidenciaRepository(db)
     for url in data.evidencias_urls:
-        await evidencia_repo.create(obj_in={
+        await Evidencia.create(db, obj_in={
             "direccion": url,
             "idEmergencia": emergencia.id
         })
@@ -154,8 +153,7 @@ async def reportar_emergencia(
 
     # Guardar análisis IA si fue procesado
     if resumen_taller:
-        resumen_repo = ResumenIARepository(db)
-        await resumen_repo.create(obj_in={
+        await ResumenIA.create(db, obj_in={
             "resumen": resumen_taller,
             "ficha_tecnica": ficha_tecnica,
             "recomendaciones_taller": ia_result.recomendaciones_taller if 'ia_result' in locals() else None,
@@ -163,7 +161,7 @@ async def reportar_emergencia(
             "idEmergencia": emergencia.id
         })
         if 'ia_result' in locals():
-            await repo.update(db_obj=emergencia, obj_in={"es_valida": ia_result.es_valida})
+            await emergencia.update(db, obj_in={"es_valida": ia_result.es_valida})
             
             if not ia_result.es_valida:
                 try:
@@ -182,19 +180,15 @@ async def reportar_emergencia(
                     print(f"Error enviando notificacion de rechazo IA: {e}")
         
         await db.flush()
-
-
-    estado_repo = EstadoRepository(db)
-    estado = await estado_repo.get_by_nombre("PENDIENTE")
+    estado = await Estado.get_by_nombre(db, "PENDIENTE")
     if estado is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Estado 'PENDIENTE' no encontrado en BD. Ejecute el seed inicial.",
         )
 
-    await repo.update(db_obj=emergencia, obj_in={"idEstado": estado.id})
-    historial_repo = HistorialEstadoRepository(db)
-    await historial_repo.create(obj_in={
+    await emergencia.update(db, obj_in={"idEstado": estado.id})
+    await HistorialEstado.create(db, obj_in={
         "idEmergencia": emergencia.id,
         "idEstado": estado.id,
     })
@@ -203,8 +197,7 @@ async def reportar_emergencia(
     return await obtener_emergencia_detalle(emergencia.id, db)
 
 async def obtener_emergencia_detalle(id: int, db: AsyncSession):
-    repo = EmergenciaRepository(db)
-    emergencia = await repo.get_detalle_by_id(id)
+    emergencia = await Emergencia.get_detalle_by_id(db, id)
     if emergencia:
         _populate_dynamic_fields(emergencia)
     return emergencia
@@ -228,8 +221,7 @@ def _populate_dynamic_fields(e: Emergencia):
 # ─── CU14 (cliente consulta sus emergencias) ──────────────────────
 
 async def listar_emergencias_cliente(cliente_id: int, db: AsyncSession):
-    repo = EmergenciaRepository(db)
-    emergencias = await repo.get_by_cliente(cliente_id)
+    emergencias = await Emergencia.get_by_cliente(db, cliente_id)
     for e in emergencias:
         _populate_dynamic_fields(e)
     return emergencias
@@ -243,8 +235,7 @@ async def actualizar_estado_emergencia(
     taller_cod: str,
     db: AsyncSession,
 ):
-    repo = EmergenciaRepository(db)
-    emergencia = await repo.get(emergencia_id)
+    emergencia = await Emergencia.get(db, emergencia_id)
     if not emergencia or emergencia.idTaller != taller_cod:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -252,17 +243,15 @@ async def actualizar_estado_emergencia(
         )
 
     # Verificar que el estado existe
-    estado_repo = EstadoRepository(db)
-    estado = await estado_repo.get(data.idEstado)
+    estado = await Estado.get(db, data.idEstado)
     if estado is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Estado no válido.",
         )
 
-    emergencia = await repo.update(db_obj=emergencia, obj_in={"idEstado": data.idEstado})
-    historial_repo = HistorialEstadoRepository(db)
-    nuevo_historial = await historial_repo.create(obj_in={
+    emergencia = await emergencia.update(db, obj_in={"idEstado": data.idEstado})
+    nuevo_historial = await HistorialEstado.create(db, obj_in={
         "idEmergencia": emergencia_id,
         "idEstado": data.idEstado
     })
@@ -298,11 +287,67 @@ async def actualizar_estado_emergencia(
 # CU15 (taller actualiza el estado de la emergencia) ──────────
 
 async def listar_emergencias_taller(taller_cod: str, db: AsyncSession):
-    repo = EmergenciaRepository(db)
-    emergencias = await repo.get_by_taller(taller_cod)
+    emergencias = await Emergencia.get_by_taller(db, taller_cod)
     for e in emergencias:
         _populate_dynamic_fields(e)
     return emergencias
+
+
+async def rechazar_emergencia_taller(emergencia_id: int, taller_cod: str, db: AsyncSession):
+    """
+    El taller rechaza una emergencia. 
+    Vuelve a estado PENDIENTE, cancela la cotización y notifica al cliente.
+    """
+    emergencia = await Emergencia.get(db, emergencia_id)
+    if not emergencia or emergencia.idTaller != taller_cod:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Emergencia no encontrada o no asignada a este taller."
+        )
+
+    # 1. Cancelar cotización aceptada
+    from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.repositories.cotizacion_repo import CotizacionRepository
+    repo_cot = CotizacionRepository(db)
+    cotizacion = await repo_cot.get_by_emergencia_and_taller(emergencia_id, taller_cod)
+    
+    if cotizacion and cotizacion.estado == "ACEPTADA":
+        await repo_cot.update(db_obj=cotizacion, obj_in={"estado": "RECHAZADA"})
+
+    # 2. Reset Emergencia to PENDIENTE (o el ID correspondiente)
+    estado_pendiente = await Estado.get_by_nombre(db, "PENDIENTE")
+    nuevo_id_estado = estado_pendiente.id if estado_pendiente else 1
+
+    await emergencia.update(db, obj_in={
+        "idTaller": None,
+        "idEstado": nuevo_id_estado
+    })
+    
+    await HistorialEstado.create(db, obj_in={
+        "idEmergencia": emergencia_id,
+        "idEstado": nuevo_id_estado
+    })
+    await db.commit()
+
+    # 3. Notificar al Cliente (WS y Push)
+    try:
+        from app.core.socket_manager import manager
+        room_id = f"emergencia_{emergencia_id}"
+        await manager.broadcast_to_room(room_id, {
+            "type": "taller_rechazado",
+            "message": "El taller ha rechazado la emergencia. La cotización fue cancelada y la emergencia vuelve a estar en búsqueda de taller."
+        })
+        
+        await NotificationService.enviar_notificacion_usuario(
+            db, 
+            emergencia.idCliente, 
+            "Taller canceló el servicio", 
+            "El taller asignado no podrá atenderte. Por favor revisa otras cotizaciones.",
+            {"emergencia_id": str(emergencia_id), "tipo": "taller_rechazado"}
+        )
+    except Exception as e:
+        print(f"Error notifying rejection: {e}")
+
+    return {"status": "ok", "message": "Emergencia rechazada exitosamente"}
 
 
 # ─── GESTIÓN DE TABLERO DE EMERGENCIAS (Admin Workshops) ──────────
@@ -326,27 +371,23 @@ async def listar_emergencias_disponibles(taller_cod: str, db: AsyncSession):
     3. Están dentro de un radio de 50km
     """
     # 1. Obtener datos del taller
-    taller_repo = TallerRepository(db)
-    taller = await taller_repo.get_with_especialidades(taller_cod)
+    taller = await Taller.get_with_especialidades(db, taller_cod)
     if not taller: return []
 
     especialidades_taller = [a.idEspecialidad for a in taller.asignaciones]
 
     # 3. Buscar emergencias sin taller asignado y en estado PENDIENTE / INICIADA
     # Filtramos por especialidad requerida (match entre taller y categoria)
-    estado_repo = EstadoRepository(db)
     estados_validos = []
-    estado_iniciada = await estado_repo.get_by_nombre("INICIADA")
-    estado_pendiente = await estado_repo.get_by_nombre("PENDIENTE")
+    estado_iniciada = await Estado.get_by_nombre(db, "INICIADA")
+    estado_pendiente = await Estado.get_by_nombre(db, "PENDIENTE")
     
     if estado_iniciada: estados_validos.append(estado_iniciada.id)
     if estado_pendiente: estados_validos.append(estado_pendiente.id)
     
     if not estados_validos:
         estados_validos = [1, 2] # Fallback
-        
-    repo = EmergenciaRepository(db)
-    todas_disponibles = await repo.get_disponibles_para_taller(especialidades_taller, estados_validos)
+    todas_disponibles = await EmergenciaRepository(db).get_disponibles_para_taller(especialidades_taller, estados_validos)
 
     # 4. Filtrar por distancia (10km)
     cercanas = []
@@ -360,23 +401,21 @@ async def listar_emergencias_disponibles(taller_cod: str, db: AsyncSession):
 
 async def bloquear_emergencia_temporal(emergencia_id: int, taller_cod: str, db: AsyncSession):
     """Establece un mutex temporal de 2 minutos."""
-    repo = EmergenciaRepository(db)
-    emergencia = await repo.get(emergencia_id)
+    emergencia = await Emergencia.get(db, emergencia_id)
     if not emergencia or emergencia.idTaller:
         raise HTTPException(status_code=400, detail="Emergencia no disponible para análisis.")
     
-    await repo.update(db_obj=emergencia, obj_in={
+    await emergencia.update(db, obj_in={
         "locked_by": taller_cod,
         "locked_at": datetime.datetime.now()
     })
     await db.commit()
     return {"status": "locked", "expires_in": 120}
 
-async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnicos_ids: List[int], db: AsyncSession):
+async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnicos_ids: list[int], db: AsyncSession):
     """Asignación final con uno o varios técnicos."""
     # 1. Obtener emergencia
-    repo = EmergenciaRepository(db)
-    emergencia = await repo.get(emergencia_id)
+    emergencia = await Emergencia.get(db, emergencia_id)
     
     if not emergencia:
         raise HTTPException(status_code=404, detail="Emergencia no encontrada.")
@@ -385,28 +424,24 @@ async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnico
         raise HTTPException(status_code=400, detail="Esta emergencia ya fue tomada por otro taller.")
 
     # 2. Realizar asignación
-    await repo.update(db_obj=emergencia, obj_in={
+    await emergencia.update(db, obj_in={
         "idTaller": taller_cod,
         "locked_by": None,
         "locked_at": None
     })
     
     # 3. Registrar técnicos
-    asignacion_repo = AsignacionTecnicoEmergenciaRepository(db)
-    await asignacion_repo.delete_by_emergencia(emergencia_id)
+    await AsignacionTecnicoEmergencia.delete_by_emergencia(db, emergencia_id)
 
     for t_id in tecnicos_ids:
-        await asignacion_repo.create(obj_in={"idEmergencia": emergencia_id, "idTecnico": t_id})
+        await AsignacionTecnicoEmergencia.create(db, obj_in={"idEmergencia": emergencia_id, "idTecnico": t_id})
     
     # 4. Actualizar estado a 'ASIGNADO'
-    estado_repo = EstadoRepository(db)
-    estado = await estado_repo.get_by_nombre("ASIGNADO")
+    estado = await Estado.get_by_nombre(db, "ASIGNADO")
     
     nuevo_id_estado = estado.id if estado else 2
-    await repo.update(db_obj=emergencia, obj_in={"idEstado": nuevo_id_estado})
-    
-    historial_repo = HistorialEstadoRepository(db)
-    await historial_repo.create(obj_in={
+    await emergencia.update(db, obj_in={"idEstado": nuevo_id_estado})
+    await HistorialEstado.create(db, obj_in={
         "idEmergencia": emergencia_id,
         "idEstado": nuevo_id_estado
     })
@@ -417,8 +452,7 @@ async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnico
 
     # 5. NOTIFICACIÓN AL CLIENTE (CU12)
     try:
-        taller_repo = TallerRepository(db)
-        taller = await taller_repo.get(taller_cod)
+        taller = await Taller.get(db, taller_cod)
         
         # Calcular distancia y tiempo estimado
         distancia = haversine_distance(taller.latitud, taller.longitud, emergencia.latitud, emergencia.longitud)
@@ -439,6 +473,19 @@ async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnico
                 "tiempo": str(tiempo_estimado)
             }
         )
+        
+        # [WS] Notificar asignación en tiempo real
+        from app.core.socket_manager import manager
+        room_id = f"emergencia_{emergencia_id}"
+        await manager.broadcast_to_room(room_id, {
+            "type": "taller_asignado",
+            "taller_cod": taller_cod,
+            "taller_nombre": taller.nombre,
+            "distancia": dist_str,
+            "tiempo": str(tiempo_estimado),
+            "message": f"El taller '{taller.nombre}' ha sido asignado a tu emergencia."
+        })
+        
     except Exception as e:
         print(f"Error al enviar notificación de asignación: {e}")
 
@@ -453,16 +500,14 @@ async def actualizar_ficha_tecnica(emergencia_id: int, data: dict, taller_cod: s
     el diagnóstico, piezas y acciones con los datos reales del servicio.
     """
     # Verificar que la emergencia pertenece al taller
-    repo = EmergenciaRepository(db)
-    emergencia = await repo.get(emergencia_id)
+    emergencia = await Emergencia.get(db, emergencia_id)
     if not emergencia:
         raise HTTPException(status_code=404, detail="Emergencia no encontrada.")
     if emergencia.idTaller != taller_cod:
         raise HTTPException(status_code=403, detail="No tienes acceso a esta emergencia.")
     
     # Obtener o crear ResumenIA
-    resumen_repo = ResumenIARepository(db)
-    resumen = await resumen_repo.get_by_emergencia(emergencia_id)
+    resumen = await ResumenIA.get_by_emergencia(db, emergencia_id)
     
     if resumen:
         # Actualizar ficha técnica existente (merge con datos nuevos)
@@ -473,10 +518,10 @@ async def actualizar_ficha_tecnica(emergencia_id: int, data: dict, taller_cod: s
         if "resumen" in data:
             update_data["resumen"] = data["resumen"]
             
-        await resumen_repo.update(db_obj=resumen, obj_in=update_data)
+        await resumen.update(db, obj_in=update_data)
     else:
         # Crear resumen si no fue generado por IA
-        await resumen_repo.create(obj_in={
+        await ResumenIA.create(db, obj_in={
             "resumen": data.get("resumen", "Diagnóstico completado por el taller."),
             "ficha_tecnica": data.get("ficha_tecnica", {}),
             "idEmergencia": emergencia_id
@@ -499,8 +544,7 @@ async def finalizar_emergencia(
     
     try:
         # 1. Validar emergencia
-        repo = EmergenciaRepository(db)
-        emergencia = await repo.get_detalle_by_id(emergencia_id)
+        emergencia = await Emergencia.get_detalle_by_id(db, emergencia_id)
         
         if not emergencia:
             raise HTTPException(status_code=404, detail="Emergencia no encontrada.")
@@ -526,10 +570,8 @@ async def finalizar_emergencia(
         
         # Log para depuración de IntegrityError
         print(f"DEBUG PAGOS: idCliente={emergencia.idCliente}, idEmergencia={emergencia_id}, monto={monto}")
-        
-        pago_repo = PagoRepository(db)
         if emergencia.pago:
-            await pago_repo.update(db_obj=emergencia.pago, obj_in={
+            await Pago.update(db, db_obj=emergencia.pago, obj_in={
                 "monto": monto,
                 "monto_comision": comision,
                 "estado": "PENDIENTE",
@@ -544,7 +586,7 @@ async def finalizar_emergencia(
                 print(f"ERROR: No se puede crear pago con IDs nulos. c_id={c_id}, e_id={e_id}")
                 raise HTTPException(status_code=500, detail="Error de integridad: Datos de cliente o emergencia faltantes.")
 
-            await pago_repo.create(obj_in={
+            await Pago.create(db, obj_in={
                 "monto": monto,
                 "monto_comision": comision,
                 "cliente_id": c_id,
@@ -555,10 +597,8 @@ async def finalizar_emergencia(
             await db.flush()
         
         # Cambiar a estado ATENDIDO (ID 6 según check_states.py)
-        await repo.update(db_obj=emergencia, obj_in={"idEstado": 6})
-        
-        historial_repo = HistorialEstadoRepository(db)
-        await historial_repo.create(obj_in={
+        await emergencia.update(db, obj_in={"idEstado": 6})
+        await HistorialEstado.create(db, obj_in={
             "idEmergencia": emergencia_id,
             "idEstado": 6,
         })
@@ -570,7 +610,7 @@ async def finalizar_emergencia(
             await NotificationService.enviar_notificacion_usuario(
                 db,
                 emergencia.idCliente,
-                "¡Trabajo Terminado! ✅",
+                "¡Trabajo Terminado! ",
                 f"El taller ha finalizado el servicio. El monto total a pagar es: ${monto:.2f}. Por favor, procede al pago.",
                 {
                     "emergencia_id": str(emergencia_id),
@@ -612,8 +652,7 @@ async def finalizar_emergencia(
         raise HTTPException(status_code=500, detail="Error interno del servidor al finalizar.")
 async def actualizar_emergencia(id_emergencia: int, data: EmergenciaCreate, user_id: int, db: AsyncSession):
     # 1. Verificar propiedad y estado
-    repo = EmergenciaRepository(db)
-    emergencia = await repo.get(id_emergencia)
+    emergencia = await Emergencia.get(db, id_emergencia)
     if not emergencia:
         raise HTTPException(status_code=404, detail="Emergencia no encontrada")
     
@@ -622,8 +661,7 @@ async def actualizar_emergencia(id_emergencia: int, data: EmergenciaCreate, user
          raise HTTPException(status_code=403, detail="No tienes permiso para editar esta emergencia")
 
     # Solo se puede editar si no ha sido aceptada (idEstado de PENDIENTE)
-    estado_repo = EstadoRepository(db)
-    estado_pend = await estado_repo.get_by_nombre("PENDIENTE")
+    estado_pend = await Estado.get_by_nombre(db, "PENDIENTE")
     
     if not estado_pend or emergencia.idEstado != estado_pend.id:
         raise HTTPException(status_code=400, detail="No se puede editar una emergencia que ya está siendo atendida")
@@ -637,25 +675,22 @@ async def actualizar_emergencia(id_emergencia: int, data: EmergenciaCreate, user
         "audio_url": data.audio_url
     }
     
-    await repo.update(db_obj=emergencia, obj_in=update_data)
+    await emergencia.update(db, obj_in=update_data)
     
     # 3. Re-procesar IA si hay contenido
-    print(f"🔍 [Update] Evaluando IA: desc={bool(data.descripcion)}, texto_ad={bool(data.texto_adicional)}, fotos={len(data.evidencias_urls)}")
+    print(f"[Update] Evaluando IA: desc={bool(data.descripcion)}, texto_ad={bool(data.texto_adicional)}, fotos={len(data.evidencias_urls)}")
     if data.descripcion or data.texto_adicional or data.evidencias_urls:
         from app.packages.inteligencia_artificial_automatizacion.modules.motor_ia.services.ai_service import analizar_transcripcion_whisper
         from app.core.config import settings
 
         # Contexto del vehículo
-        vehiculo_repo = VehiculoRepository(db)
-        veh = await vehiculo_repo.get_by_placa(data.placaVehiculo)
+        veh = await Vehiculo.get_by_placa(db, data.placaVehiculo)
         vehiculo_contexto = f"{veh.marca} {veh.modelo} ({veh.anio})" if veh else ""
 
         # Categorías y Prioridades activas
-        categoria_repo = CategoriaProblemaRepository(db)
-        prioridad_repo = PrioridadRepository(db)
         
-        categorias = await categoria_repo.get_all()
-        prioridades = await prioridad_repo.get_all()
+        categorias = await CategoriaProblema.get_all(db, )
+        prioridades = await Prioridad.get_all(db, )
         
         categorias_activas = [{"id": r.id, "nombre": r.descripcion} for r in categorias]
         prioridades_activas = [{"id": r.id, "nombre": r.descripcion} for r in prioridades]
@@ -676,7 +711,7 @@ async def actualizar_emergencia(id_emergencia: int, data: EmergenciaCreate, user
         if data.texto_adicional and data.descripcion and data.texto_adicional != data.descripcion:
             texto_para_ia = f"{data.descripcion}. {data.texto_adicional}"
 
-        print(f"🖼️ [Update] URLs enviadas a IA: {full_urls}")
+        print(f"[Update] URLs enviadas a IA: {full_urls}")
         
         ia_result = await analizar_transcripcion_whisper(
             texto_crudo=texto_para_ia,
@@ -687,21 +722,20 @@ async def actualizar_emergencia(id_emergencia: int, data: EmergenciaCreate, user
         )
 
         # 4. Actualizar Resumen IA
-        resumen_repo = ResumenIARepository(db)
-        resumen_ia = await resumen_repo.get_by_emergencia(id_emergencia)
+        resumen_ia = await ResumenIA.get_by_emergencia(db, id_emergencia)
         
         ficha_tecnica = ia_result.ficha_tecnica.model_dump() if ia_result.ficha_tecnica else {}
         resumen_taller = ia_result.resumen_taller
 
         if resumen_ia:
-            await resumen_repo.update(db_obj=resumen_ia, obj_in={
+            await resumen_ia.update(db, obj_in={
                 "resumen": resumen_taller,
                 "ficha_tecnica": ficha_tecnica,
                 "recomendaciones_taller": ia_result.recomendaciones_taller,
                 "motivo_rechazo": ia_result.motivo_rechazo
             })
         else:
-            await resumen_repo.create(obj_in={
+            await ResumenIA.create(db, obj_in={
                 "resumen": resumen_taller,
                 "ficha_tecnica": ficha_tecnica,
                 "recomendaciones_taller": ia_result.recomendaciones_taller,
@@ -710,18 +744,17 @@ async def actualizar_emergencia(id_emergencia: int, data: EmergenciaCreate, user
             })
 
         # Actualizar flags y clasificación
-        await repo.update(db_obj=emergencia, obj_in={
+        await emergencia.update(db, obj_in={
             "es_valida": ia_result.es_valida,
             "idCategoria": ia_result.id_categoria,
             "idPrioridad": ia_result.id_prioridad 
         })
 
     # 5. Actualizar Evidencias (Borrar antiguas y poner nuevas)
-    evidencia_repo = EvidenciaRepository(db)
-    await evidencia_repo.delete_by_emergencia(id_emergencia)
+    await Evidencia.delete_by_emergencia(db, id_emergencia)
     
     for url in data.evidencias_urls:
-        await evidencia_repo.create(obj_in={
+        await Evidencia.create(db, obj_in={
             "direccion": url,
             "idEmergencia": id_emergencia
         })
@@ -731,8 +764,7 @@ async def actualizar_emergencia(id_emergencia: int, data: EmergenciaCreate, user
     return emergencia
 
 async def cancelar_emergencia(id_emergencia: int, user_id: int, db: AsyncSession):
-    repo = EmergenciaRepository(db)
-    emergencia = await repo.get(id_emergencia)
+    emergencia = await Emergencia.get(db, id_emergencia)
     
     if not emergencia:
         raise HTTPException(status_code=404, detail="Emergencia no encontrada")
@@ -746,7 +778,7 @@ async def cancelar_emergencia(id_emergencia: int, user_id: int, db: AsyncSession
             detail="No se puede eliminar una emergencia que ya ha sido aceptada por un taller. Intente contactar con soporte."
         )
 
-    await repo.delete(id_emergencia)
+    await Emergencia.delete(db, id_emergencia)
     await db.commit()
     
     return {"status": "success", "message": "Emergencia eliminada permanentemente"}

@@ -17,6 +17,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'core/notification/notification_controller.dart';
 import 'core/config/stripe_config.dart';
 import 'core/network/offline_sync_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,19 +48,54 @@ void main() async {
   runApp(const TallerMovilApp());
 }
 
-class TallerMovilApp extends StatelessWidget {
+class TallerMovilApp extends StatefulWidget {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   
   const TallerMovilApp({super.key});
 
   @override
+  State<TallerMovilApp> createState() => _TallerMovilAppState();
+}
+
+class _TallerMovilAppState extends State<TallerMovilApp> {
+  bool _isOffline = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Connectivity().onConnectivityChanged.listen((results) {
+      setState(() {
+        _isOffline = results.contains(ConnectivityResult.none);
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Taller Móvil OS',
-      navigatorKey: navigatorKey,
+      navigatorKey: TallerMovilApp.navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme, // Inyectando nuestro Design System
       home: const LoginView(),
+      builder: (context, child) {
+        return Column(
+          children: [
+            if (_isOffline)
+              Container(
+                width: double.infinity,
+                color: Colors.red,
+                padding: const EdgeInsets.only(top: 40, bottom: 4), // Para el SafeArea
+                child: const Text(
+                  'fuera de conexion',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, decoration: TextDecoration.none),
+                ),
+              ),
+            Expanded(child: child ?? const SizedBox()),
+          ],
+        );
+      },
     );
   }
 }

@@ -26,7 +26,8 @@ class EmergenciaCreate(BaseModel):
     hora: time
     placaVehiculo: str
     audio_url: Optional[str] = None
-    evidencias_urls: List[str] = []
+    evidencias_urls: list[str] = []
+    uuid_local: Optional[str] = None
 
 # ─── Respuesta emergencia ─────────────────────────────────────────
 
@@ -49,8 +50,8 @@ class EmergenciaOut(BaseModel):
     
     # Datos detallados
     resumen_ia: Optional[ResumenIAOut] = None
-    evidencias: List['EvidenciaOut'] = []
-    tecnicos_asignados: List[TecnicoOut] = []
+    evidencias: list['EvidenciaOut'] = []
+    tecnicos_asignados: list[TecnicoOut] = []
     vehiculo: Optional[VehiculoOut] = None
     pago: Optional[PagoOut] = None
 

@@ -74,7 +74,7 @@ Responde con este formato exacto:
         {"type": "text", "text": full_prompt}
     ]
     
-    print(f"🖼️ Procesando {len(evidencias_urls)} imágenes para la IA...")
+    print(f"Procesando {len(evidencias_urls)} imagenes para la IA...")
     for img_url in evidencias_urls[:5]:
         image_data = img_url
         if "/uploads/" in img_url or "localhost" in img_url or settings.APP_HOST in img_url or not img_url.startswith('http'):
@@ -87,16 +87,17 @@ Responde con este formato exacto:
                         ext = filename.split('.')[-1].lower()
                         mime_ext = 'jpeg' if ext in ['jpg', 'jpeg'] else ext
                         image_data = f"data:image/{mime_ext};base64,{b64}"
-                        print(f"✅ Imagen cargada como base64: {filename}")
+                        print(f"Imagen cargada como base64: {filename}")
             except Exception as e:
-                print(f"❌ Error base64: {e}")
+                print(f"Error base64: {e}")
+
 
         user_content.append({
             "type": "image_url",
             "image_url": {"url": image_data}
         })
 
-    print(f"🤖 Invocando IA ({settings.OPENROUTER_MODEL_NAME}) en modo COMPATIBLE...")
+    print(f"Invocando IA ({settings.OPENROUTER_MODEL_NAME}) en modo COMPATIBLE...")
     
     try:
         response = await client.chat.completions.create(
@@ -109,6 +110,8 @@ Responde con este formato exacto:
         )
         
         content = response.choices[0].message.content
+        import re
+        import json
         # Limpiar posible basura de markdown
         clean_json = re.sub(r'```json\s*|\s*```', '', content).strip()
         data = json.loads(clean_json)
@@ -120,7 +123,7 @@ Responde con este formato exacto:
         return AnalisisEstructuradoIA(**data)
 
     except Exception as e:
-        print(f"🚨 Fallo total de IA (Timeout o Error): {str(e)}")
+        print(f"Fallo total de IA (Timeout o Error): {str(e)}")
         # Fallback manual para no bloquear la app
         return AnalisisEstructuradoIA(
             es_valida=True,

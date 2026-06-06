@@ -1,0 +1,134 @@
+<div class="p-6 h-full flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+  
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fas fa-users text-blue-600 dark:text-blue-400"></i>
+          Gestión de Usuarios
+        </h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Administra operadores, supervisores y técnicos del taller.</p>
+      </div>
+      <button (click)="openCreateModal()" class="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+        <i class="fas fa-plus"></i> Nuevo Usuario
+      </button>
+    </div>
+  
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex-1">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+              <th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nombre</th>
+              <th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Correo</th>
+              <th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rol</th>
+              <th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estado</th>
+              <th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tr *ngFor="let u of usuarios" class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+              <td class="p-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-sm">
+                    {{ u.nombre.charAt(0) | uppercase }}
+                  </div>
+                  <div>
+                    <div class="font-medium text-gray-900 dark:text-white">{{ u.nombre }} {{ u.apellido }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ u.tipo }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="p-4 text-sm text-gray-600 dark:text-gray-300">{{ u.correo }}</td>
+              <td class="p-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                  {{ u.rol_nombre }}
+                </span>
+              </td>
+              <td class="p-4">
+                <span [ngClass]="{'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800': u.estado === 'ACTIVO', 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800': u.estado !== 'ACTIVO'}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
+                  {{ u.estado }}
+                </span>
+              </td>
+              <td class="p-4 text-right">
+                <button (click)="toggleEstado(u)" class="text-sm font-medium" [ngClass]="{'text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300': u.estado === 'ACTIVO', 'text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300': u.estado !== 'ACTIVO'}">
+                  {{ u.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="usuarios.length === 0">
+              <td colspan="5" class="p-8 text-center text-gray-500 dark:text-gray-400">
+                No se encontraron usuarios registrados.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal -->
+  <div *ngIf="showModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true" (click)="closeModal()"></div>
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+      
+      <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full border border-gray-200 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">Registrar Nuevo Usuario</h3>
+          <button (click)="closeModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+            <span class="sr-only">Cerrar</span>
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()" class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rol</label>
+              <select formControlName="rol_id" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">Seleccione un rol...</option>
+                <option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</option>
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+              <input type="text" formControlName="nombre" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ej. Juan">
+            </div>
+  
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellido (Opcional)</label>
+              <input type="text" formControlName="apellido" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ej. Pérez">
+            </div>
+  
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo Electrónico</label>
+              <input type="email" formControlName="correo" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="ejemplo@correo.com">
+            </div>
+  
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
+              <input type="text" formControlName="telefono" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Requerido para técnicos">
+            </div>
+  
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña Temporal</label>
+              <input type="password" formControlName="contrasena" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Mínimo 6 caracteres">
+            </div>
+          </div>
+  
+          <div class="mt-6 flex justify-end gap-3">
+            <button type="button" (click)="closeModal()" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="usuarioForm.invalid || isSubmitting" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+              <i class="fas fa-save" *ngIf="!isSubmitting"></i>
+              <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+              {{ isSubmitting ? 'Guardando...' : 'Crear Usuario' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

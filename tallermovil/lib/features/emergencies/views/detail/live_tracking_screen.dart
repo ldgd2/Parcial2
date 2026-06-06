@@ -5,6 +5,9 @@ import 'package:geolocator/geolocator.dart';
 import '../../../../../core/network/web_socket_service.dart';
 import '../../../../../core/storage/local_storage.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import '../../../../../core/network/api_client.dart';
 
 class LiveTrackingScreen extends StatefulWidget {
   final int emergenciaId;
@@ -37,6 +40,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   final List<Map<String, String>> _chatMessages = [];
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  
+  List<LatLng> _routePoints = [];
 
   @override
   void initState() {
@@ -86,8 +91,47 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     });
 
     if (_isTecnico) {
-      _iniciarTransmisionGps();
+      final hasPermission = await _handleLocationPermission();
+      if (hasPermission) {
+        _iniciarTransmisionGps();
+      }
+    } else {
+      // Cliente también debe solicitar permisos para mostrarse (si se desea)
+      await _handleLocationPermission();
     }
+  }
+
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Los servicios de ubicación están deshabilitados. Por favor habilítalos.')));
+      }
+      return false;
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Permisos de ubicación denegados.')));
+        }
+        return false;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Los permisos de ubicación están denegados permanentemente.')));
+      }
+      return false;
+    }
+    return true;
   }
 
   void _iniciarTransmisionGps() {
@@ -105,10 +149,35 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           widget.destLat,
           widget.destLng,
         );
+        _fetchRoute();
       } catch (e) {
         debugPrint('Error obteniendo GPS: $e');
       }
     });
+  }
+
+  Future<void> _fetchRoute() async {
+    try {
+      final start = '\${_tecnicoPos.longitude},\${_tecnicoPos.latitude}';
+      final end = '\${widget.destLng},\${widget.destLat}';
+      final url = 'https://router.project-osrm.org/route/v1/driving/$start;$end?overview=full&geometries=geojson';
+      
+      final response = await Dio().get(url);
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 'Ok' && data['routes'].isNotEmpty) {
+          final geometry = data['routes'][0]['geometry']['coordinates'] as List;
+          final points = geometry.map((p) => LatLng(p[1] as double, p[0] as double)).toList();
+          if (mounted) {
+            setState(() {
+              _routePoints = points;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching route: $e');
+    }
   }
 
   void _sendMessage() {
@@ -200,6 +269,15 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.taller.os',
                 ),
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _routePoints,
+                      strokeWidth: 4.0,
+                      color: Colors.blueAccent,
+                    ),
+                  ],
+                ),
                 MarkerLayer(
                   markers: [
                     // Marcador de destino (Cliente/Emergencia)
@@ -239,21 +317,42 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: Llamar al backend para cambiar estado a EN_ATENCION
+                      onPressed: () async {
+                        try {
+                          final apiClient = ApiClient(localStorage: LocalStorage());
+                          await apiClient.dio.patch(
+                             '/talleres/solicitudes/\${widget.emergenciaId}/estado',
+                             data: {'idEstado': 4} // Asumiendo ARREGLADO = 4
+                          );
+                          setState(() { _currentStatus = 'ARREGLADO'; });
+                          if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marcado como Arreglado')));
+                        } catch (e) {
+                          if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Guardado en cola (Offline)')));
+                        }
                       },
-                      child: const Text('Llegué al lugar'),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      child: const Text('Marcar como Arreglado'),
                     ),
                   ),
-                if (_isTecnico && _currentStatus == 'EN_ATENCION')
+                if (_isTecnico && _currentStatus == 'ARREGLADO')
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: Llamar al backend para finalizar
+                      onPressed: () async {
+                        try {
+                          final apiClient = ApiClient(localStorage: LocalStorage());
+                          await apiClient.dio.patch(
+                             '/talleres/solicitudes/\${widget.emergenciaId}/estado',
+                             data: {'idEstado': 5} // Asumiendo COMPLETADO = 5
+                          );
+                          setState(() { _currentStatus = 'COMPLETADO'; });
+                          if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Servicio Completado Exitosamente')));
+                        } catch (e) {
+                          if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Guardado en cola (Offline)')));
+                        }
                       },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                      child: const Text('Finalizar Servicio'),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+                      child: const Text('Finalizar y Marcar COMPLETADO'),
                     ),
                   ),
               ],

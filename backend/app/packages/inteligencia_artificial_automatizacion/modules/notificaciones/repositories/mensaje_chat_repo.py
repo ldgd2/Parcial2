@@ -20,7 +20,7 @@ class MensajeChatRepository(BaseRepository[MensajeChat, MensajeChatCreate, Mensa
     def __init__(self, db: AsyncSession):
         super().__init__(MensajeChat, db)
         
-    async def get_historial_por_emergencia(self, emergencia_id: int) -> List[MensajeChat]:
+    async def get_historial_por_emergencia(self, emergencia_id: int) -> list[MensajeChat]:
         stmt = (
             select(self.model)
             .where(self.model.idEmergencia == emergencia_id)

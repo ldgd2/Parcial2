@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 
 # Agregamos la ruta base del backend para poder importar si fuera necesario
 # Y buscar el .env en la raiz
-_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-load_dotenv(os.path.join(_root_dir, ".env"))
+from pathlib import Path
+_root_dir = Path(__file__).resolve().parents[6]
+load_dotenv(_root_dir / ".env")
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 

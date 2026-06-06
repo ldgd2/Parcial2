@@ -16,7 +16,7 @@ from app.core.dependencies import require_role
 router = APIRouter(prefix="/catalogos", tags=["Catálogos"])
 
 
-@router.get("/especialidades", response_model=List[EspecialidadOut])
+@router.get("/especialidades", response_model=list[EspecialidadOut])
 async def listar_especialidades(db: AsyncSession = Depends(get_db)):
     """Lista todas las especialidades disponibles en el sistema."""
     result = await db.execute(select(Especialidad).order_by(Especialidad.nombre))

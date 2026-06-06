@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CU16 - Sincronización Offline (Terminales)</title>
+    <style>
+        body {
+            background-color: #0c0c0c;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .controls {
+            background-color: #1a1a1a;
+            padding: 10px 20px;
+            display: flex;
+            gap: 15px;
+            border-bottom: 2px solid #333;
+        }
+
+        button {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 15px;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover { background-color: #555; }
+        
+        .btn-offline { color: #ff5555; border-color: #ff5555; }
+        .btn-online { color: #55ff55; border-color: #55ff55; }
+        .btn-action { color: #55ffff; border-color: #55ffff; }
+
+        .terminals-container {
+            display: flex;
+            flex: 1;
+            width: 100%;
+        }
+
+        .terminal-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #333;
+        }
+
+        .terminal-box:last-child {
+            border-right: none;
+        }
+
+        .terminal-header {
+            background-color: #222;
+            color: #aaa;
+            padding: 5px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .terminal-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .terminal-body::-webkit-scrollbar { width: 8px; }
+        .terminal-body::-webkit-scrollbar-track { background: #111; }
+        .terminal-body::-webkit-scrollbar-thumb { background: #444; }
+
+        /* Colors for terminal output */
+        .c-prompt { color: #00ff00; }
+        .c-info { color: #aaaaaa; }
+        .c-warn { color: #ffff55; }
+        .c-err { color: #ff5555; }
+        .c-succ { color: #55ff55; }
+        .c-sys { color: #55ffff; }
+        .c-post { color: #ff55ff; }
+
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button class="btn-offline" id="btn-net" onclick="toggleNetwork()">[ NET: OFFLINE ]</button>
+        <button class="btn-action" onclick="simulateUserAction()">$ App.createQuote()</button>
+        <button class="btn-action" onclick="simulateUserActionUpdate()">$ App.updateStatus()</button>
+    </div>
+
+    <div class="terminals-container">
+        <!-- Terminal 1: Cliente / Service Worker -->
+        <div class="terminal-box">
+            <div class="terminal-header">
+                <span>user@taller-movil:~/frontend$ logs -f service-worker</span>
+                <span id="status-sw" style="color: #ff5555;">[DISCONNECTED]</span>
+            </div>
+            <div class="terminal-body" id="term-client">
+                <span class="c-info">Loading TallerMovil Service Worker (v2.1.4)...</span><br>
+                <span class="c-succ">Service Worker Active. Background Sync Ready.</span><br>
+                <span class="c-prompt">user@taller-movil:~$</span> <span class="blink">_</span>
+            </div>
+        </div>
+
+        <!-- Terminal 2: Servidor / Backend -->
+        <div class="terminal-box">
+            <div class="terminal-header">
+                <span>root@aws-prod:~/backend$ tail -f /var/log/api.log</span>
+                <span style="color: #55ff55;">[LISTENING :8000]</span>
+            </div>
+            <div class="terminal-body" id="term-server">
+                <span class="c-info">[INFO] Starting Uvicorn 0.23.2 on http://0.0.0.0:8000</span><br>
+                <span class="c-info">[INFO] Database connection pooled: PostgreSQL</span><br>
+                <span class="c-succ">[INFO] Application startup complete.</span><br>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isOnline = false;
+        let localQueue = [];
+        let reqCounter = 100;
+
+        const termClient = document.getElementById('term-client');
+        const termServer = document.getElementById('term-server');
+        const btnNet = document.getElementById('btn-net');
+        const statusSw = document.getElementById('status-sw');
+
+        function appendToTerminal(term, html) {
+            // Remove the blinking cursor if it exists
+            const textHTML = term.innerHTML;
+            if(textHTML.endsWith('<span class="blink">_</span>')) {
+                term.innerHTML = textHTML.slice(0, -28);
+            }
+            
+            const time = new Date().toISOString().split('T')[1].slice(0, 8);
+            term.innerHTML += `<span class="c-info">[${time}]</span> ${html}<br>`;
+            
+            // Add blinking cursor back to client terminal only
+            if (term === termClient) {
+                term.innerHTML += `<span class="c-prompt">user@taller-movil:~$</span> <span class="blink">_</span>`;
+            }
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function toggleNetwork() {
+            isOnline = !isOnline;
+            if (isOnline) {
+                btnNet.className = 'btn-online';
+                btnNet.innerText = '[ NET: ONLINE ]';
+                statusSw.innerText = '[CONNECTED]';
+                statusSw.style.color = '#55ff55';
+                appendToTerminal(termClient, `<span class="c-sys">Network state changed: ONLINE. Processing queued events...</span>`);
+                processQueue();
+            } else {
+                btnNet.className = 'btn-offline';
+                btnNet.innerText = '[ NET: OFFLINE ]';
+                statusSw.innerText = '[DISCONNECTED]';
+                statusSw.style.color = '#ff5555';
+                appendToTerminal(termClient, `<span class="c-err">Network state changed: OFFLINE. Next requests will be queued in IndexedDB.</span>`);
+            }
+        }
+
+        function simulateUserAction() {
+            reqCounter++;
+            const reqId = `REQ-${reqCounter}`;
+            const payload = `POST /api/v1/cotizaciones {"taller_id": "TAL-001", "monto": 150.00}`;
+            
+            appendToTerminal(termClient, `<span class="c-post">> Intercepted App request:</span> ${payload}`);
+
+            if (!isOnline) {
+                appendToTerminal(termClient, `<span class="c-warn">>> No internet. Enqueuing request ${reqId} in local IndexedDB.</span>`);
+                localQueue.push({ id: reqId, data: payload, type: 'POST' });
+            } else {
+                sendToServer(reqId, payload);
+            }
+        }
+
+        function simulateUserActionUpdate() {
+            reqCounter++;
+            const reqId = `REQ-${reqCounter}`;
+            const payload = `PATCH /api/v1/emergencias/24/estado {"estado": "FINALIZADO"}`;
+            
+            appendToTerminal(termClient, `<span class="c-post">> Intercepted App request:</span> ${payload}`);
+
+            if (!isOnline) {
+                appendToTerminal(termClient, `<span class="c-warn">>> No internet. Enqueuing request ${reqId} in local IndexedDB.</span>`);
+                localQueue.push({ id: reqId, data: payload, type: 'PATCH' });
+            } else {
+                sendToServer(reqId, payload);
+            }
+        }
+
+        async function processQueue() {
+            if (localQueue.length === 0) {
+                appendToTerminal(termClient, `<span class="c-info">>> Local queue is empty.</span>`);
+                return;
+            }
+
+            appendToTerminal(termClient, `<span class="c-sys">>> Background Sync Event triggered. Found ${localQueue.length} items in IndexedDB.</span>`);
+
+            while(localQueue.length > 0 && isOnline) {
+                const req = localQueue[0]; // peek
+                appendToTerminal(termClient, `<span class="c-sys">>> Sending queued request ${req.id} to server...</span>`);
+                
+                await new Promise(r => setTimeout(r, 1000)); // Simulate network latency
+
+                if (!isOnline) {
+                    appendToTerminal(termClient, `<span class="c-err">>> Connection lost during background sync. Aborting.</span>`);
+                    break;
+                }
+
+                sendToServer(req.id, req.data, true);
+                localQueue.shift(); // remove from queue
+            }
+            
+            if (isOnline && localQueue.length === 0) {
+                appendToTerminal(termClient, `<span class="c-succ">>> Background Sync complete. Queue is empty.</span>`);
+            }
+        }
+
+        function sendToServer(reqId, payload, isFromQueue = false) {
+            if(!isFromQueue) {
+                appendToTerminal(termClient, `<span class="c-sys">>> Sending request ${reqId} directly...</span>`);
+            }
+            
+            // Simulate Backend receiving
+            setTimeout(() => {
+                appendToTerminal(termServer, `<span class="c-succ">[REQUEST]</span> Recibiendo peticion fuera de linea procesada (ID: ${reqId})`);
+                appendToTerminal(termServer, `<span class="c-info">Payload:</span> ${payload}`);
+                appendToTerminal(termServer, `<span class="c-warn">[DB]</span> Transaction committed successfully.`);
+                appendToTerminal(termServer, `<span class="c-sys">200 OK</span> - Response sent to client.`);
+                
+                // Simulate Frontend success response
+                setTimeout(() => {
+                    appendToTerminal(termClient, `<span class="c-succ"><< Received 200 OK for ${reqId}</span>`);
+                }, 400);
+            }, 800);
+        }
+
+        // Initialize as OFFLINE
+        setTimeout(() => {
+            appendToTerminal(termClient, `<span class="c-err">Network state changed: OFFLINE. Next requests will be queued in IndexedDB.</span>`);
+        }, 1000);
+
+    </script>
+</body>
+</html>

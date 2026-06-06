@@ -3,9 +3,6 @@ from firebase_admin import credentials, messaging
 from sqlalchemy.ext.asyncio import AsyncSession
 import os
 from app.core.socket_manager import manager
-from app.packages.inteligencia_artificial_automatizacion.modules.notificaciones.repositories.fcm_token_repo import FCMTokenRepository
-from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.repositories.usuario_repo import UsuarioRepository
-from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.repositories.cliente_repo import ClienteRepository
 
 class NotificationService:
     _initialized = False
@@ -36,8 +33,7 @@ class NotificationService:
     @staticmethod
     async def registrar_token(db: AsyncSession, user_id: int, token: str, dispositivo: str = "android", role: str = "cliente"):
         # 1. Registrar en la tabla centralizada FCMToken
-        fcm_repo = FCMTokenRepository(db)
-        await fcm_repo.delete_by_token(token)
+        await FCMToken.delete_by_token(db, token)
         
         obj_in = {
             "token": token,
@@ -50,19 +46,17 @@ class NotificationService:
         else:
             obj_in["idUsuario"] = user_id
             
-        nuevo_fcm = await fcm_repo.create(obj_in=obj_in)
+        nuevo_fcm = await FCMToken.create(db, obj_in=obj_in)
 
         # 2. Registrar directamente en la tabla específica para visibilidad inmediata
         if role == "cliente":
-            cliente_repo = ClienteRepository(db)
-            cliente = await cliente_repo.get(user_id)
+            cliente = await Cliente.get(db, user_id)
             if cliente:
-                await cliente_repo.update(db_obj=cliente, obj_in={"fcm_token": token})
+                await cliente.update(db, obj_in={"fcm_token": token})
         else:
-            usuario_repo = UsuarioRepository(db)
-            usuario = await usuario_repo.get(user_id)
+            usuario = await Usuario.get(db, user_id)
             if usuario:
-                await usuario_repo.update(db_obj=usuario, obj_in={"fcm_token": token})
+                await usuario.update(db, obj_in={"fcm_token": token})
 
         await db.commit()
         return nuevo_fcm
@@ -81,8 +75,7 @@ class NotificationService:
         NotificationService.initialize()
         
         # Obtener tokens del usuario o cliente
-        fcm_repo = FCMTokenRepository(db)
-        fcm_tokens = await fcm_repo.get_by_user_or_client(user_id)
+        fcm_tokens = await FCMToken.get_by_user_or_client(db, user_id)
         tokens = [t.token for t in fcm_tokens]
         
         if not tokens:

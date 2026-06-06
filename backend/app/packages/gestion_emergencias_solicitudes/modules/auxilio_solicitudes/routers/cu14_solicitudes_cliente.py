@@ -20,7 +20,7 @@ router = APIRouter(prefix="/emergencias", tags=["Comercio — Solicitudes Client
 
 @router.get(
     "/mis-solicitudes",
-    response_model=List[EmergenciaOut],
+    response_model=list[EmergenciaOut],
     summary="CU14 — Ver historial de mis solicitudes de auxilio",
 )
 async def mis_solicitudes(

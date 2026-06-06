@@ -40,11 +40,27 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
-def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+from sqlalchemy import text
 
+def include_name(name, type_, parent_names):
+    if type_ == "table" and name == "alembic_version":
+        return False
+    return True
+
+def do_run_migrations(connection: Connection, tenant_schema: str = "public") -> None:
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table_schema=tenant_schema,
+        include_schemas=True,
+        include_name=include_name,
+    )
     with context.begin_transaction():
+        if tenant_schema != "public":
+            context.execute(f"SET search_path TO {tenant_schema}")
         context.run_migrations()
+        if tenant_schema != "public":
+            context.execute("SET search_path TO public")
 
 async def run_async_migrations() -> None:
     """In this scenario we need to create an Engine
@@ -60,7 +76,16 @@ async def run_async_migrations() -> None:
     )
 
     async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+        import sys
+        is_autogenerate = any(arg == "--autogenerate" for arg in sys.argv)
+        
+        # Run migrations on public schema
+        await connection.run_sync(do_run_migrations, "public")
+        
+        # We skip migrating tenant schemas because ALL models are currently
+        # hardcoded to __table_args__ = {"schema": "public"}. Running migrations
+        # on empty tenant schemas causes constraint dropping errors since the
+        # tables only exist in public.
 
     await connectable.dispose()
 

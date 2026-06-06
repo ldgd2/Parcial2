@@ -1,14 +1,13 @@
 from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey, func, JSON
 from sqlalchemy.orm import relationship
-from app.db.session import Base
-
-
-class Pago(Base):
+from app.db.generic_model import GenericModel
+class Pago(GenericModel):
     __tablename__ = "pago"
+    __table_args__ = {"schema": "public"}
 
     id = Column(Integer, primary_key=True, index=True)
-    cliente_id = Column(Integer, ForeignKey("cliente.id"), nullable=False)
-    emergencia_id = Column(Integer, ForeignKey("emergencia.id"), nullable=False)
+    cliente_id = Column(Integer, ForeignKey("public.cliente.id"), nullable=False)
+    emergencia_id = Column(Integer, ForeignKey("public.emergencia.id"), nullable=False)
     
     monto = Column("Monto", Numeric(18, 2), nullable=False)
     monto_comision = Column("MontoComision", Numeric(18, 2), nullable=False)

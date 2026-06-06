@@ -18,7 +18,7 @@ router = APIRouter(prefix="/clientes", tags=["GPS — Clientes (CU03)"])
 
 @router.get(
     "/",
-    response_model=List[ClienteOut],
+    response_model=list[ClienteOut],
     summary="CU03 — Listar todos los clientes",
 )
 async def listar_clientes(db: AsyncSession = Depends(get_db)):
@@ -50,7 +50,7 @@ async def registrar(data: ClienteCreate, db: AsyncSession = Depends(get_db)):
 
 @router.get(
     "/mis-vehiculos",
-    response_model=List[VehiculoOut],
+    response_model=list[VehiculoOut],
     summary="CU03 — Listar mis vehículos",
 )
 async def mis_vehiculos(

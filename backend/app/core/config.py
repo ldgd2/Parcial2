@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     
     # Stripe
     STRIPE_SECRET_KEY: str = ""
+    STRIPE_PUBLIC_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
 
     # Configuración de Pydantic v2

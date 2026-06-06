@@ -40,7 +40,7 @@ async def crear_tecnico(
 
 @router.get(
     "/taller/{idTaller}",
-    response_model=List[TecnicoOut],
+    response_model=list[TecnicoOut],
     summary="CU07 — Listar técnicos de un taller",
 )
 async def listar_tecnicos_taller(
@@ -102,7 +102,7 @@ async def desactivar_tecnico(
 )
 async def asignar_especialidades_tecnico(
     tecnico_id: int,
-    especialidades_ids: List[int],
+    especialidades_ids: list[int],
     current=Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ):

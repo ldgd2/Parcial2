@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/emergency_report.dart';
 
+
 class EmergencyService {
   final ApiClient apiClient;
 
@@ -34,7 +35,7 @@ class EmergencyService {
   }
 
   /// Registra la emergencia oficial en el backend
-  Future<void> submitEmergency(EmergencyReport report) async {
+  Future<void> submitEmergency(EmergencyReport report, {List<String>? localFiles}) async {
     try {
       await apiClient.dio.post(
         '/emergencias/reportar',

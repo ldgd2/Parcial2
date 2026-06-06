@@ -10,7 +10,7 @@ from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.services.
 router = APIRouter(prefix="/cotizaciones", tags=["Cotizaciones"])
 
 @router.post("/{id_emergencia}", response_model=CotizacionOut)
-def create_cotizacion(
+async def create_cotizacion(
     id_emergencia: int,
     data: CotizacionCreate,
     db: Session = Depends(get_db),
@@ -20,16 +20,16 @@ def create_cotizacion(
     service = CotizacionService(db)
     # Extraemos el cod del Taller del token del usuario autenticado
     id_taller = current_user.get("taller", "TALLER_001") if current_user else "TALLER_001"
-    return service.create_cotizacion(id_emergencia, id_taller, data)
+    return await service.create_cotizacion(id_emergencia, id_taller, data)
 
-@router.get("/emergencia/{id_emergencia}", response_model=List[CotizacionOut])
-def get_cotizaciones_by_emergencia(
+@router.get("/emergencia/{id_emergencia}", response_model=list[CotizacionOut])
+async def get_cotizaciones_by_emergencia(
     id_emergencia: int,
     db: Session = Depends(get_db)
 ):
     """Obtiene todas las cotizaciones hechas para una emergencia."""
     service = CotizacionService(db)
-    return service.get_cotizaciones_by_emergencia(id_emergencia)
+    return await service.get_cotizaciones_by_emergencia(id_emergencia)
 
 @router.put("/{id_cotizacion}/estado", response_model=CotizacionOut)
 async def update_estado_cotizacion(

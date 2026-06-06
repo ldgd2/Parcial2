@@ -1,6 +1,7 @@
 import { ApplicationConfig, importProvidersFrom, APP_INITIALIZER, isDevMode } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { ConfigService } from './core/config/config.service';
 import { 
   LucideAngularModule, 
@@ -9,7 +10,8 @@ import {
   Wrench, ShieldAlert, Send, Sun, Moon, ChevronsLeft, ChevronsRight,
   LayoutDashboard, Briefcase, Factory, Eye, Globe, Plus, Bell,
   ArrowRight, Camera, Mail, KeyRound, Loader2, CheckSquare, Check, Image as ImageIcon, Tag, X, Radio, Video, Info, MessageSquare,
-  TrendingUp, DollarSign, FileText, Calendar
+  TrendingUp, DollarSign, FileText, Calendar, CheckCircle, Cpu, ShieldCheck, CreditCard, Zap,
+  ArrowUpCircle, BarChart2, Radar, Star, UserCog, Server
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -20,6 +22,7 @@ import { provideServiceWorker } from '@angular/service-worker';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideAnimations(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor, offlineInterceptor])),
     {
@@ -35,7 +38,8 @@ export const appConfig: ApplicationConfig = {
         Wrench, ShieldAlert, Send, Sun, Moon, ChevronsLeft, ChevronsRight,
         LayoutDashboard, Briefcase, Factory, Eye, Globe, Plus, Bell,
         ArrowRight, Camera, Mail, KeyRound, Loader2, CheckSquare, Check, Image: ImageIcon, Tag, X, Radio, Video, Info, MessageSquare,
-        TrendingUp, DollarSign, FileText, Calendar
+        TrendingUp, DollarSign, FileText, Calendar, CheckCircle, Cpu, ShieldCheck, CreditCard, Zap,
+        ArrowUpCircle, BarChart2, Radar, Star, UserCog, Server
     })),
     provideServiceWorker('ngsw-worker.js', {
         enabled: !isDevMode(),

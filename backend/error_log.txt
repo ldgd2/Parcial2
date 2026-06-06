@@ -1,0 +1,212 @@
+Error en register_admin: name 'Usuario' is not defined
+Traceback (most recent call last):
+  File "C:\Users\ldgd2\OneDrive\Documentos\Proyectos_lider\taller\backend\app\packages\gestion_usuarios_seguridad\modules\auth\services\auth_service.py", line 32, in register_admin
+    if await Usuario.get_by_correo(db, data.correo):
+NameError: name 'Usuario' is not defined
+
+Error en register_admin: Module 'tecnico_especialidad' has no mapped classes registered under the name '_sa_instance_state'
+Traceback (most recent call last):
+  File "C:\Users\ldgd2\OneDrive\Documentos\Proyectos_lider\taller\backend\app\packages\gestion_usuarios_seguridad\modules\auth\services\auth_service.py", line 37, in register_admin
+    if await Usuario.get_by_correo(db, data.correo):
+  File "C:\Users\ldgd2\OneDrive\Documentos\Proyectos_lider\taller\backend\app\packages\gestion_usuarios_seguridad\modules\usuarios_vehiculos\models\usuario.py", line 26, in get_by_correo
+    result = await db.execute(select(cls).where(cls.correo == correo))
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2249, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1633, in _execute_clauseelement
+    compiled_sql, extracted_params, cache_hit = elem._compile_w_cache(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 716, in _compile_w_cache
+    compiled_sql = self._compiler(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 324, in _compiler
+    return dialect.statement_compiler(dialect, self, **kw)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 1461, in __init__
+    Compiled.__init__(self, dialect, statement, **kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 901, in __init__
+    self.string = self.process(self.statement, **compile_kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 947, in process
+    return obj._compiler_dispatch(self, **kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\visitors.py", line 138, in _compiler_dispatch
+    return meth(self, **kw)  # type: ignore  # noqa: E501
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 4807, in visit_select
+    compile_state = select_stmt._compile_state_factory(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\base.py", line 775, in create_for_statement
+    return klass.create_for_statement(statement, compiler, **kw)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 447, in create_for_statement
+    return cls._create_orm_context(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 1175, in _create_orm_context
+    _QueryEntity.to_compile_state(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 2628, in to_compile_state
+    _MapperEntity(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 2708, in __init__
+    entity._post_inspect
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\langhelpers.py", line 1235, in __get__
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 2733, in _post_inspect
+    self._check_configure()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 2410, in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 4227, in _configure_registries
+    _do_configure_registries(registries, cascade)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 4268, in _do_configure_registries
+    mapper._post_configure_properties()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 2427, in _post_configure_properties
+    prop.init()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\interfaces.py", line 595, in init
+    self.do_init()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\relationships.py", line 1654, in do_init
+    self._process_dependent_arguments()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\relationships.py", line 1710, in _process_dependent_arguments
+    if secondary is not None and _is_mapped_class(secondary):
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\base.py", line 467, in _is_mapped_class
+    insp = inspection.inspect(entity, False)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\inspection.py", line 140, in inspect
+    ret = reg(subject)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\base.py", line 430, in _inspect_mapped_object
+    return instance_state(instance)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\clsregistry.py", line 350, in __getattr__
+    raise NameError(
+NameError: Module 'tecnico_especialidad' has no mapped classes registered under the name '_sa_instance_state'
+
+Error en register_admin: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tecnico(tecnico)]'. Original exception was: Module 'tecnico_especialidad' has no mapped classes registered under the name '_sa_instance_state'
+Traceback (most recent call last):
+  File "C:\Users\ldgd2\OneDrive\Documentos\Proyectos_lider\taller\backend\app\packages\gestion_usuarios_seguridad\modules\auth\services\auth_service.py", line 37, in register_admin
+    if await Usuario.get_by_correo(db, data.correo):
+  File "C:\Users\ldgd2\OneDrive\Documentos\Proyectos_lider\taller\backend\app\packages\gestion_usuarios_seguridad\modules\usuarios_vehiculos\models\usuario.py", line 26, in get_by_correo
+    result = await db.execute(select(cls).where(cls.correo == correo))
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 190, in greenlet_spawn
+    result = context.switch(*args, **kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2249, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1633, in _execute_clauseelement
+    compiled_sql, extracted_params, cache_hit = elem._compile_w_cache(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 716, in _compile_w_cache
+    compiled_sql = self._compiler(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 324, in _compiler
+    return dialect.statement_compiler(dialect, self, **kw)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 1461, in __init__
+    Compiled.__init__(self, dialect, statement, **kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 901, in __init__
+    self.string = self.process(self.statement, **compile_kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 947, in process
+    return obj._compiler_dispatch(self, **kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\visitors.py", line 138, in _compiler_dispatch
+    return meth(self, **kw)  # type: ignore  # noqa: E501
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 4807, in visit_select
+    compile_state = select_stmt._compile_state_factory(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\base.py", line 775, in create_for_statement
+    return klass.create_for_statement(statement, compiler, **kw)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 447, in create_for_statement
+    return cls._create_orm_context(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 1175, in _create_orm_context
+    _QueryEntity.to_compile_state(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 2628, in to_compile_state
+    _MapperEntity(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 2708, in __init__
+    entity._post_inspect
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\langhelpers.py", line 1235, in __get__
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 2733, in _post_inspect
+    self._check_configure()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 2410, in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 4227, in _configure_registries
+    _do_configure_registries(registries, cascade)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 4264, in _do_configure_registries
+    raise e
+sqlalchemy.exc.InvalidRequestError: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tecnico(tecnico)]'. Original exception was: Module 'tecnico_especialidad' has no mapped classes registered under the name '_sa_instance_state'
+
+Error en register_admin: Module 'asignacion_tecnico_emergencia' has no mapped classes registered under the name '_sa_instance_state'
+Traceback (most recent call last):
+  File "C:\Users\ldgd2\OneDrive\Documentos\Proyectos_lider\taller\backend\app\packages\gestion_usuarios_seguridad\modules\auth\services\auth_service.py", line 37, in register_admin
+    if await Usuario.get_by_correo(db, data.correo):
+  File "C:\Users\ldgd2\OneDrive\Documentos\Proyectos_lider\taller\backend\app\packages\gestion_usuarios_seguridad\modules\usuarios_vehiculos\models\usuario.py", line 26, in get_by_correo
+    result = await db.execute(select(cls).where(cls.correo == correo))
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2249, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1633, in _execute_clauseelement
+    compiled_sql, extracted_params, cache_hit = elem._compile_w_cache(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 716, in _compile_w_cache
+    compiled_sql = self._compiler(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 324, in _compiler
+    return dialect.statement_compiler(dialect, self, **kw)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 1461, in __init__
+    Compiled.__init__(self, dialect, statement, **kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 901, in __init__
+    self.string = self.process(self.statement, **compile_kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 947, in process
+    return obj._compiler_dispatch(self, **kwargs)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\visitors.py", line 138, in _compiler_dispatch
+    return meth(self, **kw)  # type: ignore  # noqa: E501
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\compiler.py", line 4807, in visit_select
+    compile_state = select_stmt._compile_state_factory(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\base.py", line 775, in create_for_statement
+    return klass.create_for_statement(statement, compiler, **kw)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 447, in create_for_statement
+    return cls._create_orm_context(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 1175, in _create_orm_context
+    _QueryEntity.to_compile_state(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 2628, in to_compile_state
+    _MapperEntity(
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 2708, in __init__
+    entity._post_inspect
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\langhelpers.py", line 1235, in __get__
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 2733, in _post_inspect
+    self._check_configure()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 2410, in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 4227, in _configure_registries
+    _do_configure_registries(registries, cascade)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 4268, in _do_configure_registries
+    mapper._post_configure_properties()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\mapper.py", line 2427, in _post_configure_properties
+    prop.init()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\interfaces.py", line 595, in init
+    self.do_init()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\relationships.py", line 1654, in do_init
+    self._process_dependent_arguments()
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\relationships.py", line 1710, in _process_dependent_arguments
+    if secondary is not None and _is_mapped_class(secondary):
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\base.py", line 467, in _is_mapped_class
+    insp = inspection.inspect(entity, False)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\inspection.py", line 140, in inspect
+    ret = reg(subject)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\base.py", line 430, in _inspect_mapped_object
+    return instance_state(instance)
+  File "C:\Users\ldgd2\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\clsregistry.py", line 350, in __getattr__
+    raise NameError(
+NameError: Module 'asignacion_tecnico_emergencia' has no mapped classes registered under the name '_sa_instance_state'
+

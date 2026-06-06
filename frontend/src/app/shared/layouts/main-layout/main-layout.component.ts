@@ -1,15 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { ThemeService } from '../../../core/services/theme.service';
 import { ApiService } from '../../../core/api/api.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 import { toast } from 'ngx-sonner';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, HasPermissionDirective],
   template: `
     <div class="flex h-screen bg-[#050505] text-white transition-all duration-300 overflow-hidden font-sans selection:bg-primary selection:text-white">
       
@@ -28,7 +30,7 @@ import { toast } from 'ngx-sonner';
         <!-- Navigation -->
         <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto overflow-x-hidden pt-8">
           <ng-container *ngFor="let item of navItems">
-            <a [routerLink]="item.path" 
+            <a *appHasPermission="item.permission" [routerLink]="item.path" 
                routerLinkActive="bg-zinc-900 border-l border-primary"
                class="flex items-center gap-4 px-5 py-4 transition-all hover:bg-zinc-900/50 group relative">
               <lucide-icon [name]="item.icon" size="16" class="shrink-0 text-zinc-500 group-hover:text-white transition-colors"></lucide-icon>
@@ -71,17 +73,20 @@ import { toast } from 'ngx-sonner';
           <div class="flex items-center gap-4">
             <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
             <span class="font-bold text-[10px] uppercase tracking-[.25em] text-zinc-600">Conexión Segura Establecida</span>
+            <span class="ml-4 px-2 py-1 bg-zinc-800 text-xs font-mono rounded tracking-widest uppercase border border-zinc-700 text-zinc-300" *ngIf="auth.currentUser()?.plan?.nombre">
+              PLAN: {{ auth.currentUser()?.plan?.nombre }}
+            </span>
           </div>
 
           <div class="flex items-center gap-8">
             <lucide-icon name="bell" size="16" class="text-zinc-600 hover:text-white cursor-pointer"></lucide-icon>
             <div class="flex items-center gap-4 border-l border-zinc-800 pl-8">
               <div class="text-right">
-                <div class="font-bold text-xs">{{ operadorNombre }}</div>
-                <div class="font-bold text-[10px] uppercase tracking-widest text-zinc-600">{{ operadorTaller }}</div>
+                <div class="font-bold text-xs">{{ auth.currentUser()?.usuario?.nombre || 'Operador' }}</div>
+                <div class="font-bold text-[10px] uppercase tracking-widest text-zinc-600">{{ auth.currentUser()?.taller?.nombre || 'SaaS ADMIN' }}</div>
               </div>
-              <div class="w-10 h-10 bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold">
-                {{ operadorInicial }}
+              <div class="w-10 h-10 bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold uppercase">
+                {{ (auth.currentUser()?.usuario?.nombre || 'OP').substring(0, 2) }}
               </div>
             </div>
           </div>
@@ -101,17 +106,33 @@ import { toast } from 'ngx-sonner';
 })
 export class MainLayoutComponent implements OnInit {
   isCollapsed = false;
-  operadorNombre = localStorage.getItem('user_name') || 'Operador';
-  operadorTaller = localStorage.getItem('nombre_taller') || 'Taller OS';
-  operadorInicial = (this.operadorNombre).substring(0, 2).toUpperCase();
   
-  navItems = [
-    { label: 'Tablero', icon: 'layout-dashboard', path: '/app/dashboard' },
-    { label: 'Reportes', icon: 'trending-up', path: '/app/reportes' },
-    { label: 'Mis Trabajos', icon: 'briefcase', path: '/app/trabajos' },
-    { label: 'Técnicos', icon: 'users', path: '/app/tecnicos' },
-    { label: 'Mis Talleres', icon: 'factory', path: '/app/talleres' },
-  ];
+  public auth = inject(AuthService);
+
+  get navItems() {
+    const user = this.auth.currentUser();
+    const isSuperAdmin = !user?.taller;
+
+    if (isSuperAdmin) {
+      return [
+        { label: 'SaaS', icon: 'server', path: '/app/saas-admin/tenants', permission: '' },
+        { label: 'Suscripción Global', icon: 'credit-card', path: '/app/suscripcion', permission: '' }
+      ];
+    }
+
+    return [
+      { label: 'Tablero', icon: 'layout-dashboard', path: '/app/dashboard', permission: '' },
+      { label: 'Radar', icon: 'radar', path: '/app/radar', permission: '' },
+      { label: 'Reportes', icon: 'trending-up', path: '/app/reportes', permission: 'PERMISO_VER_REPORTES' },
+      { label: 'Historial Vehicular', icon: 'history', path: '/app/reportes/historial-vehicular', permission: 'PERMISO_VER_REPORTES' },
+      { label: 'Mis Trabajos', icon: 'briefcase', path: '/app/trabajos', permission: '' },
+      { label: 'Técnicos', icon: 'users', path: '/app/tecnicos', permission: 'PERMISO_VER_TECNICO' },
+      { label: 'Usuarios', icon: 'user-cog', path: '/app/usuarios', permission: 'PERMISO_GESTIONAR_TECNICO' },
+      { label: 'Calificaciones', icon: 'star', path: '/app/calificaciones', permission: 'PERMISO_VER_REPORTES' },
+      { label: 'Mis Talleres', icon: 'factory', path: '/app/talleres', permission: 'PERMISO_VER_SUCURSALES' },
+      { label: 'Suscripción', icon: 'credit-card', path: '/app/suscripcion', permission: '' }
+    ];
+  }
 
   constructor(
     public themeService: ThemeService,
@@ -122,17 +143,6 @@ export class MainLayoutComponent implements OnInit {
   ngOnInit() {}
 
   logout() {
-    // CU02 — Llamar al endpoint de cierre de sesión en el backend
-    this.api.post('/auth/logout', {}).subscribe({
-      next: () => {
-        localStorage.clear();
-        this.router.navigate(['/auth/login']);
-      },
-      error: () => {
-        // Incluso si falla el endpoint, cerramos sesión localmente
-        localStorage.clear();
-        this.router.navigate(['/auth/login']);
-      }
-    });
+    this.auth.logout();
   }
 }

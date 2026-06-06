@@ -1,10 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { ApiService } from '../../../core/api/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
@@ -116,12 +116,9 @@ export class LoginComponent {
 
   loading = false;
   errorMessage = '';
-
-  constructor(
-    private api: ApiService, 
-    private router: Router,
-    public theme: ThemeService
-  ) {}
+  
+  public theme = inject(ThemeService);
+  private authService = inject(AuthService);
 
   onLogin() {
     if (!this.formData.correo || !this.formData.contrasena) {
@@ -132,19 +129,9 @@ export class LoginComponent {
     this.loading = true;
     this.errorMessage = '';
 
-    // En la web solo se permite el login de administradores
-    this.api.post<any>('/auth/login/web', this.formData).subscribe({
-      next: (res) => {
+    this.authService.loginWeb(this.formData).subscribe({
+      next: () => {
         this.loading = false;
-        // Guardar token
-        // Guardar token y sesión
-        localStorage.setItem('access_token', res.access_token);
-        localStorage.setItem('rol', res.rol);
-        localStorage.setItem('user_name', res.nombre);
-        localStorage.setItem('cod_taller', res.cod_taller || '');
-        localStorage.setItem('nombre_taller', res.nombre_taller || 'Taller OS');
-        
-        this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
         this.loading = false;

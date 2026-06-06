@@ -25,11 +25,21 @@ class Base(DeclarativeBase):
     pass
 
 
+from fastapi import Request
+from sqlalchemy import text
+
 # ─── Dependencia FastAPI ──────────────────────────────────────────
-async def get_db() -> AsyncSession:
-    """Inyecta una sesión de base de datos en cada request."""
+async def get_db(request: Request = None) -> AsyncSession:
+    """Inyecta una sesión de base de datos en cada request, manejando el multitenancy."""
     async with AsyncSessionLocal() as session:
         try:
+            if request:
+                tenant_schema = request.headers.get("X-Tenant-Schema")
+                if tenant_schema:
+                    # Sanitizamos el input básico
+                    if tenant_schema.isidentifier():
+                        await session.execute(text(f"SET search_path TO {tenant_schema}, public"))
+            
             yield session
             await session.commit()
         except Exception:

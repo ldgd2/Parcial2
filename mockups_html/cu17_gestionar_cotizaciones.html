@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CU17 - Gestionar Cotizaciones (Web Dashboard)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: white; margin: 0; }
+        .font-mono { font-family: 'Space Mono', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #000; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; }
+    </style>
+</head>
+<body class="min-h-full flex flex-col bg-[#050505] text-white pb-20">
+
+    <!-- TOP NAVIGATION BAR -->
+    <div class="h-20 bg-[#050505] border-b border-zinc-900 px-8 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xl bg-opacity-80">
+        <div class="flex items-center gap-6">
+            <button class="w-10 h-10 border border-zinc-800 flex items-center justify-center hover:bg-zinc-900 transition-all group">
+                <i data-lucide="arrow-left" class="text-zinc-600 group-hover:text-white" width="16"></i>
+            </button>
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-lg font-bold tracking-tight uppercase">Batería Muerta / Falla Eléctrica</h1>
+                    <span class="px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[.2em] border border-[#f97316] text-[#f97316]">
+                        ESPERANDO_COTIZACION
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-4">
+            <button class="bg-orange-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-orange-500 flex items-center gap-2" onclick="document.getElementById('modal-cotizacion').style.display='flex'">
+                <i data-lucide="calculator" width="14"></i>
+                Cotizar
+            </button>
+        </div>
+    </div>
+
+    <!-- MAP SECTION -->
+    <div class="relative w-full h-[400px] border-b border-zinc-900 overflow-hidden bg-zinc-900 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center">
+        <div class="absolute inset-0 bg-black/60"></div>
+        <div class="absolute inset-x-0 bottom-0 p-8 flex justify-between items-end z-10">
+            <div class="bg-black/80 backdrop-blur-md border border-zinc-800 p-6">
+                <div class="flex items-center gap-3 mb-2">
+                    <i data-lucide="map-pin" class="text-orange-500" width="14"></i>
+                    <span class="font-bold text-[10px] uppercase tracking-widest text-white">Av. San Martin 4to Anillo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-px bg-zinc-900">
+        <div class="lg:col-span-8 bg-[#050505] p-10 lg:p-14 space-y-12">
+            <div class="space-y-4">
+                <h2 class="text-2xl font-light italic text-zinc-200">"El cliente reporta que el vehículo no enciende, hace un sonido de clic al girar la llave. Luces del tablero débiles."</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-zinc-900">
+                <div class="space-y-4">
+                    <h3 class="font-bold text-[9px] uppercase tracking-widest text-orange-500">Diagnóstico Probable</h3>
+                    <p class="text-xs text-zinc-400 font-mono">Batería descargada o terminales sulfatados</p>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="font-bold text-[9px] uppercase tracking-widest text-zinc-400">Piezas Necesarias</h3>
+                    <p class="text-xs text-zinc-400 font-mono">Multímetro, Batería de reemplazo, Cables pasa corriente</p>
+                </div>
+            </div>
+        </div>
+        <div class="lg:col-span-4 bg-[#080808] p-10 space-y-10">
+            <section class="space-y-4">
+                <h3 class="text-[9px] font-bold uppercase tracking-widest text-zinc-600">Vehículo</h3>
+                <div class="bg-zinc-950 border border-zinc-900 p-6">
+                    <div class="text-sm font-bold">Nissan Sentra 2018</div>
+                    <div class="text-[10px] font-mono text-zinc-500 mt-1">HJK-892</div>
+                </div>
+            </section>
+
+            <!-- Seccion Cotizaciones -->
+            <section class="space-y-4" id="cotizaciones-list" style="display:none;">
+                <h3 class="text-[9px] font-bold uppercase tracking-widest text-orange-500">Cotizaciones Emitidas</h3>
+                <div class="space-y-3" id="cotizaciones-container">
+                    <!-- Cotizaciones injected here -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal Cotizacion -->
+    <div id="modal-cotizacion" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm overflow-y-auto" style="display: none;">
+        <div class="bg-zinc-950 border border-orange-900 w-full max-w-xl my-8">
+            <div class="p-6 border-b border-zinc-900 flex justify-between items-center">
+                <h2 class="font-bold text-xs uppercase tracking-widest text-orange-500">Generar Cotización</h2>
+                <button onclick="document.getElementById('modal-cotizacion').style.display='none'"><i data-lucide="x" width="18"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Descripción del Servicio</label>
+                    <textarea id="desc" rows="3" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500" placeholder="Ej: Cambio de batería a domicilio"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Mano de Obra ($)</label>
+                        <input type="number" id="mano" value="0" oninput="calcTotal()" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Repuestos ($)</label>
+                        <input type="number" id="rep" value="0" oninput="calcTotal()" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Tiempo Est. (Horas)</label>
+                        <input type="number" id="tiempo" value="1" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Condiciones / Notas (Opcional)</label>
+                    <textarea rows="2" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500"></textarea>
+                </div>
+                
+                <div class="pt-4 border-t border-zinc-900 mt-6 flex flex-col gap-4">
+                    <div class="flex justify-between items-center text-[11px] font-mono font-bold text-orange-400">
+                        <span>TOTAL ESTIMADO:</span>
+                        <span class="text-lg">$ <span id="total-val">0.00</span></span>
+                    </div>
+                    <button onclick="enviarCotizacion()" class="w-full bg-orange-700 py-4 font-bold text-[10px] uppercase tracking-widest transition-colors hover:bg-orange-600 text-white">
+                        Enviar al Cliente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function calcTotal() {
+            let m = parseFloat(document.getElementById('mano').value) || 0;
+            let r = parseFloat(document.getElementById('rep').value) || 0;
+            document.getElementById('total-val').innerText = (m + r).toFixed(2);
+        }
+
+        function enviarCotizacion() {
+            document.getElementById('modal-cotizacion').style.display = 'none';
+            document.getElementById('cotizaciones-list').style.display = 'block';
+            
+            let m = parseFloat(document.getElementById('mano').value) || 0;
+            let r = parseFloat(document.getElementById('rep').value) || 0;
+            let desc = document.getElementById('desc').value || "Servicio Técnico";
+            
+            document.getElementById('cotizaciones-container').innerHTML += `
+                <div class="bg-zinc-950 border border-orange-900/50 p-4 relative">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-white">#1</span>
+                        <span class="text-[8px] px-2 py-0.5 border uppercase font-bold border-yellow-500 text-yellow-500">
+                            PENDIENTE
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 mb-2">${desc}</p>
+                    <div class="text-xs font-mono text-orange-400 font-bold flex justify-between">
+                        <span>Total:</span>
+                        <span>$ ${(m+r).toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

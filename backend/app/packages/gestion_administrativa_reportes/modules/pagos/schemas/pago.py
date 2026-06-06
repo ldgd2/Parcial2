@@ -11,7 +11,7 @@ class FacturaItem(BaseModel):
     total: float
 
 class DetalleFactura(BaseModel):
-    items: List[FacturaItem]
+    items: list[FacturaItem]
     subtotal: float
     impuestos: float
     total_general: float

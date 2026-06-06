@@ -23,6 +23,49 @@ export interface StatsResponse {
   grafica: StatsGrafica[];
 }
 
+export interface KpiResumen {
+  total_activas: number;
+  total_atendidas: number;
+  tiempo_promedio_asignacion: number;
+  tiempo_promedio_llegada: number;
+  tiempo_respuesta_minutos: number;
+  tasa_asignacion: number;
+  calificacion_promedio: number;
+  tasa_cumplimiento_sla: number;
+}
+
+export interface AnaliticaAvanzada {
+  incidentes_por_tipo: { tipo: string, cantidad: number }[];
+  zonas_incidentes: { zona: string, cantidad: number }[];
+  ranking_sucursales: { sucursal: string, eficiencia_promedio_min: number, atendidas: number }[];
+}
+
+export interface KpiResponse {
+  kpis: KpiResumen;
+  analitica: AnaliticaAvanzada;
+  grafica: any[];
+}
+
+export interface VehiculoOut {
+  placa: string;
+  marca: string;
+  modelo: string;
+  anio: number;
+}
+
+export interface HistorialVehicularItem {
+  id_emergencia: number;
+  fecha: string;
+  estado_final: string;
+  tipo_emergencia: string;
+  diagnostico_inicial: string;
+  diagnostico_final: string | null;
+  servicios_realizados: string | null;
+  monto_total: number | null;
+  calificacion_taller: number | null;
+  calificacion_tecnico: number | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -35,6 +78,19 @@ export class ReportesService {
       .set('mes', mes.toString())
       .set('anio', anio.toString());
     return this.api.get<StatsResponse>('/reportes/stats', params);
+  }
+
+  obtenerVehiculosAtendidos(): Observable<VehiculoOut[]> {
+    return this.api.get<VehiculoOut[]>('/reportes/vehiculos-atendidos');
+  }
+
+  obtenerHistorialVehiculo(placa: string): Observable<HistorialVehicularItem[]> {
+    return this.api.get<HistorialVehicularItem[]>(`/reportes/vehiculos-atendidos/${placa}/historial`);
+  }
+
+  getKpis(rango: 'diario' | 'semanal' | 'mensual'): Observable<KpiResponse> {
+    const params = new HttpParams().set('rango', rango);
+    return this.api.get<KpiResponse>('/reportes/kpis-legacy', params);
   }
 
   downloadPdf(mes: number, anio: number): void {

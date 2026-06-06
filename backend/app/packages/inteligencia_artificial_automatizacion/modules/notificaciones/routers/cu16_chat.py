@@ -11,7 +11,7 @@ from app.packages.inteligencia_artificial_automatizacion.modules.notificaciones.
 
 router = APIRouter(prefix="/chat", tags=["Comercio — Chat (CU16)"])
 
-@router.get("/{emergencia_id}", response_model=List[MensajeChatOut])
+@router.get("/{emergencia_id}", response_model=list[MensajeChatOut])
 async def get_chat_history(
     emergencia_id: int,
     db: AsyncSession = Depends(get_db),

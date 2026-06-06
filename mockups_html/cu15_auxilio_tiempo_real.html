@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CU15 - Gestión de Auxilio a Tiempo Real (Web Dashboard)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: white; margin: 0; }
+        .font-mono { font-family: 'Space Mono', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #000; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; }
+        
+        #map { width: 100%; height: 100%; background: #000; }
+        .leaflet-container .leaflet-control-attribution { background: rgba(0,0,0,0.5); color: #888; }
+        
+        .pulse-marker {
+            width: 16px;
+            height: 16px;
+            background-color: #3b82f6;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #3b82f6;
+            animation: pulse 1.5s infinite;
+        }
+        .incident-marker {
+            width: 16px;
+            height: 16px;
+            background-color: #f97316;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #f97316;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col bg-[#050505] text-white pb-20">
+
+    <!-- TOP NAVIGATION BAR -->
+    <div class="h-20 bg-[#050505] border-b border-zinc-900 px-8 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xl bg-opacity-80">
+        <div class="flex items-center gap-6">
+            <button class="w-10 h-10 border border-zinc-800 flex items-center justify-center hover:bg-zinc-900 transition-all group">
+                <i data-lucide="arrow-left" class="text-zinc-600 group-hover:text-white" width="16"></i>
+            </button>
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-lg font-bold tracking-tight uppercase">Motor Sobrecalentado</h1>
+                    <span id="badge-estado" class="px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[.2em] border border-blue-500 text-blue-500">
+                        PENDIENTE
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-4">
+            <button id="btn-asignar" class="bg-red-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.4)] flex items-center gap-2" onclick="document.getElementById('modal-asignacion').style.display='flex'">
+                <i data-lucide="shield-alert" width="14"></i>
+                Asignar Misión
+            </button>
+            <button class="border border-blue-700 text-blue-400 hover:bg-blue-900/20 px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all flex items-center gap-2" onclick="alert('Abriendo Chat con Técnico y Cliente...')">
+                <i data-lucide="message-square" width="14"></i>
+                Chat Directo
+            </button>
+        </div>
+    </div>
+
+    <!-- MAP SECTION -->
+    <div class="relative w-full h-[400px] border-b border-zinc-900 overflow-hidden bg-black z-0">
+        <div id="map"></div>
+        
+        <!-- Overlay Gradiente Superior -->
+        <div class="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-10"></div>
+
+        <div class="absolute inset-x-0 bottom-0 p-8 flex justify-between items-end z-20 pointer-events-none">
+            <div class="bg-black/80 backdrop-blur-md border border-zinc-800 p-6 pointer-events-auto">
+                <div class="flex items-center gap-3 mb-2">
+                    <i data-lucide="map-pin" class="text-orange-500" width="14"></i>
+                    <span class="font-bold text-[10px] uppercase tracking-widest text-white" id="ubicacion-texto">Av. Banzer 4to Anillo</span>
+                </div>
+            </div>
+            
+            <div id="telemetry" style="display: none; transition: opacity 0.5s ease;" class="bg-black/90 backdrop-blur-md border border-blue-900/50 p-6 pointer-events-auto shadow-[0_0_30px_rgba(30,58,138,0.3)]">
+                <div class="flex items-center gap-8">
+                    <div class="text-center">
+                        <div class="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">ETA</div>
+                        <div class="font-mono text-2xl font-bold text-blue-400" id="eta-text">12m</div>
+                    </div>
+                    <div class="text-center border-l border-zinc-800 pl-8">
+                        <div class="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">Distancia</div>
+                        <div class="font-mono text-2xl font-bold text-blue-400" id="dist-text">4.5</div>
+                        <div class="font-mono text-[9px] text-zinc-500">KM</div>
+                    </div>
+                    <div class="text-center border-l border-zinc-800 pl-8">
+                        <div class="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">Velocidad</div>
+                        <div class="font-mono text-2xl font-bold text-green-400">45</div>
+                        <div class="font-mono text-[9px] text-zinc-500">KM/H</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-px bg-zinc-900 z-10 relative">
+        <div class="lg:col-span-8 bg-[#050505] p-10 lg:p-14 space-y-12">
+            <div class="space-y-4">
+                <h2 class="text-2xl font-light italic text-zinc-200">"El auto empezó a echar humo por el capó. La aguja de temperatura está al máximo y hay líquido verde en el suelo."</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-zinc-900">
+                <div class="space-y-4">
+                    <h3 class="font-bold text-[9px] uppercase tracking-widest text-orange-500">Diagnóstico Probable</h3>
+                    <p class="text-xs text-zinc-400 font-mono">Fuga de refrigerante / Manguera rota</p>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="font-bold text-[9px] uppercase tracking-widest text-zinc-400">Piezas Necesarias</h3>
+                    <p class="text-xs text-zinc-400 font-mono">Refrigerante 5L, Manguera Universal, Abrazaderas</p>
+                </div>
+            </div>
+        </div>
+        <div class="lg:col-span-4 bg-[#080808] p-10 space-y-10">
+            <section class="space-y-4">
+                <h3 class="text-[9px] font-bold uppercase tracking-widest text-zinc-600">Vehículo</h3>
+                <div class="bg-zinc-950 border border-zinc-900 p-6">
+                    <div class="text-sm font-bold">Toyota Hilux 2022</div>
+                    <div class="text-[10px] font-mono text-zinc-500 mt-1">ZYX-987</div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal Asignación -->
+    <div id="modal-asignacion" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" style="display: none;">
+        <div class="bg-zinc-950 border border-zinc-800 w-full max-w-xl">
+            <div class="p-6 border-b border-zinc-900 flex justify-between items-center">
+                <h2 class="font-bold text-xs uppercase tracking-widest">Asignación</h2>
+                <button onclick="document.getElementById('modal-asignacion').style.display='none'"><i data-lucide="x" width="18"></i></button>
+            </div>
+            <div class="p-8 space-y-8">
+                <div class="space-y-2">
+                    <h3 class="text-[10px] font-bold uppercase tracking-[.3em] text-zinc-500">Seleccionar Personal Operativo</h3>
+                    <p class="text-[11px] text-zinc-400 font-mono italic">Seleccione uno o más técnicos para esta intervención.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                    <div class="p-4 border border-zinc-800 bg-zinc-900/30 cursor-pointer transition-all hover:bg-zinc-900 flex justify-between items-center" onclick="this.classList.toggle('border-blue-500'); this.classList.toggle('bg-blue-900/20'); document.getElementById('chk-1').classList.toggle('opacity-0'); document.getElementById('btn-confirmar').disabled = false; document.getElementById('btn-confirmar').classList.remove('bg-zinc-800', 'text-zinc-600'); document.getElementById('btn-confirmar').classList.add('bg-blue-600', 'text-white');">
+                        <div>
+                            <div class="text-xs font-bold uppercase tracking-tight text-white">Técnico Roberto</div>
+                            <div class="flex gap-2 mt-1">
+                                <span class="text-[8px] uppercase tracking-tighter text-zinc-500">#Mecánica General</span>
+                            </div>
+                        </div>
+                        <div class="w-5 h-5 border border-zinc-700 flex items-center justify-center">
+                            <i id="chk-1" data-lucide="check" class="text-blue-500 opacity-0" width="12"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-zinc-900 flex flex-col gap-4">
+                    <button id="btn-confirmar" disabled onclick="confirmarMision()" class="w-full bg-zinc-800 text-zinc-600 py-4 font-bold text-[10px] uppercase tracking-[.3em] transition-all hover:brightness-110">
+                        Confirmar Misión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // INICIALIZACIÓN DEL MAPA (Leaflet en modo oscuro)
+        // Coordenadas base: Santa Cruz (Equipetrol / Banzer)
+        const targetLat = -17.7618;
+        const targetLng = -63.1762;
+        const startLat = -17.7850;
+        const startLng = -63.1812;
+
+        const map = L.map('map', { zoomControl: false }).setView([targetLat, targetLng], 14);
+        
+        // Tile Layer Oscuro (CartoDB Dark Matter)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Marcador del Cliente (Incidente)
+        const incidentIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: '<div class="incident-marker"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+        L.marker([targetLat, targetLng], { icon: incidentIcon }).addTo(map);
+
+        // Variables Globales
+        let techMarker;
+        let routePolyline;
+        
+        // Ruta simulada entre Start y Target
+        const routePoints = [
+            [startLat, startLng],
+            [-17.7800, -63.1800],
+            [-17.7750, -63.1790],
+            [-17.7700, -63.1770],
+            [targetLat, targetLng]
+        ];
+
+        function confirmarMision() {
+            document.getElementById('modal-asignacion').style.display = 'none';
+            document.getElementById('btn-asignar').style.display = 'none';
+            
+            const badge = document.getElementById('badge-estado');
+            badge.innerText = 'EN RUTA';
+            badge.className = 'px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[.2em] border border-blue-500 text-blue-500';
+            
+            document.getElementById('telemetry').style.display = 'block';
+            
+            iniciarTracking();
+        }
+
+        function iniciarTracking() {
+            // Dibujar Ruta
+            routePolyline = L.polyline(routePoints, {
+                color: '#3b82f6',
+                weight: 4,
+                opacity: 0.6,
+                dashArray: '10, 10',
+                lineJoin: 'round'
+            }).addTo(map);
+
+            // Ajustar vista para ver ambos
+            map.fitBounds(routePolyline.getBounds(), { padding: [50, 50], animate: true, duration: 1.5 });
+
+            // Crear Marcador del Técnico
+            const techIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div class="pulse-marker"></div>',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+            techMarker = L.marker([startLat, startLng], { icon: techIcon }).addTo(map);
+
+            // Simular Movimiento Animado (Interpolar a lo largo de la ruta)
+            animarMovimiento(routePoints, 12000); // 12 segundos para llegar
+        }
+
+        function animarMovimiento(puntos, duracionTotalMs) {
+            let inicioMs = null;
+            let distTotal = 4.5;
+            let etaInicialMinutos = 12;
+
+            const updateFrame = (timestamp) => {
+                if (!inicioMs) inicioMs = timestamp;
+                let progreso = (timestamp - inicioMs) / duracionTotalMs;
+                
+                if (progreso > 1) progreso = 1;
+
+                // Calcular posicion interpolada simplificada
+                const totalSegmentos = puntos.length - 1;
+                const segmentoActual = Math.floor(progreso * totalSegmentos);
+                
+                if (segmentoActual < totalSegmentos) {
+                    const progEnSegmento = (progreso * totalSegmentos) - segmentoActual;
+                    const p1 = puntos[segmentoActual];
+                    const p2 = puntos[segmentoActual + 1];
+                    
+                    const latActual = p1[0] + (p2[0] - p1[0]) * progEnSegmento;
+                    const lngActual = p1[1] + (p2[1] - p1[1]) * progEnSegmento;
+                    
+                    techMarker.setLatLng([latActual, lngActual]);
+
+                    // Actualizar Telemetría UI
+                    const distFaltante = (distTotal * (1 - progreso)).toFixed(1);
+                    let etaFaltante = Math.ceil(etaInicialMinutos * (1 - progreso));
+                    
+                    if (etaFaltante < 1) etaFaltante = "<1";
+                    
+                    document.getElementById('dist-text').innerText = distFaltante;
+                    document.getElementById('eta-text').innerText = etaFaltante + "m";
+                }
+
+                if (progreso < 1) {
+                    requestAnimationFrame(updateFrame);
+                } else {
+                    document.getElementById('dist-text').innerText = "0.0";
+                    document.getElementById('eta-text').innerText = "0m";
+                    document.getElementById('telemetry').style.borderColor = "rgba(34, 197, 94, 0.5)"; // verde al llegar
+                    document.getElementById('telemetry').style.boxShadow = "0 0 30px rgba(34, 197, 94, 0.3)";
+                    
+                    const badge = document.getElementById('badge-estado');
+                    badge.innerText = 'EN SITIO';
+                    badge.className = 'px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[.2em] border border-green-500 text-green-500';
+                }
+            };
+            
+            requestAnimationFrame(updateFrame);
+        }
+    </script>
+</body>
+</html>

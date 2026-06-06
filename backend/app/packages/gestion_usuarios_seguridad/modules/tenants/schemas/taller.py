@@ -18,7 +18,7 @@ class TallerUpdate(BaseModel):
     latitud: Optional[float] = None
     longitud: Optional[float] = None
     estado: Optional[str] = None  # "ACTIVO" | "INACTIVO"
-    especialidades: Optional[List[int]] = None # IDs
+    especialidades: Optional[list[int]] = None # IDs
 
 
 class TallerOut(BaseModel):
@@ -29,7 +29,7 @@ class TallerOut(BaseModel):
     longitud: Optional[float] = None
     estado: str
     id_admin: Optional[int] = None
-    especialidades: List[EspecialidadOut] = []
+    especialidades: list[EspecialidadOut] = []
 
     model_config = {"from_attributes": True}
 

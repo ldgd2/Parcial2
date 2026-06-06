@@ -58,6 +58,9 @@ UPLOADS_DIR = "uploads"
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
+# ─── Idempotency Middleware ───────────────────────────────────────
+from app.core.idempotency_middleware import IdempotencyMiddleware
+app.add_middleware(IdempotencyMiddleware)
 
 # ─── CORS ─────────────────────────────────────────────────────────
 app.add_middleware(

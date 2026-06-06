@@ -13,7 +13,7 @@ import { LucideAngularModule, TrendingUp, DollarSign, Wrench, FileText, Calendar
   template: `
     <div class="p-8 min-h-screen bg-[#050505] text-white selection:bg-primary selection:text-white">
       <!-- Header Section -->
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-zinc-900 pb-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6 border-b border-zinc-900 pb-8">
         <div class="space-y-2">
           <div class="flex items-center gap-3 mb-1">
             <div class="w-2 h-2 bg-primary"></div>
@@ -40,8 +40,20 @@ import { LucideAngularModule, TrendingUp, DollarSign, Wrench, FileText, Calendar
         </div>
       </div>
 
-      <!-- Stats Grid (Industrial Cards) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <!-- Tabs -->
+      <div class="flex gap-8 border-b border-zinc-900 mb-8 pb-4">
+        <button (click)="activeTab = 'FINANCIERO'" [class.text-primary]="activeTab === 'FINANCIERO'" [class.border-b-2]="activeTab === 'FINANCIERO'" [class.border-primary]="activeTab === 'FINANCIERO'" class="text-xs font-bold uppercase tracking-[.2em] text-zinc-500 hover:text-white transition-all pb-2">
+          Financiero
+        </button>
+        <button (click)="activeTab = 'OPERACIONAL'" [class.text-primary]="activeTab === 'OPERACIONAL'" [class.border-b-2]="activeTab === 'OPERACIONAL'" [class.border-primary]="activeTab === 'OPERACIONAL'" class="text-xs font-bold uppercase tracking-[.2em] text-zinc-500 hover:text-white transition-all pb-2">
+          Inteligencia Operacional (KPIs)
+        </button>
+      </div>
+
+      <!-- FINANCIERO TAB -->
+      <ng-container *ngIf="activeTab === 'FINANCIERO'">
+        <!-- Stats Grid (Industrial Cards) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <!-- Servicos Card -->
         <div class="card-industrial p-8 group">
           <div class="flex justify-between items-start mb-6">
@@ -117,6 +129,52 @@ import { LucideAngularModule, TrendingUp, DollarSign, Wrench, FileText, Calendar
         <div class="w-12 h-1 bg-zinc-800 mb-6"></div>
         <p class="text-[10px] font-bold uppercase tracking-[.4em] text-zinc-600">Sistema sin registros para este periodo</p>
       </div>
+      </ng-container>
+
+      <!-- OPERACIONAL TAB -->
+      <ng-container *ngIf="activeTab === 'OPERACIONAL'">
+        <!-- KPI Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="card-industrial p-8 group border-l-primary/30">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">T. Promedio Asignación</div>
+            <div class="text-4xl font-black text-white">{{ kpiData?.kpis?.tiempo_promedio_asignacion || 0 }} <span class="text-sm text-zinc-600 font-normal">min</span></div>
+          </div>
+          <div class="card-industrial p-8 group border-l-primary/30">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">T. Promedio Llegada</div>
+            <div class="text-4xl font-black text-white">{{ kpiData?.kpis?.tiempo_promedio_llegada || 0 }} <span class="text-sm text-zinc-600 font-normal">min</span></div>
+          </div>
+          <div class="card-industrial p-8 group border-l-emerald-500/30">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Cumplimiento SLA (< 1hr)</div>
+            <div class="text-4xl font-black text-emerald-500">{{ kpiData?.kpis?.tasa_cumplimiento_sla || 0 }}%</div>
+          </div>
+          <div class="card-industrial p-8 group border-l-amber-500/30">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Tasa de Asignación</div>
+            <div class="text-4xl font-black text-amber-500">{{ kpiData?.kpis?.tasa_asignacion || 0 }}%</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Incidentes por Tipo Chart -->
+          <div class="card-industrial p-8">
+            <h2 class="text-xs font-bold uppercase tracking-[.3em] text-white mb-6">Incidentes por Tipo</h2>
+            <div class="h-[300px] w-full relative">
+              <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions" [type]="'doughnut'"></canvas>
+            </div>
+          </div>
+
+          <!-- Zonas con más Incidentes -->
+          <div class="card-industrial p-8">
+            <h2 class="text-xs font-bold uppercase tracking-[.3em] text-white mb-6">Zonas de Mayor Riesgo</h2>
+            <div class="space-y-4">
+              <div *ngFor="let zona of kpiData?.analitica?.zonas_incidentes" class="flex justify-between items-center bg-zinc-950 p-4 border border-zinc-900">
+                <span class="text-xs font-bold uppercase tracking-widest text-zinc-400">{{ zona.zona }}</span>
+                <span class="text-sm font-black text-primary">{{ zona.cantidad }} casos</span>
+              </div>
+              <div *ngIf="!kpiData?.analitica?.zonas_incidentes?.length" class="text-xs text-zinc-600 uppercase tracking-widest p-4">Sin datos de zonas</div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
     </div>
   `,
   styles: [`
@@ -138,8 +196,10 @@ export class WorkshopReportsComponent implements OnInit {
   
   selectedMonth = new Date().getMonth() + 1;
   selectedYear = new Date().getFullYear();
+  activeTab: 'FINANCIERO' | 'OPERACIONAL' = 'FINANCIERO';
   
   stats?: StatsResponse;
+  kpiData?: any;
 
   // Chart Properties
   public lineChartData: ChartConfiguration['data'] = {
@@ -196,6 +256,27 @@ export class WorkshopReportsComponent implements OnInit {
   
   public lineChartType: ChartType = 'line';
 
+  public doughnutChartData: ChartConfiguration['data'] = {
+    datasets: [{
+      data: [],
+      backgroundColor: ['#FF5733', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'],
+      borderWidth: 0,
+      hoverOffset: 4
+    }],
+    labels: []
+  };
+
+  public doughnutChartOptions: ChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { color: '#a1a1aa', font: { size: 10, weight: 'bold' } }
+      }
+    }
+  };
+
   ngOnInit() {
     this.loadData();
   }
@@ -205,6 +286,11 @@ export class WorkshopReportsComponent implements OnInit {
       this.stats = res;
       this.updateChart(res.grafica);
     });
+
+    this.reportesService.getKpis('mensual').subscribe(res => {
+      this.kpiData = res;
+      this.updateDoughnutChart(res.analitica.incidentes_por_tipo);
+    });
   }
 
   updateChart(grafica: any[]) {
@@ -213,6 +299,11 @@ export class WorkshopReportsComponent implements OnInit {
       return `${d.getDate()}/${d.getMonth() + 1}`;
     });
     this.lineChartData.datasets[0].data = grafica.map(g => g.monto);
+  }
+
+  updateDoughnutChart(tipos: any[]) {
+    this.doughnutChartData.labels = tipos.map(t => t.tipo);
+    this.doughnutChartData.datasets[0].data = tipos.map(t => t.cantidad);
   }
 
   downloadReport() {

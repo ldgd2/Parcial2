@@ -23,14 +23,14 @@ router = APIRouter(prefix="/gestion-emergencia", tags=["IA — Motor de Asignaci
 
 
 class AsignarTecnicosRequest(BaseModel):
-    tecnicos_ids: List[int]
+    tecnicos_ids: list[int]
 
 
 # ─── CU11: Motor de Asignación ────────────────────────────────────────────────
 
 @router.get(
     "/disponibles",
-    response_model=List[EmergenciaOut],
+    response_model=list[EmergenciaOut],
     summary="CU11 — Listar emergencias disponibles para reclamar",
 )
 async def listar_disponibles(
@@ -46,7 +46,7 @@ async def listar_disponibles(
 
 @router.get(
     "/asignadas",
-    response_model=List[EmergenciaOut],
+    response_model=list[EmergenciaOut],
     summary="CU11 — Listar emergencias asignadas a este taller",
 )
 async def listar_asignadas(

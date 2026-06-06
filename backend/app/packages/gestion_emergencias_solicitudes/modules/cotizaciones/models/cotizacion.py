@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Integer, String, Text, Float, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
-from app.db.session import Base
-
-class Cotizacion(Base):
+from app.db.generic_model import GenericModel
+class Cotizacion(GenericModel):
     __tablename__ = "cotizacion"
+    __table_args__ = {"schema": "public"}
 
     id = Column(Integer, primary_key=True, index=True)
-    idEmergencia = Column(Integer, ForeignKey("emergencia.id"), nullable=False, index=True)
-    idTaller = Column(String(10), ForeignKey("taller.cod"), nullable=False, index=True)
+    idEmergencia = Column(Integer, ForeignKey("public.emergencia.id"), nullable=False, index=True)
+    idTaller = Column(String(10), ForeignKey("public.taller.cod"), nullable=False, index=True)
     
     descripcion_servicio = Column(Text, nullable=False)
     costo_mano_obra = Column(Float, nullable=False)
