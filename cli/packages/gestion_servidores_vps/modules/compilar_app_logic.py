@@ -42,7 +42,7 @@ def compilar_y_publicar():
         return
         
     compile_cmd = [
-        "flutter", "build", "apk", "--release", 
+        "flutter.bat" if os.name == 'nt' else "flutter", "build", "apk", "--release", 
         f"--dart-define=BACKEND_URL={backend_url}"
     ]
     

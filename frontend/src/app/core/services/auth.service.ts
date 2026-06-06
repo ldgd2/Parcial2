@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Router } from '@angular/router';
 import { catchError, map, tap, switchMap } from 'rxjs/operators';
-import { Observable, of, BehaviorSubject } from 'rxjs';
+import { Observable, of, BehaviorSubject, throwError } from 'rxjs';
 
 export interface PlanInfo {
   nombre: string;
@@ -67,9 +67,15 @@ export class AuthService {
         next: (me) => {
           this.currentUser.set(me);
           this.isAuthenticated.set(true);
-          this.router.navigate(['/app/dashboard']);
         },
-        error: () => this.logout()
+        error: (err) => {
+          console.error('[AuthService] fetchMe failed in loginWeb:', err);
+          this.logout();
+        }
+      }),
+      catchError(err => {
+        console.error('[AuthService] Fatal error in loginWeb observable chain:', err);
+        return throwError(() => err);
       })
     );
   }

@@ -133,7 +133,14 @@ export class LoginComponent {
     this.authService.loginWeb(this.formData).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/app/dashboard']);
+        this.router.navigate(['/app/dashboard']).then(success => {
+          if (!success) {
+            console.error('[Router] Navegación cancelada o fallida.');
+          }
+        }).catch(err => {
+          console.error('[Router] Error fatal durante navegación:', err);
+          this.errorMessage = 'ERROR INTERNO: ' + (err.message || 'La vista falló al cargar.');
+        });
       },
       error: (err) => {
         this.loading = false;
