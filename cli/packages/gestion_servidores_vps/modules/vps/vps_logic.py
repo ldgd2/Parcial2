@@ -123,6 +123,15 @@ def restart_services():
         print("Esta opción solo funciona en Linux/VPS.")
         return
     
+    print("Instalando dependencias del Backend...")
+    if os.path.exists(".venv/bin/pip"):
+        os.system(".venv/bin/pip install -r backend/requirements.txt")
+    else:
+        os.system("pip3 install -r backend/requirements.txt")
+        
+    print("Instalando dependencias del Frontend...")
+    os.system("cd frontend && npm install --legacy-peer-deps")
+    
     print("Reiniciando servicios de ejecución...")
     os.system("sudo systemctl restart taller-backend taller-frontend")
     print("Servicios reiniciados.")
