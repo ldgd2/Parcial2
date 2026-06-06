@@ -119,6 +119,7 @@ export class LoginComponent {
   
   public theme = inject(ThemeService);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   onLogin() {
     if (!this.formData.correo || !this.formData.contrasena) {
@@ -132,6 +133,7 @@ export class LoginComponent {
     this.authService.loginWeb(this.formData).subscribe({
       next: () => {
         this.loading = false;
+        this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
         this.loading = false;
