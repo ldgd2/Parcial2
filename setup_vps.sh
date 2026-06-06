@@ -77,7 +77,7 @@ progress_bar
 
 # 1. CAPTURA DE DATOS INTERACTIVA
 echo -ne "\n${BLUE}${BOLD}[ DETECCIÓN DE RED ]${NC}\n  🔍 Detectando IP pública del servidor..."
-VPS_IP=$(curl -s ifconfig.me)
+VPS_IP=$(curl -4 -s ifconfig.me)
 echo -e " ${GREEN}$VPS_IP${NC}"
 
 echo -e "\n${BLUE}${BOLD}[ CONFIGURACIÓN DE BASE DE DATOS ]${NC}"
