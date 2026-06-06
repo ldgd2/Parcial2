@@ -2,7 +2,7 @@ import json
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response, JSONResponse
-from app.db.session import SessionLocal
+from app.db.session import AsyncSessionLocal
 from app.db.idempotency_key import IdempotencyKey
 from sqlalchemy import select
 
@@ -17,7 +17,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Verificar en base de datos si la llave ya existe
-        async with SessionLocal() as db:
+        async with AsyncSessionLocal() as db:
             stmt = select(IdempotencyKey).where(IdempotencyKey.key == idempotency_key)
             result = await db.execute(stmt)
             existing_key = result.scalar_one_or_none()
@@ -63,7 +63,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                 json_body = {"detail": "non-json response"}
 
             # Actualizar llave a completed
-            async with SessionLocal() as db:
+            async with AsyncSessionLocal() as db:
                 stmt = select(IdempotencyKey).where(IdempotencyKey.key == idempotency_key)
                 result = await db.execute(stmt)
                 db_key = result.scalar_one()
@@ -80,7 +80,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             )
 
         # Si falló feo (500), lo borramos para que pueda reintentar
-        async with SessionLocal() as db:
+        async with AsyncSessionLocal() as db:
             stmt = select(IdempotencyKey).where(IdempotencyKey.key == idempotency_key)
             result = await db.execute(stmt)
             db_key = result.scalar_one_or_none()
