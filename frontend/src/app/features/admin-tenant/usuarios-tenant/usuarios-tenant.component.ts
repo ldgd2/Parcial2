@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsuariosTenantService, UsuarioTenant, RolOut } from '../../../core/services/usuarios-tenant.service';
 import { toast } from 'ngx-sonner';
+import { LucideAngularModule, Users, Plus, Save, Loader2, X } from 'lucide-angular';
 
 @Component({
   selector: 'app-usuarios-tenant',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   templateUrl: './usuarios-tenant.component.html',
   styleUrls: ['./usuarios-tenant.component.scss']
 })

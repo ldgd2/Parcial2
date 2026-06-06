@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CalificacionesService, CalificacionModerada } from '../../../core/services/calificaciones.service';
 import { toast } from 'ngx-sonner';
+import { LucideAngularModule, Star, MessageSquareOff, EyeOff, Eye, Loader2 } from 'lucide-angular';
 
 @Component({
   selector: 'app-calificaciones',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './calificaciones.component.html',
   styleUrls: ['./calificaciones.component.scss']
 })

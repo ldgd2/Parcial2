@@ -1,78 +1,76 @@
-<div class="p-6 h-full flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-      <i class="fas fa-star text-yellow-500"></i>
+<div class="min-h-full flex flex-col bg-[#050505] text-white p-8">
+  <div class="mb-8 border-b border-zinc-900 pb-6">
+    <h1 class="text-xl font-bold uppercase tracking-widest flex items-center gap-3">
+      <lucide-icon name="star" class="text-yellow-500" size="20"></lucide-icon>
       Reseñas y Calificaciones
     </h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+    <p class="text-[10px] text-zinc-500 font-mono mt-2 uppercase tracking-[.2em]">
       Visualiza y modera las calificaciones recibidas por tus clientes.
     </p>
   </div>
 
-  <div *ngIf="loading" class="flex justify-center items-center py-12">
-    <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
+  <div *ngIf="loading" class="flex justify-center items-center py-20">
+    <lucide-icon name="loader-2" class="animate-spin text-primary" size="32"></lucide-icon>
   </div>
 
-  <div *ngIf="!loading && calificaciones.length === 0" class="bg-white dark:bg-gray-800 rounded-xl p-8 text-center shadow-sm border border-gray-200 dark:border-gray-700">
-    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-      <i class="fas fa-comment-slash text-gray-400 text-2xl"></i>
+  <div *ngIf="!loading && calificaciones.length === 0" class="bg-black border border-zinc-900 p-12 text-center flex flex-col items-center">
+    <div class="w-16 h-16 border border-zinc-800 bg-zinc-950 rounded-full flex items-center justify-center mb-4 text-zinc-600">
+      <lucide-icon name="message-square-off" size="24"></lucide-icon>
     </div>
-    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Aún no hay reseñas</h3>
-    <p class="text-gray-500 dark:text-gray-400 mt-1">Cuando los clientes comiencen a calificar tus servicios, aparecerán aquí.</p>
+    <h3 class="text-xs font-bold uppercase tracking-widest text-white mb-2">Aún no hay reseñas</h3>
+    <p class="text-[10px] font-mono uppercase tracking-[.1em] text-zinc-500">Cuando los clientes comiencen a calificar tus servicios, aparecerán aquí.</p>
   </div>
 
   <div *ngIf="!loading && calificaciones.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div *ngFor="let calif of calificaciones" 
-         class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border overflow-hidden flex flex-col transition-all duration-300 relative"
-         [ngClass]="{'border-red-200 dark:border-red-900 opacity-60': calif.estado === 'OCULTADA', 'border-gray-200 dark:border-gray-700': calif.estado === 'PUBLICADA'}">
+         class="bg-black border flex flex-col transition-all duration-300 relative"
+         [ngClass]="{'border-red-900/50 opacity-60': calif.estado === 'OCULTADA', 'border-zinc-900': calif.estado === 'PUBLICADA'}">
       
-      <div *ngIf="calif.estado === 'OCULTADA'" class="absolute top-4 right-4 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
-        <i class="fas fa-eye-slash"></i> Oculta
+      <div *ngIf="calif.estado === 'OCULTADA'" class="absolute top-4 right-4 border border-red-900/50 bg-red-900/20 text-red-500 text-[8px] uppercase tracking-widest font-bold px-2 py-1 flex items-center gap-1">
+        <lucide-icon name="eye-off" size="10"></lucide-icon> Oculta
       </div>
 
-      <div class="p-5 flex-1">
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold">
+      <div class="p-6 flex-1">
+        <div class="flex items-start justify-between mb-6">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 border border-zinc-800 bg-zinc-950 flex items-center justify-center text-primary font-bold text-sm">
               {{ calif.cliente_nombre.charAt(0) | uppercase }}
             </div>
             <div>
-              <div class="font-semibold text-gray-900 dark:text-white">{{ calif.cliente_nombre }}</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">{{ calif.fecha | date:'medium' }}</div>
+              <div class="font-bold text-xs uppercase tracking-wider text-white">{{ calif.cliente_nombre }}</div>
+              <div class="text-[9px] font-mono text-zinc-500 mt-1">{{ calif.fecha | date:'medium' }}</div>
             </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-50 dark:bg-gray-750 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+        <div class="grid grid-cols-2 gap-4 mb-6 bg-zinc-950 p-4 border border-zinc-900">
           <div>
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Taller</div>
-            <div class="flex text-yellow-400 text-sm">
-              <i *ngFor="let s of getEstrellas(calif.puntuacion_taller)" 
-                 [class]="s <= calif.puntuacion_taller ? 'fas fa-star' : 'far fa-star text-gray-300 dark:text-gray-600'"></i>
+            <div class="text-[8px] font-bold uppercase tracking-[.2em] text-zinc-600 mb-2">Taller</div>
+            <div class="flex gap-1 text-yellow-500">
+              <lucide-icon *ngFor="let s of getEstrellas(calif.puntuacion_taller)" name="star" size="12" [class]="s <= calif.puntuacion_taller ? 'fill-yellow-500' : 'text-zinc-700'"></lucide-icon>
             </div>
           </div>
           <div>
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Técnico: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ calif.tecnico_nombre }}</span></div>
-            <div class="flex text-yellow-400 text-sm">
-              <i *ngFor="let s of getEstrellas(calif.puntuacion_tecnico)" 
-                 [class]="s <= calif.puntuacion_tecnico ? 'fas fa-star' : 'far fa-star text-gray-300 dark:text-gray-600'"></i>
+            <div class="text-[8px] font-bold uppercase tracking-[.2em] text-zinc-600 mb-2">Técnico: <span class="text-white">{{ calif.tecnico_nombre }}</span></div>
+            <div class="flex gap-1 text-yellow-500">
+              <lucide-icon *ngFor="let s of getEstrellas(calif.puntuacion_tecnico)" name="star" size="12" [class]="s <= calif.puntuacion_tecnico ? 'fill-yellow-500' : 'text-zinc-700'"></lucide-icon>
             </div>
           </div>
         </div>
 
-        <div class="text-gray-700 dark:text-gray-300 italic text-sm border-l-4 border-blue-500 pl-3 py-1">
+        <div class="text-zinc-300 italic text-[11px] border-l-2 border-primary pl-4 py-2 font-mono">
           "{{ calif.comentario || 'Sin comentario adicional.' }}"
         </div>
       </div>
       
-      <div class="border-t border-gray-100 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
-        <div class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+      <div class="border-t border-zinc-900 p-4 bg-zinc-950 flex justify-between items-center">
+        <div class="text-[9px] text-zinc-500 font-mono font-bold uppercase tracking-widest">
           Emergencia #{{ calif.idEmergencia }}
         </div>
         <button (click)="toggleModeracion(calif)" 
-                class="text-sm font-medium transition-colors flex items-center gap-1 px-3 py-1.5 rounded-md"
-                [ngClass]="{'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30': calif.estado === 'OCULTADA', 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30': calif.estado === 'PUBLICADA'}">
-          <i [class]="calif.estado === 'PUBLICADA' ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                class="text-[9px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 border"
+                [ngClass]="{'border-primary text-primary hover:bg-primary/10': calif.estado === 'OCULTADA', 'border-red-900/50 text-red-500 hover:bg-red-900/20': calif.estado === 'PUBLICADA'}">
+          <lucide-icon [name]="calif.estado === 'PUBLICADA' ? 'eye-off' : 'eye'" size="12"></lucide-icon>
           {{ calif.estado === 'PUBLICADA' ? 'Ocultar Reseña' : 'Publicar Reseña' }}
         </button>
       </div>

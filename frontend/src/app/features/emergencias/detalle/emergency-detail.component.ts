@@ -20,6 +20,7 @@ import {
 } from 'lucide-angular';
 
 import { ConfigService } from '../../../core/config/config.service';
+import { ReportesService, HistorialVehicularItem } from '../../../core/services/reportes.service';
 
 @Component({
   selector: 'app-emergency-detail',
@@ -134,11 +135,35 @@ import { ConfigService } from '../../../core/config/config.service';
             </div>
           </div>
           <div class="lg:col-span-4 bg-[#080808] p-10 space-y-10">
-              <section class="space-y-4">
+               <section class="space-y-4">
                  <h3 class="text-[9px] font-bold uppercase tracking-widest text-zinc-600">Vehículo</h3>
                  <div class="bg-zinc-950 border border-zinc-900 p-6">
                     <div class="text-sm font-bold">{{ emergency.vehiculo?.marca }} {{ emergency.vehiculo?.modelo }}</div>
                     <div class="text-[10px] font-mono text-zinc-500 mt-1">{{ emergency.vehiculo?.placa }}</div>
+                 </div>
+              </section>
+
+              <!-- Historial Vehicular -->
+              <section class="space-y-4">
+                 <h3 class="text-[9px] font-bold uppercase tracking-widest text-zinc-600">Historial del Vehículo</h3>
+                 <div *ngIf="loadingHistorial" class="flex justify-center py-4">
+                   <lucide-icon name="loader-2" class="animate-spin text-primary" size="16"></lucide-icon>
+                 </div>
+                 <div *ngIf="!loadingHistorial && historialVehicular.length === 0" class="bg-zinc-950 border border-zinc-900 p-4 text-center">
+                   <p class="text-[9px] font-mono text-zinc-500 uppercase">Sin atenciones previas.</p>
+                 </div>
+                 <div *ngIf="!loadingHistorial && historialVehicular.length > 0" class="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                   <div *ngFor="let hist of historialVehicular" class="bg-zinc-950 border border-zinc-900 p-4 hover:border-primary transition-colors cursor-default">
+                     <div class="flex justify-between items-start mb-2">
+                       <span class="text-[10px] font-bold uppercase tracking-wider text-white">Emg #{{ hist.id_emergencia }}</span>
+                       <span class="text-[8px] font-mono text-zinc-500">{{ hist.fecha | date:'shortDate' }}</span>
+                     </div>
+                     <p class="text-[10px] text-zinc-400 font-mono line-clamp-2 leading-relaxed mb-2">{{ hist.diagnostico_final || hist.diagnostico_inicial }}</p>
+                     <div class="mt-2 flex justify-between items-center border-t border-zinc-900 pt-2">
+                        <span class="text-[8px] font-bold px-2 py-0.5 border border-emerald-900/50 bg-emerald-900/20 text-emerald-500 uppercase">{{ hist.estado_final }}</span>
+                        <span class="text-[10px] font-mono font-bold text-white">{{ hist.monto_total ? (hist.monto_total | currency:'USD') : '-' }}</span>
+                     </div>
+                   </div>
                  </div>
               </section>
 
@@ -415,6 +440,9 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
     eta: ''
   };
 
+  historialVehicular: HistorialVehicularItem[] = [];
+  loadingHistorial = false;
+
   // CU05 — Pago
   showPagoModal = false;
   pagoMonto: number | null = null;
@@ -463,7 +491,8 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private socketService: SocketService,
     private sanitizer: DomSanitizer,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private reportesService: ReportesService
   ) {}
 
   ngOnInit() {
@@ -537,6 +566,7 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
         this.emergency = res;
         this.cargarPago(); // CU05 — Cargar pago si ya existe
         this.cargarCotizaciones();
+        this.cargarHistorialVehicular();
         
         // 2. Cargar coordenadas del taller para el HUD/Mapa
         this.api.get<any>(`/talleres/${this.currentWorkshop}`).subscribe({
@@ -764,6 +794,20 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
       next: (res) => { this.pagoExistente = res; },
       error: () => { 
         this.pagoExistente = null; 
+      }
+    });
+  }
+
+  cargarHistorialVehicular() {
+    if (!this.emergency?.vehiculo?.placa) return;
+    this.loadingHistorial = true;
+    this.reportesService.obtenerHistorialVehiculo(this.emergency.vehiculo.placa).subscribe({
+      next: (res) => {
+        this.historialVehicular = res.filter(h => h.id_emergencia !== this.emergency.id);
+        this.loadingHistorial = false;
+      },
+      error: () => {
+        this.loadingHistorial = false;
       }
     });
   }

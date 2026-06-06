@@ -5,11 +5,12 @@ import { ReportesService, VehiculoOut, HistorialVehicularItem } from '../../../c
 import { toast } from 'ngx-sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { LucideAngularModule, Search, Car, FolderOpen, FileSpreadsheet, FileText, Wrench, Store, UserCog, Loader2 } from 'lucide-angular';
 
 @Component({
   selector: 'app-historial-vehicular',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   providers: [DatePipe, CurrencyPipe],
   templateUrl: './historial-vehicular.component.html',
   styleUrls: ['./historial-vehicular.component.scss']

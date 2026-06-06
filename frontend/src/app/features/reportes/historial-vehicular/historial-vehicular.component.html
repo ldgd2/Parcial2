@@ -1,132 +1,131 @@
-<div class="p-6 h-full flex flex-col md:flex-row gap-6 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+<div class="min-h-full flex flex-col md:flex-row bg-[#050505] text-white p-8 gap-8">
   
   <!-- Sidebar: Lista de Vehículos -->
-  <div class="w-full md:w-1/3 lg:w-1/4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-[calc(100vh-8rem)]">
-    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Vehículos Atendidos</h2>
+  <div class="w-full md:w-1/3 lg:w-1/4 bg-black border border-zinc-900 flex flex-col h-[calc(100vh-8rem)]">
+    <div class="p-6 border-b border-zinc-900">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-white mb-6">Vehículos Atendidos</h2>
       <div class="relative">
-        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-        <input type="text" [(ngModel)]="busqueda" (ngModelChange)="filtrarVehiculos()" placeholder="Buscar por placa o marca..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors">
+        <lucide-icon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size="14"></lucide-icon>
+        <input type="text" [(ngModel)]="busqueda" (ngModelChange)="filtrarVehiculos()" placeholder="Buscar por placa o marca..." class="w-full pl-10 pr-4 py-3 border border-zinc-800 bg-zinc-950 text-white focus:border-primary focus:ring-0 text-[10px] uppercase tracking-widest outline-none font-mono transition-colors">
       </div>
     </div>
     
-    <div class="flex-1 overflow-y-auto p-2">
-      <div *ngIf="loading" class="flex justify-center py-8">
-        <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
+    <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+      <div *ngIf="loading" class="flex justify-center py-12">
+        <lucide-icon name="loader-2" class="animate-spin text-primary" size="24"></lucide-icon>
       </div>
       
-      <div *ngIf="!loading && vehiculosFiltrados.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+      <div *ngIf="!loading && vehiculosFiltrados.length === 0" class="text-center py-12 text-zinc-600 font-mono text-[10px] uppercase tracking-widest">
         No se encontraron vehículos.
       </div>
 
       <button *ngFor="let v of vehiculosFiltrados" 
               (click)="seleccionarVehiculo(v)"
-              [class.bg-blue-50]="vehiculoSeleccionado?.placa === v.placa"
-              [class.border-blue-200]="vehiculoSeleccionado?.placa === v.placa"
-              [class.dark:bg-blue-900_30]="vehiculoSeleccionado?.placa === v.placa"
-              [class.dark:border-blue-800]="vehiculoSeleccionado?.placa === v.placa"
-              class="w-full text-left p-3 mb-2 rounded-lg border border-transparent hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300">
-          <i class="fas fa-car"></i>
+              [class.bg-zinc-900]="vehiculoSeleccionado?.placa === v.placa"
+              [class.border-primary]="vehiculoSeleccionado?.placa === v.placa"
+              [class.border-transparent]="vehiculoSeleccionado?.placa !== v.placa"
+              class="w-full text-left p-4 mb-3 border hover:bg-zinc-900/50 transition-colors flex items-center gap-4 group">
+        <div class="w-10 h-10 border border-zinc-800 bg-zinc-950 flex items-center justify-center text-zinc-500 group-hover:text-primary transition-colors">
+          <lucide-icon name="car" size="16"></lucide-icon>
         </div>
         <div>
-          <div class="font-bold text-gray-900 dark:text-white uppercase">{{ v.placa }}</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">{{ v.marca }} {{ v.modelo }} ({{ v.anio }})</div>
+          <div class="font-bold text-xs text-white uppercase tracking-wider">{{ v.placa }}</div>
+          <div class="text-[9px] font-mono text-zinc-500 mt-1 uppercase tracking-widest">{{ v.marca }} {{ v.modelo }}</div>
         </div>
       </button>
     </div>
   </div>
 
   <!-- Contenido Principal: Historial -->
-  <div class="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-[calc(100vh-8rem)]">
+  <div class="flex-1 bg-black border border-zinc-900 flex flex-col h-[calc(100vh-8rem)]">
     
-    <div *ngIf="!vehiculoSeleccionado" class="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-      <i class="fas fa-folder-open text-5xl mb-4 opacity-50"></i>
-      <p>Selecciona un vehículo de la lista para ver su historial completo.</p>
+    <div *ngIf="!vehiculoSeleccionado" class="flex-1 flex flex-col items-center justify-center text-zinc-600">
+      <lucide-icon name="folder-open" size="48" class="mb-6 opacity-50"></lucide-icon>
+      <p class="font-mono text-[10px] uppercase tracking-widest text-zinc-500">Selecciona un vehículo para ver su historial.</p>
     </div>
 
     <ng-container *ngIf="vehiculoSeleccionado">
       <!-- Encabezado de Reporte -->
-      <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex flex-wrap justify-between items-center gap-4">
+      <div class="p-8 border-b border-zinc-900 flex flex-wrap justify-between items-center gap-6 bg-zinc-950/50">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Historial de <span class="text-blue-600 dark:text-blue-400 uppercase">{{ vehiculoSeleccionado.placa }}</span>
+          <h2 class="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
+            Historial de <span class="text-primary">{{ vehiculoSeleccionado.placa }}</span>
           </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p class="text-[11px] font-mono text-zinc-500 mt-2 uppercase tracking-[.2em]">
             {{ vehiculoSeleccionado.marca }} {{ vehiculoSeleccionado.modelo }} ({{ vehiculoSeleccionado.anio }})
           </p>
         </div>
-        <div class="flex gap-2">
-          <button (click)="exportarCSV()" [disabled]="historial.length === 0" class="px-4 py-2 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-            <i class="fas fa-file-csv"></i> Excel/CSV
+        <div class="flex gap-4">
+          <button (click)="exportarCSV()" [disabled]="historial.length === 0" class="px-6 py-3 border border-emerald-900/50 bg-emerald-900/20 text-emerald-500 font-bold text-[9px] uppercase tracking-widest hover:bg-emerald-900/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            <lucide-icon name="file-spreadsheet" size="14"></lucide-icon> CSV
           </button>
-          <button (click)="exportarPDF()" [disabled]="historial.length === 0" class="px-4 py-2 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-            <i class="fas fa-file-pdf"></i> PDF
+          <button (click)="exportarPDF()" [disabled]="historial.length === 0" class="px-6 py-3 border border-red-900/50 bg-red-900/20 text-red-500 font-bold text-[9px] uppercase tracking-widest hover:bg-red-900/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            <lucide-icon name="file-text" size="14"></lucide-icon> PDF
           </button>
         </div>
       </div>
 
       <!-- Timeline -->
-      <div class="flex-1 overflow-y-auto p-6 relative">
-        <div *ngIf="loadingHistorial" class="flex justify-center py-12">
-          <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
+      <div class="flex-1 overflow-y-auto p-8 relative custom-scrollbar bg-[#050505]">
+        <div *ngIf="loadingHistorial" class="flex justify-center py-20">
+          <lucide-icon name="loader-2" class="animate-spin text-primary" size="32"></lucide-icon>
         </div>
 
-        <div *ngIf="!loadingHistorial && historial.length === 0" class="text-center py-12 text-gray-500">
-          Este vehículo no tiene atenciones registradas en el sistema.
+        <div *ngIf="!loadingHistorial && historial.length === 0" class="text-center py-20 text-zinc-600 font-mono text-[10px] uppercase tracking-widest">
+          Este vehículo no tiene atenciones registradas.
         </div>
 
-        <div *ngIf="!loadingHistorial && historial.length > 0" class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-300 dark:before:via-gray-600 before:to-transparent">
+        <div *ngIf="!loadingHistorial && historial.length > 0" class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-px before:bg-zinc-800">
           
           <div *ngFor="let item of historial; let i = index" class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
             
             <!-- Icono Timeline -->
-            <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white dark:border-gray-800 bg-blue-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-              <i class="fas fa-wrench text-sm"></i>
+            <div class="flex items-center justify-center w-10 h-10 border border-primary bg-black text-primary shadow-[0_0_15px_rgba(59,130,246,0.3)] shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+              <lucide-icon name="wrench" size="16"></lucide-icon>
             </div>
             
             <!-- Card de Evento -->
-            <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm transition-transform duration-300 hover:-translate-y-1">
-              <div class="flex flex-wrap items-center justify-between mb-2">
-                <span class="font-bold text-gray-900 dark:text-white">Emg #{{ item.id_emergencia }}</span>
-                <span class="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+            <div class="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] p-6 border border-zinc-900 bg-zinc-950 transition-transform duration-300 hover:-translate-y-1 hover:border-zinc-800">
+              <div class="flex flex-wrap items-center justify-between mb-4">
+                <span class="font-bold text-xs text-white uppercase tracking-widest">Emg #{{ item.id_emergencia }}</span>
+                <span class="text-[9px] font-mono px-3 py-1 border border-zinc-800 text-zinc-400 uppercase tracking-widest">
                   {{ item.fecha | date:'medium' }}
                 </span>
               </div>
-              <div class="mb-3 flex gap-2">
-                <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-medium">
+              <div class="mb-6 flex gap-3">
+                <span class="text-[9px] font-bold px-3 py-1 border border-blue-900/50 bg-blue-900/20 text-blue-400 uppercase tracking-widest">
                   {{ item.tipo_emergencia }}
                 </span>
-                <span class="text-xs px-2 py-1 rounded bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 font-medium">
+                <span class="text-[9px] font-bold px-3 py-1 border border-emerald-900/50 bg-emerald-900/20 text-emerald-400 uppercase tracking-widest">
                   {{ item.estado_final }}
                 </span>
               </div>
               
-              <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                <strong>Ingreso:</strong> {{ item.diagnostico_inicial }}
+              <div class="text-[11px] text-zinc-400 mb-3 leading-relaxed">
+                <strong class="text-zinc-300 uppercase tracking-widest text-[9px] mr-2">Ingreso:</strong> {{ item.diagnostico_inicial }}
               </div>
               
-              <div *ngIf="item.diagnostico_final" class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                <strong>Diagnóstico:</strong> {{ item.diagnostico_final }}
+              <div *ngIf="item.diagnostico_final" class="text-[11px] text-zinc-400 mb-3 leading-relaxed">
+                <strong class="text-zinc-300 uppercase tracking-widest text-[9px] mr-2">Diagnóstico:</strong> {{ item.diagnostico_final }}
               </div>
               
-              <div *ngIf="item.servicios_realizados" class="text-sm text-gray-600 dark:text-gray-400 mb-4 p-2 bg-gray-50 dark:bg-gray-750 rounded-md border border-gray-100 dark:border-gray-700">
-                <strong>Trabajos:</strong> {{ item.servicios_realizados }}
+              <div *ngIf="item.servicios_realizados" class="text-[11px] text-zinc-400 mb-6 p-4 border border-zinc-800 bg-black font-mono leading-relaxed">
+                <strong class="text-zinc-500 uppercase tracking-widest text-[9px] block mb-2">Trabajos:</strong> {{ item.servicios_realizados }}
               </div>
 
-              <div class="flex justify-between items-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div class="flex justify-between items-end mt-6 pt-4 border-t border-zinc-900">
                 <div>
-                  <div class="text-xs text-gray-500 mb-1">Calificaciones</div>
-                  <div class="flex gap-2">
-                    <span class="text-xs font-medium px-1.5 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-500" title="Calificación Taller">
-                      <i class="fas fa-store mr-1"></i>{{ item.calificacion_taller || '-' }} <i class="fas fa-star text-[10px]"></i>
+                  <div class="text-[8px] uppercase tracking-[.2em] text-zinc-600 mb-2 font-bold">Calificaciones</div>
+                  <div class="flex gap-3">
+                    <span class="text-[10px] font-mono flex items-center gap-1.5 px-2 py-1 border border-yellow-900/30 bg-yellow-900/10 text-yellow-500" title="Calificación Taller">
+                      <lucide-icon name="store" size="12"></lucide-icon>{{ item.calificacion_taller || '-' }}
                     </span>
-                    <span class="text-xs font-medium px-1.5 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-500" title="Calificación Técnico">
-                      <i class="fas fa-user-cog mr-1"></i>{{ item.calificacion_tecnico || '-' }} <i class="fas fa-star text-[10px]"></i>
+                    <span class="text-[10px] font-mono flex items-center gap-1.5 px-2 py-1 border border-yellow-900/30 bg-yellow-900/10 text-yellow-500" title="Calificación Técnico">
+                      <lucide-icon name="user-cog" size="12"></lucide-icon>{{ item.calificacion_tecnico || '-' }}
                     </span>
                   </div>
                 </div>
-                <div class="text-lg font-bold text-gray-900 dark:text-white">
+                <div class="text-xl font-bold font-mono text-white">
                   {{ item.monto_total ? (item.monto_total | currency:'USD') : 'N/A' }}
                 </div>
               </div>

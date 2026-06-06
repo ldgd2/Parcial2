@@ -23,7 +23,7 @@ async def calificar_emergencia(
     """
     (Cliente) Permite al cliente calificar un servicio finalizado.
     """
-    return await CalificacionService.crear_calificacion(db, id_emergencia, current_user.id, data)
+    return await CalificacionService.crear_calificacion(db, id_emergencia, current_user.get("user_id"), data)
 
 @router.put("/cliente/{id_calificacion}", response_model=CalificacionOut)
 async def editar_calificacion(
@@ -35,7 +35,7 @@ async def editar_calificacion(
     """
     (Cliente) Permite al cliente editar su propia calificación en cualquier momento.
     """
-    return await CalificacionService.editar_calificacion(db, id_calificacion, current_user.id, data)
+    return await CalificacionService.editar_calificacion(db, id_calificacion, current_user.get("user_id"), data)
 
 @router.get("/mi-calificacion/{id_emergencia}", response_model=CalificacionOut)
 async def obtener_mi_calificacion(
@@ -46,7 +46,7 @@ async def obtener_mi_calificacion(
     """
     (Cliente) Retorna la calificación que el cliente ya hizo para esta emergencia, si existe.
     """
-    return await CalificacionService.obtener_calificacion_cliente(db, id_emergencia, current_user.id)
+    return await CalificacionService.obtener_calificacion_cliente(db, id_emergencia, current_user.get("user_id"))
 
 @router.get("/pendientes", response_model=List[EmergenciaOut])
 async def obtener_pendientes(
@@ -56,7 +56,7 @@ async def obtener_pendientes(
     """
     (Cliente) Retorna las emergencias finalizadas que el cliente aún no ha calificado.
     """
-    return await CalificacionService.listar_pendientes_cliente(db, current_user.id)
+    return await CalificacionService.listar_pendientes_cliente(db, current_user.get("user_id"))
 
 @router.get("/taller", response_model=List[CalificacionModeradaOut])
 async def obtener_calificaciones_taller(
@@ -66,7 +66,7 @@ async def obtener_calificaciones_taller(
     """
     (Taller Admin) Retorna todas las calificaciones recibidas por el taller actual.
     """
-    return await CalificacionService.listar_calificaciones_taller(db, current_user.idTaller)
+    return await CalificacionService.listar_calificaciones_taller(db, current_user.get("taller"))
 
 @router.get("/publicas/{id_taller}", response_model=List[CalificacionModeradaOut])
 async def obtener_calificaciones_publicas(
@@ -89,4 +89,4 @@ async def moderar_calificacion(
     """
     (Taller Admin) Permite ocultar comentarios inapropiados.
     """
-    return await CalificacionService.moderar_calificacion(db, id_calificacion, data, current_user.idTaller)
+    return await CalificacionService.moderar_calificacion(db, id_calificacion, data, current_user.get("taller"))
