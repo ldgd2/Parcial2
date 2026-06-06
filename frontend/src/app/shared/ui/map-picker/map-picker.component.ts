@@ -141,11 +141,9 @@ export class MapPickerComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     try {
-      const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18&addressdetails=1`, {
-        headers: { 'Accept-Language': 'es' }
-      });
+      const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18&addressdetails=1`);
       const data = await resp.json();
-      this.currentAddress = data.display_name;
+      this.currentAddress = data.display_name || 'Coordenadas seleccionadas en el mapa';
       this.loading = false;
       this.locationSelected.emit({
         lat: latlng.lat,
@@ -154,11 +152,12 @@ export class MapPickerComponent implements OnInit, OnDestroy {
       });
     } catch (error) {
       console.error('Error reverse geocoding:', error);
+      this.currentAddress = 'Coordenadas seleccionadas en el mapa';
       this.loading = false;
       this.locationSelected.emit({
         lat: latlng.lat,
         lng: latlng.lng,
-        address: 'Dirección no encontrada'
+        address: this.currentAddress
       });
     }
   }
