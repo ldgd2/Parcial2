@@ -3,6 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, Column, Integer, String, Text, Date, Time, ForeignKey, func, Float, DateTime, Boolean, desc
 from sqlalchemy.orm import relationship
 from app.db.generic_model import GenericModel
+
+# Importar modelos relacionados para que se registren en SQLAlchemy
+from app.packages.gestion_usuarios_seguridad.modules.tenants.models.taller import Taller
+from app.packages.gestion_usuarios_seguridad.modules.tenants.models.sucursal import Sucursal
 class Emergencia(GenericModel):
     __tablename__ = "emergencia"
     __table_args__ = {"schema": "public"}

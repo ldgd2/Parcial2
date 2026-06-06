@@ -19,6 +19,7 @@ try:
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload, joinedload
     from app.db.session import AsyncSessionLocal
+    import app.db.base # Importamos todos los modelos para SQLAlchemy
     from pydantic import TypeAdapter
 except ImportError as e:
     print(f"[ERROR] No se pudo importar los módulos de la aplicación: {e}")
