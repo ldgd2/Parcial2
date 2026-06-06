@@ -50,8 +50,8 @@ export const offlineInterceptor: HttpInterceptorFn = (
   // Si hay red o es un método distinto a POST, pasa normalmente
   return next(req).pipe(
     catchError((error) => {
-      // Fallback: Si falló por error de red (status 0) a pesar de onLine = true
-      if (error.status === 0 && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+      // Fallback: Si falló por error de red (status 0) pero confirmamos que REALMENTE no hay internet
+      if (!navigator.onLine && error.status === 0 && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
         let files: {file: File, fieldName: string}[] = [];
         let payload: any = req.body;
         if (req.body instanceof FormData) {
