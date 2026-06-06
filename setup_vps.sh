@@ -76,9 +76,13 @@ echo -e "${YELLOW}${BOLD}>>> INICIANDO CONFIGURACIÓN NIVEL ADMINISTRADOR${NC}"
 progress_bar
 
 # 1. CAPTURA DE DATOS INTERACTIVA
+echo -ne "\n${BLUE}${BOLD}[ DETECCIÓN DE RED ]${NC}\n  🔍 Detectando IP pública del servidor..."
+VPS_IP=$(curl -s ifconfig.me)
+echo -e " ${GREEN}$VPS_IP${NC}"
+
 echo -e "\n${BLUE}${BOLD}[ CONFIGURACIÓN DE BASE DE DATOS ]${NC}"
-read -p "  👤 Ingrese Nuevo Usuario de DB: " DB_USER
-if [ -z "$DB_USER" ]; then DB_USER="admin_taller"; fi
+read -p "  👤 Ingrese Usuario de DB [postgres]: " DB_USER
+if [ -z "$DB_USER" ]; then DB_USER="postgres"; fi
 
 while true; do
     read -s -p "  🔑 Ingrese Contraseña para $DB_USER: " DB_PASS
@@ -86,32 +90,34 @@ while true; do
     read -s -p "  🔄 Repita la Contraseña: " DB_PASS_CONF
     echo ""
     if [ "$DB_PASS" == "$DB_PASS_CONF" ]; then
-        echo -e "  ${GREEN}✅ Contraseñas listas.${NC}"
-        break
+        if [ -z "$DB_PASS" ]; then
+            echo -e "  ${RED}❌ La contraseña no puede estar vacía. Intente de nuevo.${NC}"
+        else
+            echo -e "  ${GREEN}✅ Contraseñas coinciden.${NC}"
+            break
+        fi
     else
         echo -e "  ${RED}❌ Las contraseñas no coinciden. Intente de nuevo.${NC}"
     fi
 done
 
-echo -e "\n${BLUE}${BOLD}[ CONFIGURACIÓN DE RED ]${NC}"
-echo -e "  1) Localhost (127.0.0.1)"
-echo -e "  2) IP del VPS (Detección automática)"
+echo -e "\n${BLUE}${BOLD}[ CONEXIÓN BASE DE DATOS ]${NC}"
+echo -e "  1) Localhost (127.0.0.1) - Recomendado si el backend está en el mismo server"
+echo -e "  2) IP del VPS ($VPS_IP)"
 read -p "  Seleccione opción [1]: " HOST_CHOICE
 
 if [ "$HOST_CHOICE" == "2" ]; then
-    echo -ne "  🔍 Detectando IP pública..."
-    VPS_IP=$(curl -s ifconfig.me)
     DB_HOST=$VPS_IP
-    echo -e " ${GREEN}Detectada: $DB_HOST${NC}"
 else
     DB_HOST="127.0.0.1"
 fi
 
-# 2. ACTUALIZACIÓN DEL SISTEMA
-echo -e "\n${YELLOW}>>> 1. Actualizando sistema y repositorios...${NC}"
+# 2. ACTUALIZACIÓN DEL SISTEMA Y ZONA HORARIA
+echo -e "\n${YELLOW}>>> 1. Configurando Zona Horaria (La Paz) y Actualizando sistema...${NC}"
+sudo timedatectl set-timezone America/La_Paz
 (sudo apt update && sudo apt upgrade -y) > /dev/null 2>&1 &
 spinner $!
-echo -e "${GREEN}   ✅ Sistema al día.${NC}"
+echo -e "${GREEN}   ✅ Hora configurada (UTC-4) y Sistema al día.${NC}"
 
 # 3. INSTALAR POSTGRESQL Y CONFIGURAR SUPERUSER
 echo -e "\n${YELLOW}>>> 2. Instalando y Configurando PostgreSQL ($DB_VERSION_REQ)...${NC}"
@@ -123,16 +129,21 @@ sudo apt update > /dev/null 2>&1
 (sudo apt install -y postgresql postgresql-contrib postgresql-client build-essential jq) > /dev/null 2>&1 &
 spinner $!
 
-echo -e "   🐘 Creando usuario administrador '$DB_USER' en PostgreSQL..."
+echo -e "   🐘 Configurando usuario '$DB_USER' en PostgreSQL..."
 sudo systemctl start postgresql
-# Crear usuario con permisos de SUPERUSER (Administrador total)
-sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';" > /dev/null 2>&1
-sudo -u postgres psql -c "ALTER USER $DB_USER WITH SUPERUSER;" > /dev/null 2>&1
+
+if [ "$DB_USER" == "postgres" ]; then
+    # Actualizar contraseña del superusuario por defecto
+    sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$DB_PASS';" > /dev/null 2>&1
+else
+    # Crear usuario con permisos de SUPERUSER (Administrador total)
+    sudo -u postgres psql -c "CREATE USER $DB_USER WITH SUPERUSER PASSWORD '$DB_PASS';" > /dev/null 2>&1
+fi
 
 # Crear base de datos por defecto si no existe
 DB_NAME_VAL="taller_db"
 sudo -u postgres psql -c "CREATE DATABASE $DB_NAME_VAL OWNER $DB_USER;" > /dev/null 2>&1
-echo -e "${GREEN}   ✅ Usuario '$DB_USER' creado con permisos de SUPERUSER.${NC}"
+echo -e "${GREEN}   ✅ Usuario '$DB_USER' (SUPERUSER) listo y Base de Datos $DB_NAME_VAL creada.${NC}"
 
 # 4. INSTALAR PYTHON 3.12.3
 echo -e "\n${YELLOW}>>> 3. Instalando Python $PYTHON_VER vía pyenv...${NC}"
@@ -166,17 +177,19 @@ spinner $!
 echo -e "${GREEN}   ✅ Entorno listo.${NC}"
 
 # 6. CONFIGURAR .ENV
-echo -e "\n${YELLOW}>>> 5. Sincronizando credenciales en $ENV_FILE...${NC}"
-if [ ! -f $ENV_FILE ]; then
-    cp backend/.env.example $ENV_FILE 2>/dev/null || touch $ENV_FILE
-fi
+echo -e "\n${YELLOW}>>> 5. Generando archivo $ENV_FILE con tu configuración...${NC}"
 
-# Actualizar el .env con sed
-sed -i "s/^DB_USER=.*/DB_USER=$DB_USER/" $ENV_FILE
-sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" $ENV_FILE
-sed -i "s/^DB_HOST=.*/DB_HOST=$DB_HOST/" $ENV_FILE
-sed -i "s/^DB_NAME=.*/DB_NAME=$DB_NAME_VAL/" $ENV_FILE
-echo -e "${GREEN}   ✅ Archivo .env configurado.${NC}"
+cat > $ENV_FILE << EOL
+APP_HOST=$VPS_IP
+APP_PORT_BACKEND=8000
+DB_USER=$DB_USER
+DB_PASSWORD=$DB_PASS
+DB_HOST=$DB_HOST
+DB_PORT=5432
+DB_NAME=$DB_NAME_VAL
+EOL
+
+echo -e "${GREEN}   ✅ Archivo .env configurado exitosamente.${NC}"
 
 # 7. FINALIZACIÓN Y LANZAMIENTO
 echo -e "\n${MAGENTA}${BOLD}=================================================${NC}"
