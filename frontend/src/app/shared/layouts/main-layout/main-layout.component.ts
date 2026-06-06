@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -29,7 +29,7 @@ import { toast } from 'ngx-sonner';
 
         <!-- Navigation -->
         <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto overflow-x-hidden pt-8">
-          <ng-container *ngFor="let item of navItems">
+          <ng-container *ngFor="let item of navItems()">
             <a *appHasPermission="item.permission" [routerLink]="item.path" 
                routerLinkActive="bg-zinc-900 border-l border-primary"
                class="flex items-center gap-4 px-5 py-4 transition-all hover:bg-zinc-900/50 group relative">
@@ -109,7 +109,7 @@ export class MainLayoutComponent implements OnInit {
   
   public auth = inject(AuthService);
 
-  get navItems() {
+  navItems = computed(() => {
     const user = this.auth.currentUser();
     const isSuperAdmin = !user?.taller;
 
@@ -132,7 +132,7 @@ export class MainLayoutComponent implements OnInit {
       { label: 'Mis Talleres', icon: 'factory', path: '/app/talleres', permission: 'PERMISO_VER_SUCURSALES' },
       { label: 'Suscripción', icon: 'credit-card', path: '/app/suscripcion', permission: '' }
     ];
-  }
+  });
 
   constructor(
     public themeService: ThemeService,
