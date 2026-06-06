@@ -1,8 +1,8 @@
 import os
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from app.api.dependencies import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import get_db
 from app.packages.gestion_administrativa_reportes.modules.apps.schemas.app_version import AppVersionOut
 from app.packages.gestion_administrativa_reportes.modules.apps.services.app_version_service import AppVersionService
 
@@ -13,23 +13,23 @@ async def publish_app(
     version: str = Form(...),
     changelog: str = Form(""),
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     service = AppVersionService(db)
     return await service.publish_version(version, changelog, file)
 
 @router.get("/latest", response_model=AppVersionOut, summary="Obtener metadatos de la última versión")
-async def get_latest_app(db: Session = Depends(get_db)):
+async def get_latest_app(db: AsyncSession = Depends(get_db)):
     service = AppVersionService(db)
     return await service.get_latest()
 
 @router.get("/history", response_model=list[AppVersionOut], summary="Obtener historial de versiones")
-async def get_app_history(db: Session = Depends(get_db)):
+async def get_app_history(db: AsyncSession = Depends(get_db)):
     service = AppVersionService(db)
     return await service.get_history()
 
 @router.get("/download/latest", summary="Descargar directamente la última versión (APK)")
-async def download_latest_app(db: Session = Depends(get_db)):
+async def download_latest_app(db: AsyncSession = Depends(get_db)):
     service = AppVersionService(db)
     latest = await service.get_latest()
     

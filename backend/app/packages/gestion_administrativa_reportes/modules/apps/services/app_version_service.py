@@ -1,7 +1,7 @@
 import os
 import shutil
 from fastapi import UploadFile, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.packages.gestion_administrativa_reportes.modules.apps.repositories.app_version_repo import AppVersionRepository
 from app.packages.gestion_administrativa_reportes.modules.apps.schemas.app_version import AppVersionCreate, AppVersionOut
 from app.packages.gestion_administrativa_reportes.modules.apps.models.app_version import AppVersion
@@ -11,7 +11,7 @@ APPS_DIR = os.path.join(os.getcwd(), "static", "apps")
 os.makedirs(APPS_DIR, exist_ok=True)
 
 class AppVersionService:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.repo = AppVersionRepository(db)
 
     async def publish_version(self, version: str, changelog: str, file: UploadFile) -> AppVersion:

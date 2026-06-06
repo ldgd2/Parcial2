@@ -56,7 +56,6 @@ After=network.target
 [Service]
 User={user}
 WorkingDirectory={cwd}/frontend
-ExecStartPre={python_exe} {cwd}/scripts/sync_env.py
 ExecStart=/usr/bin/npm start -- --host 0.0.0.0 --port {port_front} --disable-host-check
 Restart=always
 RestartSec=10
