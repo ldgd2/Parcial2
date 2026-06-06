@@ -208,6 +208,20 @@ import { StripeElements, Stripe } from '@stripe/stripe-js';
             </div>
           </div>
 
+          <!-- STEP 5: ÉXITO -->
+          <div *ngIf="step === 5" @slideAnimation class="w-full flex flex-col items-center justify-center py-12">
+            <div class="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-6">
+              <lucide-icon name="check-circle" class="text-green-500 w-12 h-12"></lucide-icon>
+            </div>
+            <h2 class="text-3xl font-extrabold uppercase mb-2 text-center text-green-500">¡OPERACIÓN EXITOSA!</h2>
+            <p class="text-zinc-400 font-mono text-xs uppercase tracking-widest text-center mb-8">
+              Tu método de pago ha sido procesado y tu cuenta fue registrada.
+            </p>
+            <button (click)="goToLogin()" class="bg-[#FF5733] text-white px-8 py-4 text-[12px] uppercase font-bold tracking-[.2em] hover:bg-[#e04c2c] transition-colors">
+              INICIAR SESIÓN AHORA
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -350,13 +364,17 @@ export class RegisterComponent implements OnInit {
     this.api.post<any>('/auth/register', this.formData).subscribe({
       next: (res) => {
         this.loading = false;
-        // Success -> redirect
-        this.router.navigate(['/auth/login'], { queryParams: { registered: true, email: this.formData.correo } });
+        // Success -> show step 5
+        this.step = 5;
       },
       error: (err) => {
         this.loading = false;
         this.errorMessage = err.error?.detail || 'Error al crear la cuenta en el sistema.';
       }
     });
+  }
+
+  goToLogin() {
+    this.router.navigate(['/auth/login'], { queryParams: { registered: true, email: this.formData.correo } });
   }
 }
