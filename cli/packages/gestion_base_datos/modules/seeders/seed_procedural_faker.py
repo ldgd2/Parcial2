@@ -249,6 +249,10 @@ async def run_procedural_seeder():
             
             # Si completada, agregar Pago y Calificacion
             if estado == 5:
+                # Obtener un técnico del taller para la calificación
+                tecnicos_taller = (await db.execute(select(Tecnico).where(Tecnico.idTaller == taller.cod))).scalars().all()
+                tecnico_id = random.choice(tecnicos_taller).id if tecnicos_taller else 1
+
                 # Pago
                 p = Pago(
                     emergencia_id=e.id,
@@ -262,8 +266,12 @@ async def run_procedural_seeder():
                 
                 # Calificacion
                 calif = Calificacion(
-                    id_emergencia=e.id,
-                    puntuacion=random.randint(3, 5), # Mayormente buenas
+                    idEmergencia=e.id,
+                    idCliente=vehiculo.idCliente,
+                    idTaller=taller.cod,
+                    idTecnico=tecnico_id,
+                    puntuacion_taller=random.randint(3, 5),
+                    puntuacion_tecnico=random.randint(3, 5),
                     comentario=fake.sentence(nb_words=10)
                 )
                 db.add(calif)

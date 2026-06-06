@@ -289,20 +289,32 @@ export class DashboardComponent implements OnInit {
   }
 
   updateCharts(res: KpiResponse) {
+    if (!res) return;
+
     // 1. Tendencia Line Chart
-    this.lineChartData.labels = res.grafica.map(g => {
-      const d = new Date(g.fecha + 'T12:00:00'); // Prevent timezone shift
-      return `${d.getDate()}/${d.getMonth() + 1}`;
-    });
-    this.lineChartData.datasets[0].data = res.grafica.map(g => g.atendidas);
-    this.lineChartData.datasets[1].data = res.grafica.map(g => g.activas);
+    if (res.grafica && res.grafica.length > 0) {
+      this.lineChartData.labels = res.grafica.map(g => {
+        const d = new Date(g.fecha + 'T12:00:00'); // Prevent timezone shift
+        return `${d.getDate()}/${d.getMonth() + 1}`;
+      });
+      this.lineChartData.datasets[0].data = res.grafica.map(g => g.atendidas);
+      this.lineChartData.datasets[1].data = res.grafica.map(g => g.activas);
+    } else {
+      this.lineChartData.labels = [];
+      this.lineChartData.datasets[0].data = [];
+      this.lineChartData.datasets[1].data = [];
+    }
 
     // 2. Polar Area (Tipos)
-    this.polarChartData.labels = res.analitica.incidentes_por_tipo.map(i => i.tipo);
-    this.polarChartData.datasets[0].data = res.analitica.incidentes_por_tipo.map(i => i.cantidad);
+    if (res.analitica && res.analitica.incidentes_por_tipo) {
+      this.polarChartData.labels = res.analitica.incidentes_por_tipo.map(i => i.tipo);
+      this.polarChartData.datasets[0].data = res.analitica.incidentes_por_tipo.map(i => i.cantidad);
+    }
 
     // 3. Bar Chart (Zonas)
-    this.barChartData.labels = res.analitica.zonas_incidentes.map(z => z.zona);
-    this.barChartData.datasets[0].data = res.analitica.zonas_incidentes.map(z => z.cantidad);
+    if (res.analitica && res.analitica.zonas_incidentes) {
+      this.barChartData.labels = res.analitica.zonas_incidentes.map(z => z.zona);
+      this.barChartData.datasets[0].data = res.analitica.zonas_incidentes.map(z => z.cantidad);
+    }
   }
 }

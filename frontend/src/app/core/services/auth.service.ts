@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Router } from '@angular/router';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, tap, switchMap } from 'rxjs/operators';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 
 export interface PlanInfo {
@@ -62,17 +62,14 @@ export class AuthService {
         localStorage.setItem('cod_taller', res.cod_taller || '');
         localStorage.setItem('nombre_taller', res.nombre_taller || 'Taller OS');
       }),
-      // After getting token, immediately fetch ME to get permissions
-      map(() => {
-        this.fetchMe().subscribe({
-          next: (me) => {
-            this.currentUser.set(me);
-            this.isAuthenticated.set(true);
-            this.router.navigate(['/app/dashboard']);
-          },
-          error: () => this.logout()
-        });
-        return true;
+      switchMap(() => this.fetchMe()),
+      tap({
+        next: (me) => {
+          this.currentUser.set(me);
+          this.isAuthenticated.set(true);
+          this.router.navigate(['/app/dashboard']);
+        },
+        error: () => this.logout()
       })
     );
   }
