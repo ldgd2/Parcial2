@@ -100,6 +100,10 @@ else
     DB_HOST="127.0.0.1"
 fi
 
+echo -e "\n${BLUE}${BOLD}[ INSTALACIÓN DE SERVICIOS ]${NC}"
+echo -e "  ❓ ¿Desea instalar PostgreSQL y configurar la base de datos localmente?"
+read -p "  (Presione Enter para SÍ, escriba 'n' para NO) [S/n]: " SETUP_PG
+
 # 2. ACTUALIZACIÓN DEL SISTEMA Y ZONA HORARIA
 echo -e "\n${YELLOW}>>> 1. Configurando Zona Horaria (La Paz) y Actualizando sistema...${NC}"
 sudo timedatectl set-timezone America/La_Paz
@@ -118,9 +122,6 @@ sudo apt update > /dev/null 2>&1
 
 # Instalación de servidor y cliente
 sudo apt install -yq postgresql postgresql-contrib postgresql-client build-essential jq
-
-echo -e "\n  ❓ ¿Desea instalar PostgreSQL y configurar el usuario/base de datos ahora?"
-read -p "  (Presione Enter para SÍ, escriba 'n' para NO) [S/n]: " SETUP_PG
 
 if [[ "$SETUP_PG" != "n" && "$SETUP_PG" != "N" ]]; then
     echo -e "   🐘 Configurando usuario '$DB_USER' en PostgreSQL..."
