@@ -10,6 +10,11 @@ export const offlineInterceptor: HttpInterceptorFn = (
 ): Observable<HttpEvent<unknown>> => {
   const offlineSync = inject(OfflineSyncService);
 
+  // Ignorar las peticiones de login para evitar falsos positivos offline sin token
+  if (req.url.includes('/auth/login') || req.url.includes('/auth/register')) {
+    return next(req);
+  }
+
   // Verificamos si estamos sin internet antes de intentar la petición
   if (!navigator.onLine && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
     console.log(`[PWA Interceptor] Detectado sin red. Guardando payload de ${req.method} en IndexedDB...`);
