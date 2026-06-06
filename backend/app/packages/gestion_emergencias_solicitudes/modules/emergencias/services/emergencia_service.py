@@ -412,7 +412,7 @@ async def bloquear_emergencia_temporal(emergencia_id: int, taller_cod: str, db: 
     await db.commit()
     return {"status": "locked", "expires_in": 120}
 
-async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnicos_ids: list[int], db: AsyncSession):
+async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnicos_ids: list[int], db: AsyncSession, id_sucursal: int = None):
     """Asignación final con uno o varios técnicos."""
     # 1. Obtener emergencia
     emergencia = await Emergencia.get(db, emergencia_id)
@@ -426,6 +426,7 @@ async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnico
     # 2. Realizar asignación
     await emergencia.update(db, obj_in={
         "idTaller": taller_cod,
+        "idSucursal": id_sucursal,
         "locked_by": None,
         "locked_at": None
     })

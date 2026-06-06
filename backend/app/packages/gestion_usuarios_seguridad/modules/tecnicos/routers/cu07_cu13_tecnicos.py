@@ -35,6 +35,8 @@ async def crear_tecnico(
     db: AsyncSession = Depends(get_db),
 ):
     """Solo admins del taller pueden registrar técnicos."""
+    if not data.idSucursal:
+        data.idSucursal = current.get("sucursal")
     return await tecnico_service.crear_tecnico(data, db)
 
 

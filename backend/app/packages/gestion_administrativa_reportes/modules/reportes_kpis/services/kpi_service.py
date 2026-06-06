@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 
 class KpiService:
     @staticmethod
-    async def obtener_kpis(db: AsyncSession, id_taller: str, rango: str = "mensual") -> KpiResponse:
+    async def obtener_kpis(db: AsyncSession, id_taller: str, id_sucursal: int = None, rango: str = "mensual") -> KpiResponse:
         hoy = datetime.now()
         if rango == "diario":
             fecha_inicio = hoy - timedelta(days=1)
@@ -30,6 +30,9 @@ class KpiService:
                 Emergencia.fecha >= fecha_inicio.date()
             )
         )
+        if id_sucursal:
+            base_query = base_query.where(Emergencia.idSucursal == id_sucursal)
+            
         res_emergencias = await db.execute(base_query)
         emergencias = res_emergencias.scalars().all()
         

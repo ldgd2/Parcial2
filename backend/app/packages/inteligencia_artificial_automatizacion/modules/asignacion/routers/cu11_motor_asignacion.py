@@ -99,7 +99,8 @@ async def confirmar_asignacion(
     current_user: dict = Depends(require_role("admin")),
 ):
     taller_cod = current_user.get("taller")
-    return await emergencia_service.asignar_emergencia_taller(id, taller_cod, data.tecnicos_ids, db)
+    id_sucursal = current_user.get("sucursal")
+    return await emergencia_service.asignar_emergencia_taller(id, taller_cod, data.tecnicos_ids, db, id_sucursal=id_sucursal)
 
 
 @router.post(

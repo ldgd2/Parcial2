@@ -20,6 +20,7 @@ class Emergencia(GenericModel):
 
     # Claves foráneas (idTaller es nullable ahora hasta que alguien la tome)
     idTaller = Column(String(10), ForeignKey("public.taller.cod"), nullable=True, index=True)
+    idSucursal = Column(Integer, ForeignKey("public.sucursal.id"), nullable=True, index=True)
     idPrioridad = Column(Integer, ForeignKey("public.prioridad.id"), nullable=False)
     idCategoria = Column(Integer, ForeignKey("public.categoria_problema.id"), nullable=False)
     idCliente = Column(Integer, ForeignKey("public.cliente.id"), nullable=False, index=True)
@@ -35,6 +36,7 @@ class Emergencia(GenericModel):
 
     # Relaciones
     taller = relationship("Taller", back_populates="emergencias", foreign_keys=[idTaller])
+    sucursal = relationship("Sucursal", foreign_keys=[idSucursal])
     prioridad = relationship("Prioridad")
     categoria = relationship("CategoriaProblema")
     cliente = relationship("Cliente", back_populates="emergencias")

@@ -15,6 +15,7 @@ export interface AuthMeResponse {
   usuario: any;
   taller: any;
   plan: PlanInfo;
+  sucursal?: number;
   permisos: string[];
 }
 

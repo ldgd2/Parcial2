@@ -56,6 +56,7 @@ class CalificacionService:
             idEmergencia=id_emergencia,
             idCliente=id_cliente,
             idTaller=emergencia.idTaller,
+            idSucursal=emergencia.idSucursal,
             idTecnico=id_tecnico,
             puntuacion_taller=data.puntuacion_taller,
             puntuacion_tecnico=data.puntuacion_tecnico,
@@ -122,7 +123,7 @@ class CalificacionService:
         return pendientes
 
     @staticmethod
-    async def listar_calificaciones_taller(db: AsyncSession, id_taller: str, solo_publicas: bool = False):
+    async def listar_calificaciones_taller(db: AsyncSession, id_taller: str, id_sucursal: int = None, solo_publicas: bool = False):
         # Para el moderador/administrador del taller o publico
         query = select(Calificacion, Usuario, Tecnico).join(
             Usuario, Calificacion.idCliente == Usuario.id
@@ -132,6 +133,9 @@ class CalificacionService:
             Calificacion.idTaller == id_taller
         )
         
+        if id_sucursal:
+            query = query.where(Calificacion.idSucursal == id_sucursal)
+
         if solo_publicas:
             query = query.where(Calificacion.estado == "PUBLICADA")
 

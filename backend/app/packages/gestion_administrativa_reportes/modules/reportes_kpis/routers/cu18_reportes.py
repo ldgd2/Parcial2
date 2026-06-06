@@ -144,7 +144,12 @@ async def obtener_kpis_dashboard(
     Obtiene los KPIs clave (Ingresos, Trabajos Completados, Tasa de Conversión, Tiempos Promedio)
     para el taller del usuario autenticado, filtrados por rango de fecha.
     """
-    return await KpiService.obtener_kpis(db, current_user.get("taller"), rango)
+    return await KpiService.obtener_kpis(
+        db, 
+        current_user.get("taller"), 
+        id_sucursal=current_user.get("sucursal"),
+        rango=rango
+    )
 
 
 @router.get("/vehiculos-atendidos", response_model=List[VehiculoOut])

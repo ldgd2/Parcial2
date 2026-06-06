@@ -210,7 +210,7 @@ async def login_web(data: LoginRequest, db: AsyncSession) -> TokenResponse:
     
     token = create_access_token(
         subject=user.id,
-        extra_claims={"role": role_name, "taller": user.idTaller},
+        extra_claims={"role": role_name, "taller": user.idTaller, "sucursal": user.idSucursal},
     )
 
     # Registrar en bitácora
@@ -237,7 +237,8 @@ async def login_web(data: LoginRequest, db: AsyncSession) -> TokenResponse:
         user_id=user.id,
         nombre=user.nombre, 
         cod_taller=user.idTaller,
-        nombre_taller=workshop_name
+        nombre_taller=workshop_name,
+        # TODO: si el frontend espera idSucursal en el response, podemos añadirlo al schema en el futuro.
     )
 
 from sqlalchemy import select
@@ -292,5 +293,6 @@ async def get_me(current_user: dict, db: AsyncSession):
             "max_sucursales": plan.max_sucursales if plan else 1,
             "max_tecnicos": plan.max_tecnicos if plan else 3
         },
+        "sucursal": usuario.idSucursal,
         "permisos": permisos_finales
     }

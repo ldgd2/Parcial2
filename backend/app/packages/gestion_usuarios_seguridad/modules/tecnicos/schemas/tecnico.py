@@ -7,6 +7,7 @@ class TecnicoBase(BaseModel):
     correo: EmailStr
     telefono: str
     idTaller: str
+    idSucursal: Optional[int] = None
 
 class TecnicoCreate(TecnicoBase):
     contrasena: str
@@ -17,6 +18,7 @@ class TecnicoUpdate(BaseModel):
     contrasena: Optional[str] = None
     telefono: Optional[str] = None
     idTaller: Optional[str] = None
+    idSucursal: Optional[int] = None
     estado: Optional[str] = None
 
 class TecnicoOut(TecnicoBase):

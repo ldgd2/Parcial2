@@ -11,6 +11,7 @@ class Calificacion(GenericModel):
     idEmergencia = Column(Integer, ForeignKey("public.emergencia.id"), unique=True, nullable=False)
     idCliente = Column(Integer, ForeignKey("public.usuario.id"), nullable=False)
     idTaller = Column(String(10), ForeignKey("public.taller.cod"), nullable=False)
+    idSucursal = Column(Integer, ForeignKey("public.sucursal.id"), nullable=True, index=True)
     idTecnico = Column(Integer, ForeignKey("public.tecnico.id"), nullable=False)
     
     puntuacion_taller = Column(Integer, nullable=False)
@@ -22,4 +23,5 @@ class Calificacion(GenericModel):
     emergencia = relationship("Emergencia", back_populates="calificacion")
     cliente = relationship("Usuario", foreign_keys=[idCliente])
     taller = relationship("Taller")
+    sucursal = relationship("Sucursal", foreign_keys=[idSucursal])
     tecnico = relationship("Tecnico")

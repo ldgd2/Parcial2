@@ -66,7 +66,11 @@ async def obtener_calificaciones_taller(
     """
     (Taller Admin) Retorna todas las calificaciones recibidas por el taller actual.
     """
-    return await CalificacionService.listar_calificaciones_taller(db, current_user.get("taller"))
+    return await CalificacionService.listar_calificaciones_taller(
+        db, 
+        current_user.get("taller"), 
+        id_sucursal=current_user.get("sucursal")
+    )
 
 @router.get("/publicas/{id_taller}", response_model=List[CalificacionModeradaOut])
 async def obtener_calificaciones_publicas(
