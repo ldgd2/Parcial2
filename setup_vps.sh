@@ -25,19 +25,7 @@ BOLD='\033[1m'
 
 # --- ANIMACIONES Y UI ---
 
-spinner() {
-    local pid=$1
-    local delay=0.1
-    local spinstr='|/-\'
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
-        local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-        printf "\b\b\b\b\b\b"
-    done
-    printf "    \b\b\b\b"
-}
+
 
 progress_bar() {
     local duration=$1
@@ -115,8 +103,11 @@ fi
 # 2. ACTUALIZACIÓN DEL SISTEMA Y ZONA HORARIA
 echo -e "\n${YELLOW}>>> 1. Configurando Zona Horaria (La Paz) y Actualizando sistema...${NC}"
 sudo timedatectl set-timezone America/La_Paz
-(sudo apt update && sudo apt upgrade -y) > /dev/null 2>&1 &
-spinner $!
+
+# Para evitar prompts interactivos en Ubuntu durante upgrade
+export DEBIAN_FRONTEND=noninteractive
+sudo apt update
+sudo apt upgrade -yq
 echo -e "${GREEN}   ✅ Hora configurada (UTC-4) y Sistema al día.${NC}"
 
 # 3. INSTALAR POSTGRESQL Y CONFIGURAR SUPERUSER
@@ -126,8 +117,7 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo apt update > /dev/null 2>&1
 
 # Instalación de servidor y cliente
-(sudo apt install -y postgresql postgresql-contrib postgresql-client build-essential jq) > /dev/null 2>&1 &
-spinner $!
+sudo apt install -yq postgresql postgresql-contrib postgresql-client build-essential jq
 
 echo -e "   🐘 Configurando usuario '$DB_USER' en PostgreSQL..."
 sudo systemctl start postgresql
@@ -148,8 +138,7 @@ echo -e "${GREEN}   ✅ Usuario '$DB_USER' (SUPERUSER) listo y Base de Datos $DB
 # 4. INSTALAR PYTHON 3.12.3
 echo -e "\n${YELLOW}>>> 3. Instalando Python $PYTHON_VER vía pyenv...${NC}"
 if [ ! -d "$HOME/.pyenv" ]; then
-    (curl https://pyenv.run | bash) > /dev/null 2>&1 &
-    spinner $!
+    curl https://pyenv.run | bash
 fi
 
 export PYENV_ROOT="$HOME/.pyenv"
@@ -163,8 +152,7 @@ if ! grep -q "pyenv" "$HOME/.bashrc"; then
 fi
 
 echo -e "   ⚙️  Compilando Python $PYTHON_VER (paciencia...)"
-(pyenv install $PYTHON_VER -s) > /dev/null 2>&1 &
-spinner $!
+pyenv install $PYTHON_VER -s
 pyenv global $PYTHON_VER
 
 # 5. ENTORNO VIRTUAL Y DEPENDENCIAS
@@ -172,8 +160,8 @@ echo -e "\n${YELLOW}>>> 4. Configurando Entorno Virtual y Reqs...${NC}"
 python -m venv $VENV_NAME
 source $VENV_NAME/bin/activate
 
-(pip install --upgrade pip && pip install -r backend/requirements.txt rich questionary) > /dev/null 2>&1 &
-spinner $!
+pip install --upgrade pip
+pip install -r backend/requirements.txt rich questionary
 echo -e "${GREEN}   ✅ Entorno listo.${NC}"
 
 # 6. CONFIGURAR .ENV
