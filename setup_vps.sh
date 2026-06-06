@@ -68,26 +68,38 @@ echo -ne "\n${BLUE}${BOLD}[ DETECCIÓN DE RED ]${NC}\n  🔍 Detectando IP públ
 VPS_IP=$(curl -4 -s ifconfig.me)
 echo -e " ${GREEN}$VPS_IP${NC}"
 
+echo -e "\n${BLUE}${BOLD}[ INSTALACIÓN DE SERVICIOS ]${NC}"
+echo -e "  ❓ ¿Desea instalar PostgreSQL y crear la base de datos localmente en este VPS?"
+read -p "  (Presione Enter para SÍ, escriba 'n' para NO) [S/n]: " SETUP_PG
+
 echo -e "\n${BLUE}${BOLD}[ CONFIGURACIÓN DE BASE DE DATOS ]${NC}"
 read -p "  👤 Ingrese Usuario de DB [postgres]: " DB_USER
 if [ -z "$DB_USER" ]; then DB_USER="postgres"; fi
 
-while true; do
-    read -s -p "  🔑 Ingrese Contraseña para $DB_USER: " DB_PASS
-    echo ""
-    read -s -p "  🔄 Repita la Contraseña: " DB_PASS_CONF
-    echo ""
-    if [ "$DB_PASS" == "$DB_PASS_CONF" ]; then
-        if [ -z "$DB_PASS" ]; then
-            echo -e "  ${RED}❌ La contraseña no puede estar vacía. Intente de nuevo.${NC}"
+if [[ "$SETUP_PG" != "n" && "$SETUP_PG" != "N" ]]; then
+    # Si va a crear, pedimos confirmación de contraseña para evitar errores
+    while true; do
+        read -s -p "  🔑 Ingrese Nueva Contraseña para $DB_USER: " DB_PASS
+        echo ""
+        read -s -p "  🔄 Repita la Contraseña: " DB_PASS_CONF
+        echo ""
+        if [ "$DB_PASS" == "$DB_PASS_CONF" ]; then
+            if [ -z "$DB_PASS" ]; then
+                echo -e "  ${RED}❌ La contraseña no puede estar vacía. Intente de nuevo.${NC}"
+            else
+                echo -e "  ${GREEN}✅ Contraseñas coinciden.${NC}"
+                break
+            fi
         else
-            echo -e "  ${GREEN}✅ Contraseñas coinciden.${NC}"
-            break
+            echo -e "  ${RED}❌ Las contraseñas no coinciden. Intente de nuevo.${NC}"
         fi
-    else
-        echo -e "  ${RED}❌ Las contraseñas no coinciden. Intente de nuevo.${NC}"
-    fi
-done
+    done
+else
+    # Si no va a crear, solo pedimos la contraseña una vez para el .env
+    read -s -p "  🔑 Ingrese la Contraseña existente de $DB_USER: " DB_PASS
+    echo ""
+    if [ -z "$DB_PASS" ]; then DB_PASS="Li62156478"; fi
+fi
 
 echo -e "\n${BLUE}${BOLD}[ CONEXIÓN BASE DE DATOS ]${NC}"
 echo -e "  1) Localhost (127.0.0.1) - Recomendado si el backend está en el mismo server"
@@ -99,10 +111,6 @@ if [ "$HOST_CHOICE" == "2" ]; then
 else
     DB_HOST="127.0.0.1"
 fi
-
-echo -e "\n${BLUE}${BOLD}[ INSTALACIÓN DE SERVICIOS ]${NC}"
-echo -e "  ❓ ¿Desea instalar PostgreSQL y configurar la base de datos localmente?"
-read -p "  (Presione Enter para SÍ, escriba 'n' para NO) [S/n]: " SETUP_PG
 
 # 2. ACTUALIZACIÓN DEL SISTEMA Y ZONA HORARIA
 echo -e "\n${YELLOW}>>> 1. Configurando Zona Horaria (La Paz) y Actualizando sistema...${NC}"
