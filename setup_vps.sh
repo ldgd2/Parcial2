@@ -72,33 +72,55 @@ echo -e "\n${BLUE}${BOLD}[ INSTALACIÓN DE SERVICIOS ]${NC}"
 echo -e "  ❓ ¿Desea instalar PostgreSQL y crear la base de datos localmente en este VPS?"
 read -p "  (Presione Enter para SÍ, escriba 'n' para NO) [S/n]: " SETUP_PG
 
-echo -e "\n${BLUE}${BOLD}[ CONFIGURACIÓN DE BASE DE DATOS ]${NC}"
-read -p "  👤 Ingrese Usuario de DB [postgres]: " DB_USER
-if [ -z "$DB_USER" ]; then DB_USER="postgres"; fi
+# Intentar extraer credenciales previas del .env
+PREV_DB_USER="postgres"
+PREV_DB_PASS=""
+if [ -f "$ENV_FILE" ]; then
+    _USR=$(grep "^DB_USER=" $ENV_FILE | cut -d '=' -f2)
+    _PWD=$(grep "^DB_PASSWORD=" $ENV_FILE | cut -d '=' -f2)
+    if [ ! -z "$_USR" ]; then PREV_DB_USER="$_USR"; fi
+    if [ ! -z "$_PWD" ]; then PREV_DB_PASS="$_PWD"; fi
+fi
 
-if [[ "$SETUP_PG" != "n" && "$SETUP_PG" != "N" ]]; then
-    # Si va a crear, pedimos confirmación de contraseña para evitar errores
-    while true; do
-        read -s -p "  🔑 Ingrese Nueva Contraseña para $DB_USER: " DB_PASS
-        echo ""
-        read -s -p "  🔄 Repita la Contraseña: " DB_PASS_CONF
-        echo ""
-        if [ "$DB_PASS" == "$DB_PASS_CONF" ]; then
+echo -e "\n${BLUE}${BOLD}[ CONFIGURACIÓN DE BASE DE DATOS ]${NC}"
+
+if [[ ("$SETUP_PG" == "n" || "$SETUP_PG" == "N") && -f "$ENV_FILE" ]]; then
+    echo -e "  ℹ️ Configuración existente detectada en .env:"
+    echo -e "     Usuario: ${GREEN}$PREV_DB_USER${NC}"
+    echo -e "     (La contraseña se mantiene intacta)"
+    echo -e "  ${YELLOW}No se solicitarán nuevas credenciales ni se modificará la BD actual.${NC}"
+    DB_USER=$PREV_DB_USER
+    DB_PASS=$PREV_DB_PASS
+else
+    read -p "  👤 Ingrese Usuario de DB [$PREV_DB_USER]: " DB_USER
+    if [ -z "$DB_USER" ]; then DB_USER="$PREV_DB_USER"; fi
+
+    if [[ "$SETUP_PG" != "n" && "$SETUP_PG" != "N" ]]; then
+        # Si va a crear, pedimos confirmación de contraseña para evitar errores
+        while true; do
+            read -s -p "  🔑 Ingrese Nueva Contraseña para $DB_USER [Enter para usar actual/vacio]: " DB_PASS
+            echo ""
             if [ -z "$DB_PASS" ]; then
-                echo -e "  ${RED}❌ La contraseña no puede estar vacía. Intente de nuevo.${NC}"
-            else
-                echo -e "  ${GREEN}✅ Contraseñas coinciden.${NC}"
+                DB_PASS="$PREV_DB_PASS"
+                echo -e "  ${GREEN}✅ Se usará la contraseña por defecto o vacía.${NC}"
                 break
             fi
-        else
-            echo -e "  ${RED}❌ Las contraseñas no coinciden. Intente de nuevo.${NC}"
-        fi
-    done
-else
-    # Si no va a crear, solo pedimos la contraseña una vez para el .env
-    read -s -p "  🔑 Ingrese la Contraseña existente de $DB_USER: " DB_PASS
-    echo ""
-    if [ -z "$DB_PASS" ]; then DB_PASS="Li62156478"; fi
+            
+            read -s -p "  🔄 Repita la Contraseña: " DB_PASS_CONF
+            echo ""
+            if [ "$DB_PASS" == "$DB_PASS_CONF" ]; then
+                echo -e "  ${GREEN}✅ Contraseñas coinciden.${NC}"
+                break
+            else
+                echo -e "  ${RED}❌ Las contraseñas no coinciden. Intente de nuevo.${NC}"
+            fi
+        done
+    else
+        # Si no va a crear pero NO hay .env, pedimos contraseña 1 vez
+        read -s -p "  🔑 Ingrese la Contraseña existente de $DB_USER [Enter para actual/vacio]: " DB_PASS
+        echo ""
+        if [ -z "$DB_PASS" ]; then DB_PASS="$PREV_DB_PASS"; fi
+    fi
 fi
 
 echo -e "\n${BLUE}${BOLD}[ CONEXIÓN BASE DE DATOS ]${NC}"
