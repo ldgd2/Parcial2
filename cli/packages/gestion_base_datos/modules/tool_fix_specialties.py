@@ -14,8 +14,8 @@ load_dotenv(os.path.join(_root_dir, ".env"))
 try:
     from app.db.session import AsyncSessionLocal
     from app.packages.gestion_usuarios_seguridad.modules.tenants.models.taller import Taller
-    from app.packages.gestion_usuarios_seguridad.modules.tenants.models.especialidad import Especialidad
-    from app.packages.gestion_usuarios_seguridad.modules.tenants.models.asignacion_especialidad import AsignacionEspecialidad
+    from app.packages.gestion_usuarios_seguridad.modules.tecnicos.models.especialidad import Especialidad
+    from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.models.asignacion_especialidad import AsignacionEspecialidad
     from sqlalchemy import select
 except ImportError as e:
     print(f"[ERROR] No se pudo importar los módulos de la aplicación: {e}")

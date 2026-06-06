@@ -119,50 +119,50 @@ sudo apt update > /dev/null 2>&1
 # Instalación de servidor y cliente
 sudo apt install -yq postgresql postgresql-contrib postgresql-client build-essential jq
 
-echo -e "   🐘 Configurando usuario '$DB_USER' en PostgreSQL..."
-sudo systemctl start postgresql
+echo -e "\n  ❓ ¿Desea instalar PostgreSQL y configurar el usuario/base de datos ahora?"
+read -p "  (Presione Enter para SÍ, escriba 'n' para NO) [S/n]: " SETUP_PG
 
-if [ "$DB_USER" == "postgres" ]; then
-    # Actualizar contraseña del superusuario por defecto
-    sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$DB_PASS';" > /dev/null 2>&1
+if [[ "$SETUP_PG" != "n" && "$SETUP_PG" != "N" ]]; then
+    echo -e "   🐘 Configurando usuario '$DB_USER' en PostgreSQL..."
+    sudo systemctl start postgresql
+
+    if [ "$DB_USER" == "postgres" ]; then
+        # Actualizar contraseña del superusuario por defecto
+        sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$DB_PASS';" > /dev/null 2>&1
+    else
+        # Crear usuario con permisos de SUPERUSER (Administrador total)
+        sudo -u postgres psql -c "CREATE USER $DB_USER WITH SUPERUSER PASSWORD '$DB_PASS';" > /dev/null 2>&1
+    fi
+
+    # Crear base de datos por defecto si no existe
+    DB_NAME_VAL="taller_db"
+    sudo -u postgres psql -c "CREATE DATABASE $DB_NAME_VAL OWNER $DB_USER;" > /dev/null 2>&1
+    echo -e "${GREEN}   ✅ Usuario '$DB_USER' (SUPERUSER) listo y Base de Datos $DB_NAME_VAL creada.${NC}"
 else
-    # Crear usuario con permisos de SUPERUSER (Administrador total)
-    sudo -u postgres psql -c "CREATE USER $DB_USER WITH SUPERUSER PASSWORD '$DB_PASS';" > /dev/null 2>&1
+    DB_NAME_VAL="taller_db"
+    echo -e "${YELLOW}   ⚠️ Se saltó la configuración de PostgreSQL en el sistema (Se usará $DB_USER en el .env).${NC}"
 fi
 
-# Crear base de datos por defecto si no existe
-DB_NAME_VAL="taller_db"
-sudo -u postgres psql -c "CREATE DATABASE $DB_NAME_VAL OWNER $DB_USER;" > /dev/null 2>&1
-echo -e "${GREEN}   ✅ Usuario '$DB_USER' (SUPERUSER) listo y Base de Datos $DB_NAME_VAL creada.${NC}"
-
-# 4. INSTALAR PYTHON 3.12.3
-echo -e "\n${YELLOW}>>> 3. Instalando Python $PYTHON_VER vía pyenv...${NC}"
-if [ ! -d "$HOME/.pyenv" ]; then
-    curl https://pyenv.run | bash
-fi
-
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
-if ! grep -q "pyenv" "$HOME/.bashrc"; then
-    echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-    echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-    echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-fi
-
-echo -e "   ⚙️  Compilando Python $PYTHON_VER (paciencia...)"
-pyenv install $PYTHON_VER -s
-pyenv global $PYTHON_VER
+# 4. INSTALAR PYTHON Y NODEJS
+echo -e "\n${YELLOW}>>> 3. Instalando dependencias (Python 3 y Node.js 20)...${NC}"
+sudo apt install -yq python3 python3-venv python3-pip curl
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -yq nodejs
 
 # 5. ENTORNO VIRTUAL Y DEPENDENCIAS
 echo -e "\n${YELLOW}>>> 4. Configurando Entorno Virtual y Reqs...${NC}"
-python -m venv $VENV_NAME
+python3 -m venv $VENV_NAME
 source $VENV_NAME/bin/activate
 
 pip install --upgrade pip
 pip install -r backend/requirements.txt rich questionary
-echo -e "${GREEN}   ✅ Entorno listo.${NC}"
+echo -e "${GREEN}   ✅ Entorno Backend listo.${NC}"
+
+echo -e "\n${YELLOW}>>> 4.1 Instalando paquetes del Frontend (Angular)...${NC}"
+cd frontend
+npm install
+cd ..
+echo -e "${GREEN}   ✅ Entorno Frontend listo.${NC}"
 
 # 6. CONFIGURAR .ENV
 echo -e "\n${YELLOW}>>> 5. Generando archivo $ENV_FILE con tu configuración...${NC}"
@@ -187,4 +187,4 @@ progress_bar
 
 echo -e "${CYAN}🚀 Lanzando Navaja Suiza (taller.py)...${NC}"
 sleep 1
-python taller.py
+python3 taller.py
