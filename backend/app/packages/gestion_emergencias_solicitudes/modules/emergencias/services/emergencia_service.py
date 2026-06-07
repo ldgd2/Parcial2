@@ -8,6 +8,9 @@ import datetime
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.emergencia import Emergencia
 from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.models.vehiculo import Vehiculo
