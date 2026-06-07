@@ -103,6 +103,11 @@ def execute(args):
             do_status("Estampando version Head en la BD...", "Estampando...", 
                       lambda: subprocess.run([*alembic_exe_list, "stamp", "head"], check=True))
             cprint("[bold green]BD marcada como actualizada con éxito.[/bold green]", "BD Stamp completado.")
+            
+        elif target == "fix_heads":
+            do_status("Limpiando migraciones locales no oficiales...", "Limpiando...", 
+                      lambda: subprocess.run(["git", "clean", "-fd", "alembic/versions/"], check=True))
+            cprint("[bold green]Migraciones conflictivas eliminadas. Ahora puedes hacer Upgrade.[/bold green]", "Migraciones conflictivas eliminadas.")
 
         # ---- Logica conectada a scripts/db_tools ----
         elif target == "reset":
@@ -191,6 +196,7 @@ def interactive_menu():
             "Sync (Auto-Migrate + Upgrade)",
             "Upgrade (Aplicar cambios)", 
             "Stamp (Fix Desincronización)",
+            "Fix Alembic (Multiple Heads)",
             "Reset (Limpiar y Recrear)", 
             "Populate (Data Falsa)", 
             "Debug Serialización",
@@ -205,6 +211,7 @@ def interactive_menu():
         
         if "Debug Serialización" in opt: target = "diag_serialization"
         elif "Fix Especialidades" in opt: target = "fix_specialties"
+        elif "Fix Alembic" in opt: target = "fix_heads"
         elif "Seeder Universal" in opt: target = "universal-seeder"
         elif "Agregar Super Usuario Root" in opt: target = "add-root-user"
         elif "Seed Emergencias" in opt: target = "seed-emergencias"
