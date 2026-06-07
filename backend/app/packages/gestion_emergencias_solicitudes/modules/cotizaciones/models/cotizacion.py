@@ -12,7 +12,7 @@ class Cotizacion(GenericModel):
     descripcion_servicio = Column(Text, nullable=False)
     costo_mano_obra = Column(Float, nullable=False)
     costo_repuestos = Column(Float, default=0.0)
-    tiempo_estimado_horas = Column(Integer, nullable=False)
+    tiempo_estimado = Column(String(50), nullable=False)
     condiciones = Column(Text, nullable=True)
     
     # Estados sugeridos: PENDIENTE, ACEPTADA, RECHAZADA, EN_REVISION

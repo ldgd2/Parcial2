@@ -97,16 +97,22 @@ Responde con este formato exacto:
             "image_url": {"url": image_data}
         })
 
-    print(f"Invocando IA ({settings.OPENROUTER_MODEL_NAME}) en modo COMPATIBLE...")
-    
     try:
+        print(f"Invocando IA ({settings.OPENROUTER_MODEL_NAME}) en modo COMPATIBLE...")
+        
+        # Override to a multimodal model if the default doesn't support images well
+        model_name = settings.OPENROUTER_MODEL_NAME
+        if tiene_imagenes and "llama" in model_name.lower():
+            model_name = "google/gemini-flash-1.5-8b"
+            print(f"Cambiando a {model_name} porque el modelo actual no soporta vision correctamente.")
+
         response = await client.chat.completions.create(
-            model=settings.OPENROUTER_MODEL_NAME,
+            model=model_name,
             messages=[
                 {"role": "user", "content": user_content},
             ],
-            response_format={ "type": "json_object" } if "gemini" in settings.OPENROUTER_MODEL_NAME.lower() else None,
-            timeout=20
+            response_format={ "type": "json_object" } if "gemini" in model_name.lower() or "gpt" in model_name.lower() else None,
+            timeout=60
         )
         
         content = response.choices[0].message.content
@@ -123,7 +129,10 @@ Responde con este formato exacto:
         return AnalisisEstructuradoIA(**data)
 
     except Exception as e:
+        import traceback
         print(f"Fallo total de IA (Timeout o Error): {str(e)}")
+        traceback.print_exc()
+        
         # Fallback manual para no bloquear la app
         return AnalisisEstructuradoIA(
             es_valida=True,

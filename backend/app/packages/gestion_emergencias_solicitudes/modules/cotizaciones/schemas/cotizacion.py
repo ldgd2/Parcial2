@@ -6,7 +6,7 @@ class CotizacionBase(BaseModel):
     descripcion_servicio: str
     costo_mano_obra: float
     costo_repuestos: float = 0.0
-    tiempo_estimado_horas: int
+    tiempo_estimado: str
     condiciones: Optional[str] = None
 
 class CotizacionCreate(CotizacionBase):
