@@ -18,6 +18,17 @@ class TenantSchema(BaseModel):
     estado: str
     plan_id: Optional[int] = None
     admin_correo: Optional[str] = None
+
+class TenantCreateSchema(BaseModel):
+    nombre: str
+    direccion: str
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
+    plan_id: Optional[int] = None
+    admin_nombre: Optional[str] = None
+    admin_apellido: Optional[str] = None
+    admin_correo: Optional[str] = None
+    admin_contrasena: Optional[str] = None
     
 class TenantUpdateSchema(BaseModel):
     nombre: Optional[str] = None
@@ -65,21 +76,20 @@ async def listar_tenants(
 
 @router.post("/", response_model=TenantSchema)
 async def crear_tenant(
-    payload: TenantSchema,
+    payload: TenantCreateSchema,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(require_super_admin)
 ):
     """Crea un nuevo tenant (Taller)"""
-    existing = await Taller.get_by_cod(db, payload.cod)
-    if existing:
-        raise HTTPException(status_code=400, detail="El código de tenant ya existe")
-        
+    import uuid
+    new_cod = "T-" + str(uuid.uuid4())[:8].upper()
+    
     nuevo_taller = Taller(
-        cod=payload.cod,
+        cod=new_cod,
         nombre=payload.nombre,
         direccion=payload.direccion,
-        latitud=0.0,
-        longitud=0.0,
+        latitud=payload.latitud or 0.0,
+        longitud=payload.longitud or 0.0,
         estado="ACTIVO",
         plan_id=payload.plan_id
     )
@@ -87,16 +97,15 @@ async def crear_tenant(
     await db.commit()
     await db.refresh(nuevo_taller)
     
-    # Podriamos crear un AdminTaller por defecto usando el email proveido
-    admin_correo = payload.admin_correo
-    if admin_correo:
+    # Crear AdminTaller
+    if payload.admin_correo and payload.admin_contrasena:
         from app.core.security import hash_password
         
         nuevo_admin = Usuario(
-            nombre="Admin",
-            apellido="Taller",
-            correo=admin_correo,
-            contrasena=hash_password("Admin123!"),
+            nombre=payload.admin_nombre or "Admin",
+            apellido=payload.admin_apellido or "Taller",
+            correo=payload.admin_correo,
+            contrasena=hash_password(payload.admin_contrasena),
             estado="ACTIVO",
             idTaller=nuevo_taller.cod
         )
@@ -110,7 +119,7 @@ async def crear_tenant(
         direccion=nuevo_taller.direccion,
         estado=nuevo_taller.estado,
         plan_id=nuevo_taller.plan_id,
-        admin_correo=admin_correo
+        admin_correo=payload.admin_correo
     )
 
 @router.put("/{cod}", response_model=TenantSchema)

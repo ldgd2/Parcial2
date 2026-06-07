@@ -94,28 +94,72 @@ interface TallerCard {
 
       <!-- CREATE MODAL OVERLAY -->
       <div *ngIf="showModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-[#111111] border border-[#333333] p-8 w-full max-w-lg shadow-2xl relative">
-          <button (click)="closeCreateModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white">
-            <lucide-icon name="x" size="20"></lucide-icon>
-          </button>
+        <div class="bg-[#111111] border border-[#333333] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative custom-scrollbar">
+          <div class="sticky top-0 bg-[#111111] p-6 border-b border-zinc-800 z-10 flex justify-between items-center">
+             <div>
+                <h2 class="text-xl font-bold uppercase text-white">Registrar Taller</h2>
+                <p class="text-[9px] font-mono text-[#FF5733] uppercase tracking-widest">Detalles de Nueva Instalación Operativa</p>
+             </div>
+             <button (click)="closeCreateModal()" class="text-zinc-500 hover:text-white">
+                <lucide-icon name="x" size="20"></lucide-icon>
+             </button>
+          </div>
           
-          <h2 class="text-2xl font-bold mb-2 uppercase text-white">Registrar Taller</h2>
-          <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-4 mb-6">Detalles de Nueva Instalación Operativa</p>
+          <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+             
+             <!-- Columna 1: Taller & Mapa -->
+             <div class="space-y-6">
+                <h3 class="font-bold text-[11px] uppercase tracking-[.25em] text-white border-l-2 border-[#FF5733] pl-2">Datos y Ubicación</h3>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Nombre del Taller / Unidad *</label>
+                  <input type="text" [(ngModel)]="newTaller.nombre" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#FF5733] outline-none">
+                </div>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Dirección Base / Cobertura (Click en Mapa) *</label>
+                  <input type="text" [(ngModel)]="newTaller.direccion" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#FF5733] outline-none">
+                </div>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Mapa Satelital</label>
+                  <div id="tallerMap" class="h-48 w-full bg-[#050505] border border-zinc-800 relative z-0"></div>
+                </div>
+             </div>
+             
+             <!-- Columna 2: Administrador -->
+             <div class="space-y-6">
+                <h3 class="font-bold text-[11px] uppercase tracking-[.25em] text-white border-l-2 border-[#00ff9d] pl-2">Usuario Administrador</h3>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Nombre *</label>
+                      <input type="text" [(ngModel)]="newTaller.admin_nombre" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
+                    </div>
+                    <div class="space-y-2">
+                      <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Apellido *</label>
+                      <input type="text" [(ngModel)]="newTaller.admin_apellido" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
+                    </div>
+                </div>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Correo Electrónico *</label>
+                  <input type="email" [(ngModel)]="newTaller.admin_correo" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
+                </div>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Contraseña *</label>
+                  <input type="password" [(ngModel)]="newTaller.admin_contrasena" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
+                </div>
 
-          <div class="space-y-6">
-            <div class="space-y-2">
-              <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Nombre del Taller / Unidad</label>
-              <input type="text" [(ngModel)]="newTaller.nombre" class="w-full bg-[#050505] border border-zinc-800 p-4 text-sm font-bold text-white focus:border-[#FF5733] outline-none">
-            </div>
-            <div class="space-y-2">
-              <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Dirección Base / Cobertura</label>
-              <input type="text" [(ngModel)]="newTaller.direccion" class="w-full bg-[#050505] border border-zinc-800 p-4 text-sm font-bold text-white focus:border-[#FF5733] outline-none">
-            </div>
-            
-            <button (click)="submitCreate()" [disabled]="creating" class="w-full bg-[#FF5733] text-white py-4 font-bold text-[11px] uppercase tracking-widest hover:brightness-110 flex items-center justify-center gap-2 mt-8 disabled:opacity-50">
-               <lucide-icon *ngIf="creating" name="loader-2" size="14" class="animate-spin"></lucide-icon>
-               CONFIRMAR REGISTRO
-            </button>
+                <div class="pt-8 mt-auto">
+                    <button (click)="submitCreate()" [disabled]="creating" class="w-full bg-[#FF5733] text-white py-4 font-bold text-[11px] uppercase tracking-widest hover:brightness-110 flex items-center justify-center gap-2 disabled:opacity-50 transition-all">
+                       <lucide-icon *ngIf="creating" name="loader-2" size="14" class="animate-spin"></lucide-icon>
+                       REGISTRAR TALLER Y ADMIN
+                    </button>
+                </div>
+             </div>
+
           </div>
         </div>
       </div>
@@ -203,7 +247,16 @@ export class TalleresComponent implements OnInit {
 
   showModal = false;
   creating = false;
-  newTaller = { nombre: '', direccion: '' };
+  newTaller = { 
+    nombre: '', 
+    direccion: '',
+    latitud: null as number | null,
+    longitud: null as number | null,
+    admin_nombre: '',
+    admin_apellido: '',
+    admin_correo: '',
+    admin_contrasena: ''
+  };
 
   showSucursalModal = false;
   creatingSucursal = false;
@@ -242,8 +295,61 @@ export class TalleresComponent implements OnInit {
   }
 
   openCreateModal() {
-    this.newTaller = { nombre: '', direccion: '' };
+    this.newTaller = { 
+        nombre: '', 
+        direccion: '',
+        latitud: null,
+        longitud: null,
+        admin_nombre: '',
+        admin_apellido: '',
+        admin_correo: '',
+        admin_contrasena: ''
+    };
     this.showModal = true;
+    setTimeout(() => this.initTallerMap(), 100);
+  }
+  
+  initTallerMap() {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+    const mapElement = document.getElementById('tallerMap');
+    if (!mapElement) return;
+
+    this.map = L.map('tallerMap').setView([-12.0464, -77.0428], 10);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CARTO'
+    }).addTo(this.map);
+
+    const customIcon = L.divIcon({
+        className: 'custom-pin',
+        html: '<div style="background-color: #FF5733; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(255,87,51,0.8);"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+    });
+
+    this.map.on('click', (e: L.LeafletMouseEvent) => {
+        const lat = parseFloat(e.latlng.lat.toFixed(6));
+        const lng = parseFloat(e.latlng.lng.toFixed(6));
+        
+        this.newTaller.latitud = lat;
+        this.newTaller.longitud = lng;
+
+        if (this.marker) {
+            this.marker.setLatLng([lat, lng]);
+        } else {
+            this.marker = L.marker([lat, lng], { icon: customIcon }).addTo(this.map!);
+        }
+
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.display_name) {
+              this.newTaller.direccion = data.display_name;
+            }
+          });
+    });
   }
   
   closeCreateModal() {
@@ -251,7 +357,7 @@ export class TalleresComponent implements OnInit {
   }
 
   submitCreate() {
-    if (!this.newTaller.nombre || !this.newTaller.direccion) {
+    if (!this.newTaller.nombre || !this.newTaller.direccion || !this.newTaller.admin_correo || !this.newTaller.admin_contrasena) {
       toast.warning('Complete todos los campos requeridos');
       return;
     }
