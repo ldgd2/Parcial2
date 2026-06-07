@@ -9,6 +9,7 @@ from .seed_talleres import seed_nuevo_taller
 from .seed_clientes import seed_nuevo_cliente
 from .seed_emergencias import seed_emergencias_inteligentes
 from .seed_cotizaciones import seed_cotizaciones
+from .simulador_transacciones_emergencia import simular_transaccion_emergencia
 
 async def interactive_wizard():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -29,6 +30,7 @@ async def interactive_wizard():
                 "6. Cotizaciones (Requiere Emergencias)",
                 "7. Script Seeder Legacy Completo (Poblar TODO automáticamente)",
                 "8. Generador Procedural (Faker) Automático",
+                "9. SIMULADOR DE EMERGENCIA (Transacción como Cliente)",
                 questionary.Separator(),
                 "Volver al menú principal"
             ],
@@ -61,6 +63,8 @@ async def interactive_wizard():
             elif choice.startswith("8"):
                 from .seed_procedural_faker import run_procedural_seeder
                 await run_procedural_seeder()
+            elif choice.startswith("9"):
+                await simular_transaccion_emergencia()
         except Exception as e:
             print(f"\n❌ Error durante la ejecución del seeder: {e}")
             
