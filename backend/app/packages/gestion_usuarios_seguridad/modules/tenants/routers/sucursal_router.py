@@ -16,6 +16,9 @@ async def crear_sucursal(
     current_user: dict = Depends(get_current_user)
 ):
     # Validar permisos
+    if current_user.get("role") == "admin_sucursal":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Los administradores de sucursal no pueden crear sucursales.")
+    
     if "PERMISO_GESTIONAR_SUCURSALES" not in current_user.get("permisos", []) and "ALL_PERMISSIONS_FALLBACK_IF_ANY" not in current_user.get("permisos", []):
         if current_user.get("role") != "admin":
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permisos insuficientes.")
@@ -57,6 +60,9 @@ async def crear_admin_sucursal(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
+    if current_user.get("role") == "admin_sucursal":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Los administradores de sucursal no pueden crear administradores.")
+
     if "PERMISO_GESTIONAR_SUCURSALES" not in current_user.get("permisos", []) and "ALL_PERMISSIONS_FALLBACK_IF_ANY" not in current_user.get("permisos", []):
         if current_user.get("role") != "admin":
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permisos insuficientes para asignar un administrador.")
@@ -80,8 +86,48 @@ async def asignar_admin_existente(
     current_user: dict = Depends(get_current_user)
 ):
     """Vincula un usuario existente a una sucursal como su administrador"""
+    if current_user.get("role") == "admin_sucursal":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Los administradores de sucursal no pueden asignar administradores.")
+
     if "PERMISO_GESTIONAR_SUCURSALES" not in current_user.get("permisos", []) and "ALL_PERMISSIONS_FALLBACK_IF_ANY" not in current_user.get("permisos", []):
         if current_user.get("role") != "admin":
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permisos insuficientes.")
             
     return await sucursal_service.asignar_admin_existente(sucursal_id, usuario_id, db)
+
+from pydantic import BaseModel
+
+class EspecialidadOut(BaseModel):
+    id_sucursal: int
+    id_especialidad: int
+    class Config:
+        from_attributes = True
+
+class SucursalEspecialidadesUpdate(BaseModel):
+    especialidades_ids: List[int]
+
+@router.get("/{sucursal_id}/especialidades", response_model=List[EspecialidadOut])
+async def obtener_especialidades_de_sucursal(
+    sucursal_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtiene las especialidades asignadas a una sucursal"""
+    return await sucursal_service.obtener_especialidades_sucursal(sucursal_id, db)
+
+@router.put("/{sucursal_id}/especialidades")
+async def actualizar_especialidades_de_sucursal(
+    sucursal_id: int,
+    data: SucursalEspecialidadesUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Actualiza las especialidades de una sucursal"""
+    if current_user.get("role") == "admin_sucursal":
+        if current_user.get("sucursal") != sucursal_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo puede modificar las especialidades de su propia sucursal.")
+    elif current_user.get("role") != "admin":
+        if "PERMISO_GESTIONAR_SUCURSALES" not in current_user.get("permisos", []) and "ALL_PERMISSIONS_FALLBACK_IF_ANY" not in current_user.get("permisos", []):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permisos insuficientes.")
+            
+    return await sucursal_service.actualizar_especialidades_sucursal(sucursal_id, data.especialidades_ids, db)

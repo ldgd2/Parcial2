@@ -141,3 +141,26 @@ async def asignar_admin_existente(sucursal_id: int, usuario_id: int, db: AsyncSe
     await db.commit()
     await db.refresh(usuario)
     return usuario
+
+from app.packages.gestion_usuarios_seguridad.modules.tenants.models.sucursal_especialidad import SucursalEspecialidad
+from sqlalchemy import delete
+
+async def obtener_especialidades_sucursal(sucursal_id: int, db: AsyncSession):
+    stmt = select(SucursalEspecialidad).where(SucursalEspecialidad.id_sucursal == sucursal_id)
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+async def actualizar_especialidades_sucursal(sucursal_id: int, especialidades_ids: list[int], db: AsyncSession):
+    sucursal = await Sucursal.get(db, sucursal_id)
+    if not sucursal:
+        raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
+        
+    await db.execute(
+        delete(SucursalEspecialidad).where(SucursalEspecialidad.id_sucursal == sucursal_id)
+    )
+    
+    for e_id in especialidades_ids:
+        db.add(SucursalEspecialidad(id_sucursal=sucursal_id, id_especialidad=e_id))
+        
+    await db.commit()
+    return {"message": "Especialidades actualizadas exitosamente."}
