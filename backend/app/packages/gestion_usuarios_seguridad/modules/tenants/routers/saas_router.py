@@ -100,6 +100,10 @@ async def crear_tenant(
     # Crear AdminTaller
     if payload.admin_correo and payload.admin_contrasena:
         from app.core.security import hash_password
+        from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.permisos import Rol
+        
+        stmt_rol = select(Rol).where(Rol.nombre == "ADMIN_TALLER")
+        rol = (await db.execute(stmt_rol)).scalar_one_or_none()
         
         nuevo_admin = Usuario(
             nombre=payload.admin_nombre or "Admin",
@@ -107,7 +111,8 @@ async def crear_tenant(
             correo=payload.admin_correo,
             contrasena=hash_password(payload.admin_contrasena),
             estado="ACTIVO",
-            idTaller=nuevo_taller.cod
+            idTaller=nuevo_taller.cod,
+            id_rol=rol.id if rol else None
         )
         db.add(nuevo_admin)
         await db.commit()

@@ -101,12 +101,11 @@ async def crear_admin_sucursal(sucursal_id: int, data: SucursalAdminCreate, db: 
         await db.refresh(nuevo_usuario)
         
         # Asignar rol ADMIN_SUCURSAL
-        from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.permisos import Rol, UsuarioRol
+        from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.permisos import Rol
         stmt_rol = select(Rol).where(Rol.nombre == "ADMIN_SUCURSAL")
         rol = (await db.execute(stmt_rol)).scalar_one_or_none()
         if rol:
-            ur = UsuarioRol(id_usuario=nuevo_usuario.id, id_rol=rol.id)
-            db.add(ur)
+            nuevo_usuario.id_rol = rol.id
             await db.commit()
 
         return nuevo_usuario
