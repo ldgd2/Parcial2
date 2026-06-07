@@ -95,7 +95,7 @@ class Emergencia(GenericModel):
             .order_by(desc(cls.fecha), desc(cls.hora))
         )
         result = await db.execute(stmt)
-        return list(result.scalars().all())
+        return list(result.unique().scalars().all())
 
     @classmethod
     async def get_by_taller(cls, db: AsyncSession, taller_cod: str) -> list["Emergencia"]:
@@ -106,5 +106,5 @@ class Emergencia(GenericModel):
             .order_by(desc(cls.fecha), desc(cls.hora))
         )
         result = await db.execute(stmt)
-        return list(result.scalars().all())
+        return list(result.unique().scalars().all())
 
