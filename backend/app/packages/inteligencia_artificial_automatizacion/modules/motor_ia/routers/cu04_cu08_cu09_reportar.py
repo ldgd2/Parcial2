@@ -152,7 +152,7 @@ async def obtener_emergencia(
     """
     Obtener detalles de una emergencia específica.
     """
-    return await emergencia_service.obtener_emergencia_por_id(emergencia_id, db)
+    return await emergencia_service.obtener_emergencia_detalle(emergencia_id, db)
 
 
 @router.put("/{emergencia_id}", response_model=EmergenciaOut)
