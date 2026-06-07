@@ -54,7 +54,7 @@ async def simular_transaccion_emergencia():
             print("❌ Este cliente no tiene vehículos registrados.")
             return
 
-        vehiculo_choices = [f"[{v.placa}] {v.marca} {v.modelo} ({v.año})" for v in cliente.vehiculos]
+        vehiculo_choices = [f"[{v.placa}] {v.marca} {v.modelo} ({v.anio})" for v in cliente.vehiculos]
         vehiculo_seleccionado_str = await questionary.select(
             "Selecciona el vehículo del cliente:",
             choices=vehiculo_choices
