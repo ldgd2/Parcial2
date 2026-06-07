@@ -12,19 +12,20 @@ async def run_fix(db: AsyncSession):
     
     # Este query asume que idEspecialidad tiene el mismo ID que idCategoria en la data base actual,
     # o bien podemos forzar el mapeo exacto de los seeders
-    query = """
-    UPDATE public.categoria_problema SET "idEspecialidad" = 1 WHERE descripcion = 'Problema de Batería';
-    UPDATE public.categoria_problema SET "idEspecialidad" = 1 WHERE descripcion = 'Falla de Motor';
-    UPDATE public.categoria_problema SET "idEspecialidad" = 2 WHERE descripcion = 'Falla de Frenos';
-    UPDATE public.categoria_problema SET "idEspecialidad" = 3 WHERE descripcion = 'Problema de Neumáticos';
-    UPDATE public.categoria_problema SET "idEspecialidad" = 4 WHERE descripcion = 'Problema de Suspensión';
-    UPDATE public.categoria_problema SET "idEspecialidad" = 5 WHERE descripcion = 'Problema de Transmisión';
-    UPDATE public.categoria_problema SET "idEspecialidad" = 6 WHERE descripcion = 'Problema de Aire Acondicionado';
-    UPDATE public.categoria_problema SET "idEspecialidad" = 1 WHERE descripcion = 'Problema de Sistema Eléctrico';
-    UPDATE public.categoria_problema SET "idEspecialidad" = 5 WHERE descripcion = 'Otros';
-    """
+    queries = [
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 1 WHERE descripcion = 'Problema de Batería';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 1 WHERE descripcion = 'Falla de Motor';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 2 WHERE descripcion = 'Falla de Frenos';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 3 WHERE descripcion = 'Problema de Neumáticos';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 4 WHERE descripcion = 'Problema de Suspensión';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 5 WHERE descripcion = 'Problema de Transmisión';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 6 WHERE descripcion = 'Problema de Aire Acondicionado';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 1 WHERE descripcion = 'Problema de Sistema Eléctrico';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 5 WHERE descripcion = 'Otros';"
+    ]
     
-    await db.execute(text(query))
+    for q in queries:
+        await db.execute(text(q))
     await db.commit()
     print(f"✅ Fix {FIX_ID} aplicado exitosamente.")
 
