@@ -45,7 +45,7 @@ async def process_pending_ia_emergencies():
             if not emg.resumen_ia:
                 continue
                 
-            ficha = emg.resumen_ia.FichaTecnica
+            ficha = emg.resumen_ia.ficha_tecnica
             if isinstance(ficha, dict) and ficha.get("diagnostico_probable") == "PENDIENTE_REINTENTO_IA":
                 logger.info(f"Reintentando IA para emergencia ID: {emg.id}")
                 
@@ -72,8 +72,8 @@ async def process_pending_ia_emergencies():
                     
                     # Update if valid
                     if analisis.ficha_tecnica.diagnostico_probable != "PENDIENTE_REINTENTO_IA":
-                        emg.resumen_ia.Resumen = analisis.resumen_taller
-                        emg.resumen_ia.FichaTecnica = analisis.ficha_tecnica.model_dump()
+                        emg.resumen_ia.resumen = analisis.resumen_taller
+                        emg.resumen_ia.ficha_tecnica = analisis.ficha_tecnica.model_dump()
                         emg.resumen_ia.recomendaciones_taller = analisis.recomendaciones_taller
                         emg.resumen_ia.motivo_rechazo = analisis.motivo_rechazo
                         
