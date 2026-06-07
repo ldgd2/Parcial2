@@ -37,7 +37,7 @@ async def simular_transaccion_emergencia():
             print("❌ No hay clientes en la base de datos.")
             return
 
-        cliente_choices = [f"[{c.id}] {c.nombre} {c.apellido} ({c.correo})" for c in clientes]
+        cliente_choices = [f"[{c.id}] {c.nombre} ({c.correo})" for c in clientes]
         cliente_seleccionado_str = await questionary.select(
             "Selecciona el cliente que va a reportar la emergencia:",
             choices=cliente_choices
