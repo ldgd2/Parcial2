@@ -100,13 +100,13 @@ async def seed_database():
 
         # 4. CREAR CATEGORÍAS DE PROBLEMAS
         categorias_data = [
-            {"descripcion": "Falla en el motor"},
-            {"descripcion": "Problemas eléctricos"},
-            {"descripcion": "Neumático pinchado"},
-            {"descripcion": "Problemas en frenos"},
-            {"descripcion": "A/C no funciona"},
-            {"descripcion": "Daño en carrocería"},
-            {"descripcion": "Batería descargada"},
+            {"descripcion": "Falla en el motor", "idEspecialidad": 1},
+            {"descripcion": "Problemas eléctricos", "idEspecialidad": 2},
+            {"descripcion": "Neumático pinchado", "idEspecialidad": 3},
+            {"descripcion": "Problemas en frenos", "idEspecialidad": 4},
+            {"descripcion": "A/C no funciona", "idEspecialidad": 5},
+            {"descripcion": "Daño en carrocería", "idEspecialidad": 6},
+            {"descripcion": "Batería descargada", "idEspecialidad": 2},
         ]
         categorias = []
         for cat_data in categorias_data:
