@@ -6,8 +6,8 @@ from app.db.session import AsyncSessionLocal
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.emergencia import Emergencia
 from app.packages.inteligencia_artificial_automatizacion.modules.motor_ia.models.resumen_ia import ResumenIA
 from app.packages.inteligencia_artificial_automatizacion.modules.motor_ia.services.ai_service import analizar_transcripcion_whisper
-from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.categoria_repo import CategoriaRepo
-from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.prioridad_repo import PrioridadRepo
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.categoria_repo import CategoriaProblemaRepository
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.repositories.prioridad_repo import PrioridadRepository
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +50,8 @@ async def process_pending_ia_emergencies():
                 logger.info(f"Reintentando IA para emergencia ID: {emg.id}")
                 
                 # Fetch categories and priorities for context
-                cat_repo = CategoriaRepo(db)
-                pri_repo = PrioridadRepo(db)
+                cat_repo = CategoriaProblemaRepository(db)
+                pri_repo = PrioridadRepository(db)
                 categorias = [{"id": c.id, "nombre": c.descripcion} for c in await cat_repo.get_all()]
                 prioridades = [{"id": p.id, "nombre": p.descripcion} for p in await pri_repo.get_all()]
                 
