@@ -275,6 +275,11 @@ export class RadarComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Filtrar por distancia (solo cercanas, e.g. < 10 km de la matriz o cualquier sucursal)
       if (emg.latitud && emg.longitud) {
+        // Si no se cargaron coordenadas de taller ni de sucursales, no ocultar la emergencia por distancia.
+        if (!this.tallerCoords && this.sucursalesCoords.length === 0) {
+          return true;
+        }
+
         const emgLatLng = L.latLng(emg.latitud, emg.longitud);
         let minDistance = Infinity;
         

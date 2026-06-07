@@ -86,10 +86,10 @@ async def obtener_roles_disponibles(
 ):
     # En la base de datos están SUPER_ADMIN, ADMIN_TALLER, ADMIN_SUCURSAL, SUPERVISOR, OPERADOR, MECANICO, CLIENTE
     if current_user.get("role") == "admin_sucursal":
-        roles_permitidos = ["MECANICO"]
+        roles_permitidos = ["MECANICO", "TECNICO"]
     else:
         # Retornaremos solo los que puede crear: SUPERVISOR, OPERADOR, MECANICO, ADMIN_SUCURSAL
-        roles_permitidos = ["SUPERVISOR", "OPERADOR", "MECANICO", "ADMIN_SUCURSAL"]
+        roles_permitidos = ["SUPERVISOR", "OPERADOR", "MECANICO", "TECNICO", "ADMIN_SUCURSAL"]
         
     stmt = select(Rol).where(Rol.nombre.in_(roles_permitidos))
     roles = (await db.execute(stmt)).scalars().all()
