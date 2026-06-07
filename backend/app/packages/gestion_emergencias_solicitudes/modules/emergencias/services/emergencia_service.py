@@ -415,9 +415,9 @@ async def listar_emergencias_disponibles(taller_cod: str, current_user: dict, db
                 for e in s.especialidades:
                     especialidades_validas.add(e.id_especialidad)
 
-    especialidades_list = list(especialidades_validas)
-    logger.info(f"Radar - Bases Coords: {bases_coords}")
-    logger.info(f"Radar - Especialidades del Taller/Sucursal: {especialidades_list}")
+    especialidades_list = list(especialidades_validas)    
+    print(f"Radar - Bases Coords: {bases_coords}", flush=True)
+    print(f"Radar - Especialidades del Taller (incluyendo sucursales): {especialidades_list}", flush=True)
     
     if not especialidades_list:
         logger.warning(f"Radar - El taller/sucursal NO TIENE ESPECIALIDADES asignadas. Devolviendo lista vacía por seguridad.")
@@ -435,7 +435,7 @@ async def listar_emergencias_disponibles(taller_cod: str, current_user: dict, db
         estados_validos = [1, 2] # Fallback
         
     todas_disponibles = await EmergenciaRepository(db).get_disponibles_para_taller(especialidades_list, estados_validos)
-    logger.info(f"Radar - Emergencias encontradas en BD que coinciden con especialidades: {len(todas_disponibles)}")
+    print(f"Radar - Emergencias encontradas en BD que coinciden con especialidades: {len(todas_disponibles)}", flush=True)
 
     # 4. Filtrar por distancia (10km - como requerido)
     cercanas = []
@@ -447,7 +447,7 @@ async def listar_emergencias_disponibles(taller_cod: str, current_user: dict, db
             continue
             
         if not e.latitud or not e.longitud: 
-            logger.info(f"Radar - Ignorando emergencia {e.id} porque no tiene coordenadas (lat/lon).")
+            print(f"Radar - Ignorando emergencia {e.id} porque no tiene coordenadas (lat/lon).", flush=True)
             continue
             
         # Comprobar la menor distancia a CUALQUIER base (taller o sucursal)
@@ -457,14 +457,14 @@ async def listar_emergencias_disponibles(taller_cod: str, current_user: dict, db
             if dist < min_dist:
                 min_dist = dist
                 
-        logger.info(f"Radar - Evaluando emergencia {e.id} a dist {min_dist:.2f} km de la base más cercana.")
+        print(f"Radar - Evaluando emergencia {e.id} a dist {min_dist:.2f} km de la base más cercana.", flush=True)
         if min_dist <= 10: # Radio de 10km estricto como pide el usuario
             _populate_dynamic_fields(e)
             cercanas.append(e)
         else:
-            logger.info(f"Radar - Descartando emergencia {e.id} por superar los 10km (distancia={min_dist:.2f}km)")
+            print(f"Radar - Descartando emergencia {e.id} por superar los 10km (distancia={min_dist:.2f}km)", flush=True)
             
-    logger.info(f"Radar - Emergencias finales enviadas al frontend: {len(cercanas)}")
+    print(f"Radar - Emergencias finales enviadas al frontend: {len(cercanas)}", flush=True)
     return cercanas
 
 async def bloquear_emergencia_temporal(emergencia_id: int, taller_cod: str, db: AsyncSession):
