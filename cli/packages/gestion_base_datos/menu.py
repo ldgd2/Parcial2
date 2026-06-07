@@ -52,6 +52,7 @@ def add_subparsers(subparsers):
     subparsers_db.add_parser("seeder", help="Crea datos base: estados, prioridades, especialidades, talleres, técnicos y clientes")
     subparsers_db.add_parser("crear-emergencias", help="Crea emergencias consumiendo la API (requiere backend corriendo)")
     subparsers_db.add_parser("crear-emergencias-mock", help="Crea emergencias mapeadas manualmente (sin IA, para pruebas rápidas de Talleres)")
+    subparsers_db.add_parser("seed-emergencias", help="Siembra los estados base de emergencias, roles y prioridades (Seed Inicial)")
     
     parser_disable_c = subparsers_db.add_parser("disable-cliente", help="Desactiva logicamente a un cliente por CLI")
     parser_disable_c.add_argument("correo", help="Correo del cliente a desactivar")
@@ -165,6 +166,11 @@ def execute(args):
             
         elif target == "add-root-user":
             subprocess.run([python_cmd, os.path.join("..", "cli", "packages", "gestion_base_datos", "modules", "db_tools", "seed_root.py")])
+            
+        elif target == "seed-emergencias":
+            do_status("Sembrando estados iniciales de emergencias...", "Sembrando estados iniciales...", 
+                      lambda: subprocess.run([python_cmd, os.path.join("..", "cli", "packages", "gestion_base_datos", "modules", "db_tools", "seed_emergencias_initial.py")], check=True))
+            cprint("[bold green]Seed completado con exito.[/bold green]", "Seed completado.")
 
             
     except subprocess.CalledProcessError as e:
@@ -189,6 +195,7 @@ def interactive_menu():
             "Populate (Data Falsa)", 
             "Debug Serialización",
             "Fix Especialidades (Talleres)",
+            "Seed Emergencias (Estados/Roles)",
             "Volver"
         ]
         opt = questionary.select("Operación de DB:", choices=choices).ask()
@@ -200,6 +207,7 @@ def interactive_menu():
         elif "Fix Especialidades" in opt: target = "fix_specialties"
         elif "Seeder Universal" in opt: target = "universal-seeder"
         elif "Agregar Super Usuario Root" in opt: target = "add-root-user"
+        elif "Seed Emergencias" in opt: target = "seed-emergencias"
         else: target = opt.split()[0].lower()
         msg = None
     
