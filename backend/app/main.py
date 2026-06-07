@@ -21,6 +21,8 @@ from app.db.session import engine, Base
 from app.core.audit import register_audit_listeners
 from app.core.context import set_ip_context, set_user_context
 from fastapi import Request
+import asyncio
+from app.packages.inteligencia_artificial_automatizacion.modules.motor_ia.services.ia_queue_worker import ia_queue_worker_loop
 
 # ─── Importar todos los modelos para que Alembic los detecte ──────
 from app.db.base import *  # Import the centralized orchestrator
@@ -118,3 +120,8 @@ async def health_check():
         "paquetes": ["perfil_seguridad", "gestion_ia", "gestion_comercio"],
         "message": "Plataforma de Emergencias Vehiculares operativa."
     }
+
+@app.on_event("startup")
+async def startup_event():
+    # Iniciar el worker de cola IA en background
+    asyncio.create_task(ia_queue_worker_loop())

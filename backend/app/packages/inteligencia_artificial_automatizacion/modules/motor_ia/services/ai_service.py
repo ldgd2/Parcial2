@@ -91,7 +91,6 @@ Responde con este formato exacto:
             except Exception as e:
                 print(f"Error base64: {e}")
 
-
         user_content.append({
             "type": "image_url",
             "image_url": {"url": image_data}
@@ -99,12 +98,7 @@ Responde con este formato exacto:
 
     try:
         print(f"Invocando IA ({settings.OPENROUTER_MODEL_NAME}) en modo COMPATIBLE...")
-        
-        # Override to a multimodal model if the default doesn't support images well
         model_name = settings.OPENROUTER_MODEL_NAME
-        if tiene_imagenes and "llama" in model_name.lower():
-            model_name = "google/gemini-flash-1.5-8b"
-            print(f"Cambiando a {model_name} porque el modelo actual no soporta vision correctamente.")
 
         response = await client.chat.completions.create(
             model=model_name,
@@ -141,12 +135,12 @@ Responde con este formato exacto:
             id_categoria=categorias_disponibles[0]['id'] if categorias_disponibles else 1,
             id_prioridad=prioridades_disponibles[1]['id'] if len(prioridades_disponibles) > 1 else 1,
             ficha_tecnica=FichaTecnica(
-                diagnostico_probable="Pendiente de revisión manual",
-                posibles_causas=["No se pudo determinar vía IA"],
+                diagnostico_probable="PENDIENTE_REINTENTO_IA",
+                posibles_causas=["No se pudo determinar vía IA, en cola para reintento automático."],
                 piezas_necesarias=[],
                 repuestos_sugeridos=[],
-                protocolo_tecnico=["Revisar evidencias físicas"]
+                protocolo_tecnico=["Reintento automático en progreso o requerida evaluación manual."]
             ),
-            recomendaciones_taller="Verificar el vehículo físicamente.",
+            recomendaciones_taller="Pendiente de reintento IA o evaluación física.",
             motivo_rechazo=""
         )

@@ -202,6 +202,9 @@ export class RadarComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => this.newAlert = false, 4000);
   }
 
+  tallerCoords: L.LatLng | null = null;
+  sucursalesCoords: L.LatLng[] = [];
+
   initMap() {
     // Primero, inicializamos el mapa con una vista por defecto
     this.map = L.map('radar-map', {
@@ -228,9 +231,20 @@ export class RadarComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }
     });
-  }
 
-  tallerCoords: L.LatLng | null = null;
+    // Cargar también las sucursales para que el radar intercepte emergencias cerca de ellas
+    this.api.get<any[]>(`/sucursales/taller/${this.currentWorkshop}`).subscribe({
+      next: (sucursales) => {
+        if (sucursales && sucursales.length > 0) {
+          this.sucursalesCoords = sucursales
+            .filter((s: any) => s.latitud && s.longitud)
+            .map((s: any) => L.latLng(s.latitud, s.longitud));
+          this.renderMarkers(false);
+        }
+      },
+      error: (e) => console.error("Error cargando sucursales para el radar", e)
+    });
+  }
 
   refreshData(isUpdate = false) {
     this.api.get<any[]>('/gestion-emergencia/disponibles').subscribe({
@@ -259,11 +273,23 @@ export class RadarComponent implements OnInit, OnDestroy, AfterViewInit {
         if (this.filter !== 'BLOQUEADO' && (emg.estado_actual !== this.filter || emg.is_locked)) return false;
       }
 
-      // Filtrar por distancia (solo cercanas, e.g. < 40 km)
-      if (this.tallerCoords && emg.latitud && emg.longitud) {
+      // Filtrar por distancia (solo cercanas, e.g. < 10 km de la matriz o cualquier sucursal)
+      if (emg.latitud && emg.longitud) {
         const emgLatLng = L.latLng(emg.latitud, emg.longitud);
-        const distanceMeters = this.tallerCoords.distanceTo(emgLatLng);
-        if (distanceMeters > 40000) { // 40 km
+        let minDistance = Infinity;
+        
+        if (this.tallerCoords) {
+          minDistance = this.tallerCoords.distanceTo(emgLatLng);
+        }
+        
+        for (const suc of this.sucursalesCoords) {
+          const d = suc.distanceTo(emgLatLng);
+          if (d < minDistance) {
+            minDistance = d;
+          }
+        }
+        
+        if (minDistance > 10000) { // 10 km
           return false;
         }
       }
