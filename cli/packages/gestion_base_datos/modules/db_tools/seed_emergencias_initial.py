@@ -52,6 +52,10 @@ async def seed_data():
             existing = (await session.execute(select(Estado).where(Estado.id == estado["id"]))).scalar_one_or_none()
             if not existing:
                 await Estado.create(session, obj_in=estado)
+            else:
+                existing.nombre = estado["nombre"]
+                existing.descripcion = estado["descripcion"]
+                session.add(existing)
 
         # Seed Prioridades
         prioridades_data = [
@@ -68,7 +72,11 @@ async def seed_data():
                     await Prioridad.create(session, obj_in=prioridad)
                 except Exception:
                     await Prioridad.create(session, obj_in={"id": prioridad["id"], "descripcion": prioridad["descripcion"]})
-
+            else:
+                existing.descripcion = prioridad["descripcion"]
+                if hasattr(existing, "nivel") and "nivel" in prioridad:
+                    existing.nivel = prioridad["nivel"]
+                session.add(existing)
 
         # Seed Categorias Problema
         categorias_data = [
@@ -86,6 +94,9 @@ async def seed_data():
                     await CategoriaProblema.create(session, obj_in=categoria)
                 except Exception:
                     await CategoriaProblema.create(session, obj_in={"id": categoria["id"], "descripcion": categoria["descripcion"]})
+            else:
+                existing.descripcion = categoria["descripcion"]
+                session.add(existing)
 
         await session.commit()
         print("Seed Initial Data completado satisfactoriamente (Estados, Roles, Planes, Prioridades, Categorías)")
