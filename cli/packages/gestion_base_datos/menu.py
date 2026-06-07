@@ -61,6 +61,10 @@ def add_subparsers(subparsers):
     parser_disable_t.add_argument("cod", help="Codigo del Taller a desactivar (ej. TAL001)")
     
     subparsers_db.add_parser("add-root-user", help="Crea interactivamente un Super Administrador (Root)")
+    
+    # Fixes Universales
+    subparsers_db.add_parser("run-fixes", help="Ejecuta la cola universal de scripts de reparación de datos en la DB")
+
 
 def execute(args):
     target = args.target
@@ -179,6 +183,9 @@ def execute(args):
                       lambda: subprocess.run([python_cmd, os.path.join("..", "cli", "packages", "gestion_base_datos", "modules", "db_tools", "seed_emergencias_initial.py")], check=True))
             cprint("[bold green]Seed completado con exito.[/bold green]", "Seed completado.")
 
+        elif target == "run-fixes":
+            cprint("\n[bold magenta]Ejecutando Cola Universal de Fixes...[/bold magenta]", "\nEjecutando Cola de Fixes...")
+            subprocess.run([python_cmd, os.path.join("..", "cli", "packages", "gestion_base_datos", "modules", "fixes", "run_all_fixes.py")], check=True)
             
     except subprocess.CalledProcessError as e:
         cprint(f"\n[bold red][ERROR] Al ejecutar el comando en DB:[/bold red] {e}", f"\n[ERROR] Al ejecutar el comando en DB: {e}")
@@ -203,6 +210,7 @@ def interactive_menu():
             "Populate (Data Falsa)", 
             "Debug Serialización",
             "Fix Especialidades (Talleres)",
+            "Run Fixes Universales (Cola de Reparación)",
             "Seed Emergencias (Estados/Roles)",
             "Volver"
         ]
@@ -212,6 +220,7 @@ def interactive_menu():
             break
         
         if "Debug Serialización" in opt: target = "diag_serialization"
+        elif "Run Fixes Universales" in opt: target = "run-fixes"
         elif "Fix Especialidades" in opt: target = "fix_specialties"
         elif "Fix Alembic" in opt: target = "fix_heads"
         elif "Seeder Universal" in opt: target = "universal-seeder"
