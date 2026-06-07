@@ -2,10 +2,22 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
+from typing import Optional, List, Any
+
+class ItemProducto(BaseModel):
+    nombre: str
+    precio: float
+    cantidad: int
+
+class ItemServicio(BaseModel):
+    nombre: str
+    precio: float
+
 class CotizacionBase(BaseModel):
-    descripcion_servicio: str
-    costo_mano_obra: float
-    costo_repuestos: float = 0.0
+    descripcion_servicio: Optional[str] = None
+    moneda: str = "BOB"
+    lista_productos: List[ItemProducto] = []
+    lista_servicios: List[ItemServicio] = []
     tiempo_estimado: str
     condiciones: Optional[str] = None
 
@@ -30,6 +42,9 @@ class CotizacionOut(CotizacionBase):
     idEmergencia: int
     idTaller: str
     estado: str
+    subtotal_productos: float
+    subtotal_servicios: float
+    total_general: float
     fecha_creacion: datetime
     fecha_actualizacion: datetime
     taller: Optional[TallerInfo] = None

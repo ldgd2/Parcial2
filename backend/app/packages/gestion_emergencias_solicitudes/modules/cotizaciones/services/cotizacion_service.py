@@ -26,13 +26,21 @@ class CotizacionService:
                 detail="El taller ya ha emitido una cotización para esta emergencia"
             )
             
+        subtotal_productos = sum(item.precio * item.cantidad for item in data.lista_productos)
+        subtotal_servicios = sum(item.precio for item in data.lista_servicios)
+        total_general = subtotal_productos + subtotal_servicios
+
         cotizacion = await self.repo.create(
             idEmergencia=id_emergencia,
             idTaller=id_taller,
             descripcion_servicio=data.descripcion_servicio,
-            costo_mano_obra=data.costo_mano_obra,
-            costo_repuestos=data.costo_repuestos,
-            tiempo_estimado_horas=data.tiempo_estimado_horas,
+            moneda=data.moneda,
+            lista_productos=[item.dict() for item in data.lista_productos],
+            lista_servicios=[item.dict() for item in data.lista_servicios],
+            subtotal_productos=subtotal_productos,
+            subtotal_servicios=subtotal_servicios,
+            total_general=total_general,
+            tiempo_estimado=data.tiempo_estimado,
             condiciones=data.condiciones,
             estado="PENDIENTE"
         )

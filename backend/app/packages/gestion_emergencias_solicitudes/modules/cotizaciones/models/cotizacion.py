@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Float, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime, ForeignKey, func, JSON
 from sqlalchemy.orm import relationship
 from app.db.generic_model import GenericModel
 class Cotizacion(GenericModel):
@@ -9,9 +9,13 @@ class Cotizacion(GenericModel):
     idEmergencia = Column(Integer, ForeignKey("public.emergencia.id"), nullable=False, index=True)
     idTaller = Column(String(10), ForeignKey("public.taller.cod"), nullable=False, index=True)
     
-    descripcion_servicio = Column(Text, nullable=False)
-    costo_mano_obra = Column(Float, nullable=False)
-    costo_repuestos = Column(Float, default=0.0)
+    descripcion_servicio = Column(Text, nullable=True) # Optional summary
+    moneda = Column(String(3), nullable=False, default="BOB") # BOB or USD
+    lista_productos = Column(JSON, nullable=False, default=[]) # e.g. [{"nombre": "Filtro", "precio": 50, "cantidad": 1}]
+    lista_servicios = Column(JSON, nullable=False, default=[]) # e.g. [{"nombre": "Mano de obra", "precio": 100}]
+    subtotal_productos = Column(Float, nullable=False, default=0.0)
+    subtotal_servicios = Column(Float, nullable=False, default=0.0)
+    total_general = Column(Float, nullable=False, default=0.0)
     tiempo_estimado = Column(String(50), nullable=False)
     condiciones = Column(Text, nullable=True)
     
