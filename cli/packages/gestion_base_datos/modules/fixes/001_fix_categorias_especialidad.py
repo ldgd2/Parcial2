@@ -10,18 +10,12 @@ FIX_DESCRIPTION = "Asignar idEspecialidad a las Categorias de Problemas (Radar F
 async def run_fix(db: AsyncSession):
     print(f"🔧 Ejecutando Fix {FIX_ID}: {FIX_DESCRIPTION}...")
     
-    # Este query asume que idEspecialidad tiene el mismo ID que idCategoria en la data base actual,
-    # o bien podemos forzar el mapeo exacto de los seeders
     queries = [
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 1 WHERE descripcion = 'Problema de Batería';",
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 1 WHERE descripcion = 'Falla de Motor';",
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 2 WHERE descripcion = 'Falla de Frenos';",
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 3 WHERE descripcion = 'Problema de Neumáticos';",
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 4 WHERE descripcion = 'Problema de Suspensión';",
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 5 WHERE descripcion = 'Problema de Transmisión';",
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 6 WHERE descripcion = 'Problema de Aire Acondicionado';",
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 1 WHERE descripcion = 'Problema de Sistema Eléctrico';",
-        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 5 WHERE descripcion = 'Otros';"
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 1 WHERE id = 1 OR descripcion ILIKE '%Motor%';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 3 WHERE id = 2 OR descripcion ILIKE '%Neumático%';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 2 WHERE id = 3 OR descripcion ILIKE '%Batería%';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 4 WHERE id = 4 OR descripcion ILIKE '%Freno%';",
+        "UPDATE public.categoria_problema SET \"idEspecialidad\" = 1 WHERE id = 5 OR descripcion ILIKE '%Otros%';"
     ]
     
     for q in queries:
