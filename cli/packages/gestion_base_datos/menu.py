@@ -107,7 +107,9 @@ def execute(args):
         elif target == "fix_heads":
             do_status("Limpiando migraciones locales no oficiales...", "Limpiando...", 
                       lambda: subprocess.run(["git", "clean", "-fd", "alembic/versions/"], check=True))
-            cprint("[bold green]Migraciones conflictivas eliminadas. Ahora puedes hacer Upgrade.[/bold green]", "Migraciones conflictivas eliminadas.")
+            do_status("Forzando reseteo interno de Alembic...", "Reseteando cabeceras...", 
+                      lambda: subprocess.run([python_cmd, os.path.join("..", "cli", "packages", "gestion_base_datos", "modules", "db_tools", "fix_db_head.py")], check=True))
+            cprint("[bold green]Migraciones conflictivas eliminadas. Ahora puedes hacer Stamp o Upgrade.[/bold green]", "Migraciones conflictivas eliminadas.")
 
         # ---- Logica conectada a scripts/db_tools ----
         elif target == "reset":
