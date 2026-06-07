@@ -4,10 +4,20 @@ from typing import List
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
 from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.models.usuario import Usuario
-from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.schemas.cotizacion import CotizacionCreate, CotizacionUpdate, CotizacionOut
+from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.schemas.cotizacion import CotizacionCreate, CotizacionUpdate, CotizacionOut, CotizacionAjuste
 from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.services.cotizacion_service import CotizacionService
 
 router = APIRouter(prefix="/cotizaciones", tags=["Cotizaciones"])
+
+@router.put("/{id_cotizacion}/ajustar", response_model=CotizacionOut)
+async def ajustar_cotizacion(
+    id_cotizacion: int,
+    data: CotizacionAjuste,
+    db: Session = Depends(get_db)
+):
+    """(Técnico) Ajusta los productos y servicios de la cotización en el sitio."""
+    service = CotizacionService(db)
+    return await service.ajustar_cotizacion_async(id_cotizacion, data)
 
 @router.post("/{id_emergencia}", response_model=CotizacionOut)
 async def create_cotizacion(

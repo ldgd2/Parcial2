@@ -28,6 +28,11 @@ class CotizacionUpdate(BaseModel):
     estado: str
     condiciones: Optional[str] = None
 
+class CotizacionAjuste(BaseModel):
+    lista_productos: List[ItemProducto]
+    lista_servicios: List[ItemServicio]
+    descripcion_servicio: Optional[str] = None
+
 class TallerInfo(BaseModel):
     nombre: str
     latitud: Optional[float] = None

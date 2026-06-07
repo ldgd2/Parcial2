@@ -83,6 +83,16 @@ async def auxilio_websocket_endpoint(
                 }
                 await manager.broadcast_to_room(room_id, broadcast_data, exclude=websocket)
 
+            elif event_type == "repair_update" and role == "tecnico":
+                # Notificación en tiempo real de lo que hace el técnico en el sitio
+                texto_reparacion = data.get("text", "Actualizando estado de la reparación...")
+                broadcast_data = {
+                    "type": "repair_update",
+                    "text": texto_reparacion,
+                    "timestamp": data.get("timestamp", "")
+                }
+                await manager.broadcast_to_room(room_id, broadcast_data, exclude=websocket)
+
     except WebSocketDisconnect:
         manager.leave_room(websocket, room_id)
         logging.info(f"[WS] Usuario {user_id} ({role}) salió de la sala {room_id}")

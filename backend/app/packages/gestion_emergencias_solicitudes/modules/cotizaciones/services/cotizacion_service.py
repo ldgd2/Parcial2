@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from datetime import datetime, timedelta, timezone
 
-from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.schemas.cotizacion import CotizacionCreate, CotizacionUpdate
+from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.schemas.cotizacion import CotizacionCreate, CotizacionUpdate, CotizacionAjuste
 
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.emergencia import Emergencia
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.estado import Estado
@@ -120,3 +120,35 @@ class CotizacionService:
 
         return cotizacion
 
+    async def ajustar_cotizacion_async(self, id_cotizacion: int, data: "CotizacionAjuste"):
+        cotizacion = await self.repo.get(id_cotizacion)
+        if not cotizacion:
+            raise HTTPException(status_code=404, detail="Cotización no encontrada")
+
+        subtotal_productos = sum(item.precio * item.cantidad for item in data.lista_productos)
+        subtotal_servicios = sum(item.precio for item in data.lista_servicios)
+        total_general = subtotal_productos + subtotal_servicios
+
+        updates = {
+            "lista_productos": [item.dict() for item in data.lista_productos],
+            "lista_servicios": [item.dict() for item in data.lista_servicios],
+            "subtotal_productos": subtotal_productos,
+            "subtotal_servicios": subtotal_servicios,
+            "total_general": total_general,
+        }
+        if data.descripcion_servicio is not None:
+            updates["descripcion_servicio"] = data.descripcion_servicio
+
+        cotizacion = await self.repo.update(db_obj=cotizacion, obj_in=updates)
+
+        # Notify via WebSocket to the emergency room
+        room_id = f"emergencia_{cotizacion.idEmergencia}"
+        await manager.broadcast_to_room(room_id, {
+            "type": "cotizacion_ajustada",
+            "message": "El técnico ha ajustado la cotización en el sitio.",
+            "total_general": total_general,
+            "subtotal_productos": subtotal_productos,
+            "subtotal_servicios": subtotal_servicios
+        })
+
+        return cotizacion
