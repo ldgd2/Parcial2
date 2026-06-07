@@ -11,7 +11,7 @@ from app.packages.gestion_usuarios_seguridad.modules.tenants.services import usu
 
 router = APIRouter()
 
-def get_admin_taller(current_user: dict = Depends(require_role("admin"))):
+def get_admin_taller(current_user: dict = Depends(require_role("admin", "admin_sucursal"))):
     if not current_user.get("taller"):
         raise HTTPException(status_code=403, detail="El usuario no tiene un taller asociado.")
     return current_user
@@ -31,6 +31,17 @@ async def crear_usuario_tenant(
     current_user: dict = Depends(get_admin_taller)
 ):
     """Crea un usuario o técnico en el taller actual."""
+    # Validación de creación de usuarios para admin_sucursal
+    if current_user.get("role") == "admin_sucursal":
+        from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.permisos import Rol
+        rol_obj = await db.get(Rol, data.rol_id)
+        if not rol_obj or rol_obj.nombre not in ["MECANICO", "TECNICO"]:
+            raise HTTPException(status_code=403, detail="Los administradores de sucursal solo pueden crear Técnicos o Mecánicos.")
+        
+        # Opcional: forzar que la sucursal del nuevo usuario sea la misma del admin_sucursal
+        if current_user.get("sucursal"):
+            data.sucursal_id = current_user["sucursal"]
+
     return await usuario_tenant_service.crear_usuario_tenant(data, db, current_user["taller"])
 
 @router.patch("/{tipo}/{id}/status")
@@ -74,8 +85,12 @@ async def obtener_roles_disponibles(
     current_user: dict = Depends(get_admin_taller)
 ):
     # En la base de datos están SUPER_ADMIN, ADMIN_TALLER, ADMIN_SUCURSAL, SUPERVISOR, OPERADOR, MECANICO, CLIENTE
-    # Retornaremos solo los que puede crear: SUPERVISOR, OPERADOR, MECANICO, ADMIN_SUCURSAL
-    roles_permitidos = ["SUPERVISOR", "OPERADOR", "MECANICO", "ADMIN_SUCURSAL"]
+    if current_user.get("role") == "admin_sucursal":
+        roles_permitidos = ["MECANICO"]
+    else:
+        # Retornaremos solo los que puede crear: SUPERVISOR, OPERADOR, MECANICO, ADMIN_SUCURSAL
+        roles_permitidos = ["SUPERVISOR", "OPERADOR", "MECANICO", "ADMIN_SUCURSAL"]
+        
     stmt = select(Rol).where(Rol.nombre.in_(roles_permitidos))
     roles = (await db.execute(stmt)).scalars().all()
     return [{"id": r.id, "nombre": r.nombre} for r in roles]

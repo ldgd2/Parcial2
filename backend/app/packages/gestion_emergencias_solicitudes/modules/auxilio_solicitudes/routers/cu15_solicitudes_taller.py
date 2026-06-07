@@ -26,7 +26,7 @@ router = APIRouter(prefix="/talleres", tags=["Comercio — Solicitudes Taller (C
 )
 async def solicitudes_taller(
     cod: str,
-    current=Depends(require_role("tecnico", "admin")),
+    current=Depends(require_role("tecnico", "admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -43,7 +43,7 @@ async def solicitudes_taller(
 async def actualizar_estado(
     emergencia_id: int,
     data: ActualizarEstadoRequest,
-    current=Depends(require_role("tecnico", "admin")),
+    current=Depends(require_role("tecnico", "admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -64,7 +64,7 @@ async def actualizar_estado(
 async def finalizar_emergencia(
     emergencia_id: int,
     data: dict, # O usar FinalizarEmergenciaRequest si prefieres tipado fuerte
-    current=Depends(require_role("tecnico", "admin")),
+    current=Depends(require_role("tecnico", "admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -82,7 +82,7 @@ async def finalizar_emergencia(
 )
 async def rechazar_emergencia(
     emergencia_id: int,
-    current=Depends(require_role("tecnico", "admin")),
+    current=Depends(require_role("tecnico", "admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """

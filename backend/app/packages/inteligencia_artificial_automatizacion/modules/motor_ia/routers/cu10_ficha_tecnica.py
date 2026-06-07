@@ -23,7 +23,7 @@ router = APIRouter(prefix="/talleres", tags=["IA — Ficha Técnica (CU10)"])
 async def actualizar_ficha_tecnica(
     emergencia_id: int,
     data: dict,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """

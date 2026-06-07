@@ -372,21 +372,52 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     c = 2 * math.asin(math.sqrt(a))
     return R * c
 
-async def listar_emergencias_disponibles(taller_cod: str, db: AsyncSession):
+async def listar_emergencias_disponibles(taller_cod: str, current_user: dict, db: AsyncSession):
     """
     Lista emergencias que:
     1. No tienen taller asignado (idTaller IS NULL)
-    2. El taller tiene la especialidad requerida por la categoria de la emergencia
-    3. Están dentro de un radio de 50km
+    2. La sucursal (o taller) tiene la especialidad requerida por la categoria de la emergencia
+    3. Están dentro de un radio de 40km de la sucursal (o taller)
     """
-    # 1. Obtener datos del taller
-    taller = await Taller.get_with_especialidades(db, taller_cod)
-    if not taller: return []
+    from app.packages.gestion_usuarios_seguridad.modules.tenants.models.sucursal import Sucursal
+    from sqlalchemy import select
+    from sqlalchemy.orm import joinedload
+    
+    # 1. Obtener datos de ubicación y especialidades
+    latitud_base = None
+    longitud_base = None
+    especialidades_validas = set()
 
-    especialidades_taller = [a.idEspecialidad for a in taller.asignaciones]
+    if current_user.get("role") == "admin_sucursal" and current_user.get("sucursal"):
+        sucursal = await db.get(Sucursal, current_user["sucursal"], options=[joinedload(Sucursal.especialidades)])
+        if sucursal:
+            latitud_base = sucursal.latitud
+            longitud_base = sucursal.longitud
+            for e in sucursal.especialidades:
+                especialidades_validas.add(e.id_especialidad)
+    else:
+        # Fallback a nivel taller (todas las sucursales del taller)
+        taller = await Taller.get_with_especialidades(db, taller_cod)
+        if taller:
+            latitud_base = taller.latitud
+            longitud_base = taller.longitud
+            # Especialidades a nivel de taller (legado) o agrupar de sucursales
+            especialidades_validas.update([a.idEspecialidad for a in taller.asignaciones])
+            
+            stmt = select(Sucursal).where(Sucursal.id_taller == taller_cod).options(joinedload(Sucursal.especialidades))
+            sucursales = (await db.execute(stmt)).unique().scalars().all()
+            for s in sucursales:
+                for e in s.especialidades:
+                    especialidades_validas.add(e.id_especialidad)
+
+    if not latitud_base or not longitud_base:
+        return []
+
+    especialidades_list = list(especialidades_validas)
+    if not especialidades_list:
+        return []
 
     # 3. Buscar emergencias sin taller asignado y en estado PENDIENTE / INICIADA
-    # Filtramos por especialidad requerida (match entre taller y categoria)
     estados_validos = []
     estado_iniciada = await Estado.get_by_nombre(db, "INICIADA")
     estado_pendiente = await Estado.get_by_nombre(db, "PENDIENTE")
@@ -396,13 +427,15 @@ async def listar_emergencias_disponibles(taller_cod: str, db: AsyncSession):
     
     if not estados_validos:
         estados_validos = [1, 2] # Fallback
-    todas_disponibles = await EmergenciaRepository(db).get_disponibles_para_taller(especialidades_taller, estados_validos)
+        
+    todas_disponibles = await EmergenciaRepository(db).get_disponibles_para_taller(especialidades_list, estados_validos)
 
-    # 4. Filtrar por distancia (10km)
+    # 4. Filtrar por distancia (40km - ampliado para radar sucursal)
     cercanas = []
     for e in todas_disponibles:
-        dist = haversine_distance(taller.latitud, taller.longitud, e.latitud, e.longitud)
-        if dist <= 10: # Radio de 10km
+        if not e.latitud or not e.longitud: continue
+        dist = haversine_distance(latitud_base, longitud_base, e.latitud, e.longitud)
+        if dist <= 40: # Radio de 40km
             _populate_dynamic_fields(e)
             cercanas.append(e)
             

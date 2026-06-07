@@ -43,7 +43,7 @@ router = APIRouter(prefix="/pagos", tags=["Comercio — Pagos (CU05)"])
 async def registrar_pago(
     emergencia_id: int,
     data: PagoCreate,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -370,7 +370,7 @@ async def create_payment_intent(
 )
 async def obtener_pago(
     emergencia_id: int,
-    current=Depends(require_role("admin", "cliente", "tecnico")),
+    current=Depends(require_role("admin", "cliente", "tecnico", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """Retorna el registro de pago asociado a la emergencia, si existe."""

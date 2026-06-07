@@ -17,3 +17,4 @@ class Sucursal(GenericModel):
     
     # Relaciones
     taller = relationship("Taller", back_populates="sucursales")
+    especialidades = relationship("SucursalEspecialidad", back_populates="sucursal")

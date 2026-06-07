@@ -25,7 +25,7 @@ router = APIRouter(prefix="/reportes", tags=["Comercio — Reportes Taller"])
 async def obtener_estadisticas_taller(
     mes: int = Query(default=datetime.now().month, ge=1, le=12),
     anio: int = Query(default=datetime.now().year),
-    current=Depends(require_role("admin", "tecnico", "gerente", "supervisor")),
+    current=Depends(require_role("admin", "tecnico", "gerente", "supervisor", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     taller_cod = current.get("taller")
@@ -85,7 +85,7 @@ async def obtener_estadisticas_taller(
 async def generar_reporte_pdf(
     mes: int = Query(default=datetime.now().month),
     anio: int = Query(default=datetime.now().year),
-    current=Depends(require_role("tecnico", "admin")),
+    current=Depends(require_role("tecnico", "admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
 
@@ -137,7 +137,7 @@ async def generar_reporte_pdf(
 @router.get("/kpis", response_model=KpiResponse)
 async def obtener_kpis_dashboard(
     rango: str = Query(default="mensual", pattern="^(diario|semanal|mensual)$"),
-    current_user: UsuarioOut = Depends(require_role("admin", "gerente", "supervisor", "tecnico")),
+    current_user: UsuarioOut = Depends(require_role("admin", "gerente", "supervisor", "tecnico", "admin_sucursal")),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -154,7 +154,7 @@ async def obtener_kpis_dashboard(
 
 @router.get("/vehiculos-atendidos", response_model=List[VehiculoOut])
 async def obtener_vehiculos_atendidos(
-    current_user: UsuarioOut = Depends(require_role("admin", "gerente", "supervisor", "tecnico")),
+    current_user: UsuarioOut = Depends(require_role("admin", "gerente", "supervisor", "tecnico", "admin_sucursal")),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -166,7 +166,7 @@ async def obtener_vehiculos_atendidos(
 @router.get("/vehiculos-atendidos/{placa}/historial")
 async def obtener_historial_vehiculo(
     placa: str,
-    current_user: UsuarioOut = Depends(require_role("admin", "gerente", "supervisor", "tecnico")),
+    current_user: UsuarioOut = Depends(require_role("admin", "gerente", "supervisor", "tecnico", "admin_sucursal")),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -180,7 +180,7 @@ from sqlalchemy.orm import selectinload
 @router.get("/kpis-legacy")
 async def obtener_kpis_dashboard(
     rango: str = Query(default="mensual", description="diario, semanal, mensual"),
-    current=Depends(require_role("tecnico", "admin")),
+    current=Depends(require_role("tecnico", "admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     taller_cod = current.get("taller")

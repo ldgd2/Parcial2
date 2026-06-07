@@ -26,7 +26,7 @@ async def listar_especialidades(db: AsyncSession = Depends(get_db)):
 @router.post("/especialidades", response_model=EspecialidadOut)
 async def crear_especialidad(
     data: EspecialidadCreate,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db)
 ):
     """Crea una nueva especialidad en el catálogo global."""

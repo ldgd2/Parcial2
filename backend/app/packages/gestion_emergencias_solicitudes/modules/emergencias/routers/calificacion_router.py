@@ -60,7 +60,7 @@ async def obtener_pendientes(
 
 @router.get("/taller", response_model=List[CalificacionModeradaOut])
 async def obtener_calificaciones_taller(
-    current_user: UsuarioOut = Depends(require_role("admin", "supervisor")),
+    current_user: UsuarioOut = Depends(require_role("admin", "supervisor", "admin_sucursal")),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -87,7 +87,7 @@ async def obtener_calificaciones_publicas(
 async def moderar_calificacion(
     id_calificacion: int,
     data: ModerarCalificacion,
-    current_user: UsuarioOut = Depends(require_role("admin", "supervisor")),
+    current_user: UsuarioOut = Depends(require_role("admin", "supervisor", "admin_sucursal")),
     db: AsyncSession = Depends(get_db)
 ):
     """

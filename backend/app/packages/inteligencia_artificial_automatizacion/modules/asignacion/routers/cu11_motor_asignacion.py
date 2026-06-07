@@ -35,13 +35,13 @@ class AsignarTecnicosRequest(BaseModel):
 )
 async def listar_disponibles(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "admin_sucursal")),
 ):
     """Retorna las emergencias asignadas por el motor que aún no han sido reclamadas."""
     taller_cod = current_user.get("taller")
     if not taller_cod:
         raise HTTPException(status_code=400, detail="El usuario no tiene un taller asociado.")
-    return await emergencia_service.listar_emergencias_disponibles(taller_cod, db)
+    return await emergencia_service.listar_emergencias_disponibles(taller_cod, current_user, db)
 
 
 @router.get(
@@ -51,7 +51,7 @@ async def listar_disponibles(
 )
 async def listar_asignadas(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "admin_sucursal")),
 ):
     taller_cod = current_user.get("taller")
     if not taller_cod:
@@ -67,7 +67,7 @@ async def listar_asignadas(
 async def obtener_emergencia(
     id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role("admin", "tecnico", "cliente")),
+    current_user: dict = Depends(require_role("admin", "tecnico", "cliente", "admin_sucursal")),
 ):
     emergencia = await emergencia_service.obtener_emergencia_detalle(id, db)
     if not emergencia:
@@ -82,7 +82,7 @@ async def obtener_emergencia(
 async def bloquear_emergencia(
     id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "admin_sucursal")),
 ):
     taller_cod = current_user.get("taller")
     return await emergencia_service.bloquear_emergencia_temporal(id, taller_cod, db)
@@ -96,7 +96,7 @@ async def confirmar_asignacion(
     id: int,
     data: AsignarTecnicosRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "admin_sucursal")),
 ):
     taller_cod = current_user.get("taller")
     id_sucursal = current_user.get("sucursal")
@@ -111,7 +111,7 @@ async def actualizar_estado(
     id: int,
     data: ActualizarEstadoRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "admin_sucursal")),
 ):
     taller_cod = current_user.get("taller")
     return await emergencia_service.actualizar_estado_emergencia(id, data, taller_cod, db)

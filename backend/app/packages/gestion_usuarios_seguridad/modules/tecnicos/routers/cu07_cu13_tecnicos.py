@@ -31,7 +31,7 @@ router = APIRouter(prefix="/tecnicos", tags=["GPS — Técnicos (CU07/CU13)"])
 )
 async def crear_tecnico(
     data: TecnicoCreate,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """Solo admins del taller pueden registrar técnicos."""
@@ -47,7 +47,7 @@ async def crear_tecnico(
 )
 async def listar_tecnicos_taller(
     idTaller: str,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     return await tecnico_service.obtener_tecnicos_taller(idTaller, db)
@@ -76,7 +76,7 @@ async def perfil(
 async def actualizar_tecnico(
     tecnico_id: int,
     data: TecnicoUpdate,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     return await tecnico_service.actualizar_tecnico(tecnico_id, data, db)
@@ -88,7 +88,7 @@ async def actualizar_tecnico(
 )
 async def desactivar_tecnico(
     tecnico_id: int,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     await tecnico_service.desactivar_tecnico(tecnico_id, db)
@@ -105,7 +105,7 @@ async def desactivar_tecnico(
 async def asignar_especialidades_tecnico(
     tecnico_id: int,
     especialidades_ids: list[int],
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """

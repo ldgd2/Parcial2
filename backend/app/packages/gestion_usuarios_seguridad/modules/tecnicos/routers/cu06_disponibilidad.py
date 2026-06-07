@@ -28,7 +28,7 @@ router = APIRouter(prefix="/talleres", tags=["GPS — Talleres / Disponibilidad 
     summary="Listar talleres del administrador logueado",
 )
 async def mis_talleres(
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     return await taller_service.listar_talleres_admin(current["user_id"], db)
@@ -50,10 +50,29 @@ async def talleres_activos(db: AsyncSession = Depends(get_db)):
 )
 async def obtener_taller(
     cod: str,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
-    return await taller_service.obtener_taller_por_codigo(cod, db)
+    taller = await taller_service.obtener_taller_por_codigo(cod, db)
+    if not taller:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Taller no encontrado")
+
+    # Si es admin de sucursal, sobrescribir latitud/longitud con los de su sucursal
+    # para que el radar frontend se centre en la sucursal y no en la matriz.
+    if current.get("role") == "admin_sucursal" and current.get("sucursal"):
+        from app.packages.gestion_usuarios_seguridad.modules.tenants.models.sucursal import Sucursal
+        sucursal = await db.get(Sucursal, current["sucursal"])
+        if sucursal and sucursal.latitud and sucursal.longitud:
+            # TallerOut is a pydantic model, but here taller is a SQLAlchemy model.
+            # We can't modify the SQLAlchemy object in-place cleanly without affecting the session.
+            # But FastAPI automatically serializes it. We can convert to dict, update, and return the dict.
+            taller_dict = taller.__dict__.copy()
+            taller_dict["latitud"] = sucursal.latitud
+            taller_dict["longitud"] = sucursal.longitud
+            return taller_dict
+
+    return taller
 
 
 @router.post(
@@ -63,7 +82,7 @@ async def obtener_taller(
 )
 async def crear_taller(
     data: TallerCreate,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     return await taller_service.crear_taller(data, current["user_id"], db)
@@ -77,7 +96,7 @@ async def crear_taller(
 async def actualizar_taller(
     cod: str,
     data: TallerUpdate,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     return await taller_service.actualizar_taller(cod, data, db)
@@ -90,7 +109,7 @@ async def actualizar_taller(
 )
 async def desactivar_taller(
     cod: str,
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     return await taller_service.actualizar_taller(cod, TallerUpdate(estado="INACTIVO"), db)
@@ -103,7 +122,7 @@ async def desactivar_taller(
 async def asignar_especialidades(
     cod: str,
     especialidades_ids: list[int],
-    current=Depends(require_role("admin")),
+    current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     return await taller_service.actualizar_especialidades_taller(cod, especialidades_ids, db)

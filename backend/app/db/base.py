@@ -30,6 +30,7 @@ from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.evi
 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.calificacion import Calificacion
 from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.models.asignacion_tecnico_emergencia import AsignacionTecnicoEmergencia
 from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.models.asignacion_especialidad import AsignacionEspecialidad
+from app.packages.gestion_usuarios_seguridad.modules.tenants.models.sucursal_especialidad import SucursalEspecialidad
 from app.packages.gestion_emergencias_solicitudes.modules.cotizaciones.models.cotizacion import Cotizacion
 
 # Paquete 3: IA y Automatizacion
