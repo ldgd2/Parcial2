@@ -23,6 +23,13 @@ from typing import List
 import math
 from app.packages.inteligencia_artificial_automatizacion.modules.notificaciones.services.notification_service import NotificationService
 
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.categoria_problema import CategoriaProblema
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.prioridad import Prioridad
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.evidencia import Evidencia
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.historial_estado import HistorialEstado
+from app.packages.inteligencia_artificial_automatizacion.modules.motor_ia.models.resumen_ia import ResumenIA
+from app.packages.gestion_emergencias_solicitudes.modules.auxilio_solicitudes.models.asignacion_tecnico_emergencia import AsignacionTecnicoEmergencia
+from app.packages.gestion_administrativa_reportes.modules.pagos.models.pago import Pago
 
 # ─── CU04 ─────────────────────────────────────────────────────────
 
