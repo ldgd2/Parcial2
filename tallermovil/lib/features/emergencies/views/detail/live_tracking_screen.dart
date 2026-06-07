@@ -1,13 +1,18 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
+
 import '../../../../../core/network/web_socket_service.dart';
 import '../../../../../core/storage/local_storage.dart';
-import 'dart:async';
-import 'dart:convert';
-import 'package:dio/dio.dart';
 import '../../../../../core/network/api_client.dart';
+
+import '../../controllers/adjust_quote_controller.dart';
+import 'adjust_quote_dialog.dart';
 
 class LiveTrackingScreen extends StatefulWidget {
   final int emergenciaId;
@@ -321,7 +326,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                         try {
                           final apiClient = ApiClient(localStorage: LocalStorage());
                           await apiClient.dio.patch(
-                             '/talleres/solicitudes/\${widget.emergenciaId}/estado',
+                             '/talleres/solicitudes/${widget.emergenciaId}/estado',
                              data: {'idEstado': 4} // Asumiendo ARREGLADO = 4
                           );
                           setState(() { _currentStatus = 'ARREGLADO'; });
@@ -334,6 +339,26 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                       child: const Text('Marcar como Arreglado'),
                     ),
                   ),
+                if (_isTecnico && (_currentStatus == 'EN_CAMINO' || _currentStatus == 'ARREGLADO'))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final result = await showDialog(
+                          context: context,
+                          builder: (_) => ChangeNotifierProvider(
+                            create: (_) => AdjustQuoteController(),
+                            child: AdjustQuoteDialog(emergenciaId: widget.emergenciaId),
+                          ),
+                        );
+                        if (result == true) {
+                          // The quote was updated
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                      child: const Text('Ajustar Cotización en Sitio'),
+                    ),
+                  ),
                 if (_isTecnico && _currentStatus == 'ARREGLADO')
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),
@@ -342,7 +367,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                         try {
                           final apiClient = ApiClient(localStorage: LocalStorage());
                           await apiClient.dio.patch(
-                             '/talleres/solicitudes/\${widget.emergenciaId}/estado',
+                             '/talleres/solicitudes/${widget.emergenciaId}/estado',
                              data: {'idEstado': 5} // Asumiendo COMPLETADO = 5
                           );
                           setState(() { _currentStatus = 'COMPLETADO'; });
