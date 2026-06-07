@@ -62,3 +62,26 @@ async def crear_admin_sucursal(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permisos insuficientes para asignar un administrador.")
             
     return await sucursal_service.crear_admin_sucursal(sucursal_id, data, db)
+
+@router.get("/taller/{id_taller}/candidatos-admin", response_model=List[UsuarioOut])
+async def obtener_candidatos_admin(
+    id_taller: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtiene usuarios del taller que pueden ser asignados como administradores de sucursal"""
+    return await sucursal_service.obtener_candidatos_admin_taller(id_taller, db)
+
+@router.put("/{sucursal_id}/asignar-admin/{usuario_id}", response_model=UsuarioOut)
+async def asignar_admin_existente(
+    sucursal_id: int,
+    usuario_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Vincula un usuario existente a una sucursal como su administrador"""
+    if "PERMISO_GESTIONAR_SUCURSALES" not in current_user.get("permisos", []) and "ALL_PERMISSIONS_FALLBACK_IF_ANY" not in current_user.get("permisos", []):
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permisos insuficientes.")
+            
+    return await sucursal_service.asignar_admin_existente(sucursal_id, usuario_id, db)

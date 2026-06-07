@@ -203,25 +203,18 @@ interface TallerCard {
              <div class="space-y-6">
                 <h3 class="font-bold text-[11px] uppercase tracking-[.25em] text-white border-l-2 border-[#00ff9d] pl-2">Usuario Administrador</h3>
                 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                      <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Nombre *</label>
-                      <input type="text" [(ngModel)]="newSucursal.admin_nombre" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
-                    </div>
-                    <div class="space-y-2">
-                      <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Apellido *</label>
-                      <input type="text" [(ngModel)]="newSucursal.admin_apellido" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
-                    </div>
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Seleccionar Usuario *</label>
+                  <select [(ngModel)]="newSucursal.admin_usuario_id" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
+                     <option value="" disabled selected>-- Seleccione un usuario --</option>
+                     <option *ngFor="let u of candidatosAdmin" [value]="u.id">
+                        {{ u.nombre }} {{ u.apellido }} ({{ u.correo }})
+                     </option>
+                  </select>
                 </div>
                 
-                <div class="space-y-2">
-                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Correo Electrónico *</label>
-                  <input type="email" [(ngModel)]="newSucursal.admin_correo" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
-                </div>
-                
-                <div class="space-y-2">
-                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Contraseña *</label>
-                  <input type="password" [(ngModel)]="newSucursal.admin_contrasena" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
+                <div *ngIf="candidatosAdmin.length === 0" class="text-[10px] text-zinc-500 italic mt-2">
+                   No hay usuarios disponibles en este taller. Registre usuarios primero.
                 </div>
 
                 <div class="pt-8 mt-auto">
@@ -260,16 +253,14 @@ export class TalleresComponent implements OnInit {
 
   showSucursalModal = false;
   creatingSucursal = false;
+  candidatosAdmin: any[] = [];
   newSucursal = {
     id_taller: '',
     nombre: '',
     direccion: '',
     latitud: null as number | null,
     longitud: null as number | null,
-    admin_nombre: '',
-    admin_apellido: '',
-    admin_correo: '',
-    admin_contrasena: ''
+    admin_usuario_id: ''
   };
   
   map: L.Map | null = null;
@@ -392,12 +383,16 @@ export class TalleresComponent implements OnInit {
       direccion: '',
       latitud: null,
       longitud: null,
-      admin_nombre: '',
-      admin_apellido: '',
-      admin_correo: '',
-      admin_contrasena: ''
+      admin_usuario_id: ''
     };
     this.showSucursalModal = true;
+    
+    // Cargar candidatos
+    this.api.get<any[]>(`/sucursales/taller/${tallerCod}/candidatos-admin`).subscribe({
+       next: (res) => this.candidatosAdmin = res,
+       error: () => toast.error('Error cargando candidatos a administrador')
+    });
+
     setTimeout(() => this.initMap(), 100);
   }
 
@@ -445,8 +440,8 @@ export class TalleresComponent implements OnInit {
   }
 
   submitSucursalCreate() {
-    if (!this.newSucursal.nombre || !this.newSucursal.direccion || !this.newSucursal.admin_correo || !this.newSucursal.admin_contrasena) {
-      toast.warning('Complete todos los campos requeridos');
+    if (!this.newSucursal.nombre || !this.newSucursal.direccion || !this.newSucursal.admin_usuario_id) {
+      toast.warning('Complete todos los campos requeridos y seleccione un administrador');
       return;
     }
     this.creatingSucursal = true;
@@ -462,23 +457,15 @@ export class TalleresComponent implements OnInit {
 
     this.api.post<any>('/sucursales/', sucursalData).subscribe({
       next: (suc) => {
-        // 2. Crear Admin para la sucursal
-        const adminData = {
-          nombre: this.newSucursal.admin_nombre,
-          apellido: this.newSucursal.admin_apellido,
-          correo: this.newSucursal.admin_correo,
-          contrasena: this.newSucursal.admin_contrasena,
-          id_taller: this.newSucursal.id_taller
-        };
-        
-        this.api.post<any>(`/sucursales/${suc.id}/admin`, adminData).subscribe({
+        // 2. Asignar Admin existente a la sucursal
+        this.api.put<any>(`/sucursales/${suc.id}/asignar-admin/${this.newSucursal.admin_usuario_id}`, {}).subscribe({
           next: () => {
-            toast.success('Sucursal y Administrador registrados correctamente');
+            toast.success('Sucursal registrada y administrador vinculado');
             this.creatingSucursal = false;
             this.showSucursalModal = false;
           },
           error: (err) => {
-            toast.error('Sucursal creada, pero falló el admin: ' + err.error?.detail);
+            toast.error('Sucursal creada, pero falló la asignación de admin: ' + err.error?.detail);
             this.creatingSucursal = false;
           }
         });

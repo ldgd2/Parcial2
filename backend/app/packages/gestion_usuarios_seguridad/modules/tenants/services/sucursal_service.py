@@ -112,3 +112,32 @@ async def crear_admin_sucursal(sucursal_id: int, data: SucursalAdminCreate, db: 
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+async def obtener_candidatos_admin_taller(id_taller: str, db: AsyncSession):
+    # Obtener todos los usuarios del taller
+    stmt = select(Usuario).where(Usuario.idTaller == id_taller, Usuario.estado == 'ACTIVO')
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+async def asignar_admin_existente(sucursal_id: int, usuario_id: int, db: AsyncSession):
+    sucursal = await Sucursal.get(db, sucursal_id)
+    if not sucursal:
+        raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
+        
+    usuario = await db.get(Usuario, usuario_id)
+    if not usuario or usuario.idTaller != sucursal.id_taller:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado o no pertenece a este taller.")
+        
+    usuario.idSucursal = sucursal_id
+    
+    # Asignar el rol ADMIN_SUCURSAL si no es SUPER_ADMIN o ADMIN_TALLER
+    from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.permisos import Rol
+    stmt_rol = select(Rol).where(Rol.nombre == "ADMIN_SUCURSAL")
+    rol = (await db.execute(stmt_rol)).scalar_one_or_none()
+    
+    if rol:
+        usuario.id_rol = rol.id
+
+    await db.commit()
+    await db.refresh(usuario)
+    return usuario
