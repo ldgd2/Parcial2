@@ -211,10 +211,12 @@ async def obtener_emergencia_detalle(id: int, db: AsyncSession):
 
 def _populate_dynamic_fields(e: Emergencia):
     """Calcula campos que no estn en la tabla base para el esquema de salida."""
-    if e.historial:
-        last_h = sorted(e.historial, key=lambda x: (x.fecha_cambio, x.id), reverse=True)[0]
-        e.estado_actual = last_h.estado.nombre
-    else:
+    try:
+        if hasattr(e, 'estado') and e.estado:
+            e.estado_actual = e.estado.nombre
+        else:
+            e.estado_actual = "DESCONOCIDO"
+    except Exception:
         e.estado_actual = "DESCONOCIDO"
 
     # 2. Mutex (is_locked)
