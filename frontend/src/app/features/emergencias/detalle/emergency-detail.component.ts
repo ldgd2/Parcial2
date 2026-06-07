@@ -389,8 +389,8 @@ import { ReportesService, HistorialVehicularItem } from '../../../core/services/
                </div>
                <div class="grid grid-cols-2 gap-4">
                  <div>
-                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Tiempo Est. (Horas)</label>
-                    <input type="number" [(ngModel)]="newCotizacion.tiempo_estimado_horas" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Tiempo Est. (Ej. 4 a 6 horas)</label>
+                    <input type="text" [(ngModel)]="newCotizacion.tiempo_estimado" placeholder="4 a 6 horas" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
                  </div>
                </div>
                <div>
@@ -472,7 +472,7 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
     descripcion_servicio: '',
     costo_mano_obra: 0,
     costo_repuestos: 0,
-    tiempo_estimado_horas: 1,
+    tiempo_estimado: '',
     condiciones: ''
   };
 
@@ -830,7 +830,7 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
       descripcion_servicio: '',
       costo_mano_obra: 0,
       costo_repuestos: 0,
-      tiempo_estimado_horas: 1,
+      tiempo_estimado: '',
       condiciones: ''
     };
     this.showCotizacionModal = true;
