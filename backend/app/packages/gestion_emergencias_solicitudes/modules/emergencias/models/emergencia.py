@@ -70,7 +70,9 @@ class Emergencia(GenericModel):
             joinedload(cls.categoria),
             joinedload(cls.estado),
             joinedload(cls.evidencias),
-            joinedload(cls.tecnicos_asignados)
+            joinedload(cls.tecnicos_asignados),
+            joinedload(cls.resumen_ia),
+            joinedload(cls.pago)
         ]
 
     @classmethod
