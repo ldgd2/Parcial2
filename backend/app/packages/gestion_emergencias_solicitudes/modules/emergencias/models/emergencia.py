@@ -61,7 +61,8 @@ class Emergencia(GenericModel):
 
     @classmethod
     def _get_detalle_options(cls):
-        from sqlalchemy.orm import joinedload
+        from sqlalchemy.orm import joinedload, selectinload
+        from app.packages.gestion_usuarios_seguridad.modules.tecnicos.models.tecnico import Tecnico
         return [
             joinedload(cls.cliente),
             joinedload(cls.vehiculo),
@@ -69,8 +70,8 @@ class Emergencia(GenericModel):
             joinedload(cls.prioridad),
             joinedload(cls.categoria),
             joinedload(cls.estado),
-            joinedload(cls.evidencias),
-            joinedload(cls.tecnicos_asignados),
+            selectinload(cls.evidencias),
+            selectinload(cls.tecnicos_asignados).selectinload(Tecnico.especialidades),
             joinedload(cls.resumen_ia),
             joinedload(cls.pago)
         ]
