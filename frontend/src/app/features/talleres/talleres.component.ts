@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -131,6 +131,11 @@ interface TallerCard {
                 </div>
 
                 <div class="mt-auto pt-6 border-t border-[#222222] flex gap-2 z-10">
+                    <button *ngIf="isAdminTaller" (click)="openEditSucursalModal(s)"
+                            class="flex-1 py-3 border border-zinc-800 font-bold text-[10px] uppercase tracking-[.25em] text-white hover:border-[#FF5733] hover:text-[#FF5733] transition-all text-center flex justify-center items-center gap-2">
+                        <lucide-icon name="settings" size="14"></lucide-icon>
+                        EDITAR
+                    </button>
                     <button (click)="openEspecialidadesModal(s)"
                             class="flex-1 py-3 border border-zinc-800 font-bold text-[10px] uppercase tracking-[.25em] text-white hover:border-[#00ff9d] hover:text-[#00ff9d] transition-all text-center flex justify-center items-center gap-2">
                         <lucide-icon name="wrench" size="14"></lucide-icon>
@@ -201,6 +206,72 @@ interface TallerCard {
                     <button (click)="submitSucursalCreate()" [disabled]="creatingSucursal || !newSucursal.admin_usuario_id" class="w-full bg-[#FF5733] text-white py-4 font-bold text-[11px] uppercase tracking-widest hover:brightness-110 flex items-center justify-center gap-2 disabled:opacity-50 transition-all">
                        <lucide-icon *ngIf="creatingSucursal" name="loader-2" size="14" class="animate-spin"></lucide-icon>
                        REGISTRAR SUCURSAL Y ADMIN
+                    </button>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDIT SUCURSAL MODAL OVERLAY -->
+      <div *ngIf="showEditSucursalModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#111111] border border-[#333333] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative custom-scrollbar">
+          <div class="sticky top-0 bg-[#111111] p-6 border-b border-zinc-800 z-10 flex justify-between items-center">
+             <div>
+                <h2 class="text-xl font-bold uppercase text-white">Editar Sucursal</h2>
+                <p class="text-[9px] font-mono text-[#FF5733] uppercase tracking-widest">{{ editingSucursal?.nombre }}</p>
+             </div>
+             <button (click)="showEditSucursalModal = false" class="text-zinc-500 hover:text-white">
+                <lucide-icon name="x" size="20"></lucide-icon>
+             </button>
+          </div>
+          
+          <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div class="space-y-6">
+                <h3 class="font-bold text-[11px] uppercase tracking-[.25em] text-white border-l-2 border-[#FF5733] pl-2">Datos y Ubicación</h3>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Nombre de Sucursal *</label>
+                  <input type="text" [(ngModel)]="editSucursalData.nombre" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#FF5733] outline-none">
+                </div>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Dirección (Click en Mapa) *</label>
+                  <input type="text" [(ngModel)]="editSucursalData.direccion" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#FF5733] outline-none">
+                </div>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Estado</label>
+                  <select [(ngModel)]="editSucursalData.estado" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#FF5733] outline-none">
+                     <option value="ACTIVO">ACTIVO</option>
+                     <option value="INACTIVO">INACTIVO</option>
+                  </select>
+                </div>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Mapa Satelital</label>
+                  <div id="editSucursalMap" class="h-48 w-full bg-[#050505] border border-zinc-800 relative z-0"></div>
+                </div>
+             </div>
+             
+             <div class="space-y-6">
+                <h3 class="font-bold text-[11px] uppercase tracking-[.25em] text-white border-l-2 border-[#00ff9d] pl-2">Usuario Administrador</h3>
+                
+                <div class="space-y-2">
+                  <label class="font-mono text-[9px] uppercase tracking-widest text-zinc-400">Reasignar Administrador</label>
+                  <select [(ngModel)]="editSucursalData.admin_usuario_id" class="w-full bg-[#050505] border border-zinc-800 p-3 text-xs text-white focus:border-[#00ff9d] outline-none">
+                     <option value="" selected>-- No reasignar admin --</option>
+                     <option *ngFor="let u of candidatosAdmin" [value]="u.id">
+                        {{ u.nombre }} {{ u.apellido }} ({{ u.correo }})
+                     </option>
+                  </select>
+                  <p class="text-[9px] text-zinc-500 mt-1">Seleccione un usuario si desea cambiar al administrador actual de esta sucursal.</p>
+                </div>
+
+                <div class="pt-8 mt-auto">
+                    <button (click)="submitSucursalEdit()" [disabled]="updatingSucursal" class="w-full bg-[#FF5733] text-white py-4 font-bold text-[11px] uppercase tracking-widest hover:brightness-110 flex items-center justify-center gap-2 disabled:opacity-50 transition-all">
+                       <lucide-icon *ngIf="updatingSucursal" name="loader-2" size="14" class="animate-spin"></lucide-icon>
+                       GUARDAR CAMBIOS
                     </button>
                 </div>
              </div>
@@ -279,6 +350,19 @@ export class TalleresComponent implements OnInit {
   map: L.Map | null = null;
   marker: L.Marker | null = null;
 
+  // Edit Sucursal
+  showEditSucursalModal = false;
+  updatingSucursal = false;
+  editingSucursal: SucursalCard | null = null;
+  editSucursalData = {
+    nombre: '',
+    direccion: '',
+    latitud: null as number | null,
+    longitud: null as number | null,
+    estado: 'ACTIVO',
+    admin_usuario_id: ''
+  };
+
   // Especialidades
   showEspecialidadesModal = false;
   selectedSucursal: SucursalCard | null = null;
@@ -288,7 +372,7 @@ export class TalleresComponent implements OnInit {
   categoriasEspecialidades: {categoria: string, items: Especialidad[]}[] = [];
   selectedEspecialidadesIds: number[] = [];
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loadAuthAndData();
@@ -309,11 +393,13 @@ export class TalleresComponent implements OnInit {
               if (talleresRes.length > 0) {
                 this.tallerPrincipal = talleresRes[0];
               }
+              this.cdr.detectChanges(); // Fix para el bug de "letras invisibles"
               this.loadSucursales(tallerCod);
             },
             error: () => {
                 this.loading = false;
                 toast.error('Error cargando taller base');
+                this.cdr.detectChanges();
             }
           });
         } else {
@@ -325,6 +411,7 @@ export class TalleresComponent implements OnInit {
       error: () => {
         this.loading = false;
         toast.error('Error de autenticación');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -338,16 +425,19 @@ export class TalleresComponent implements OnInit {
             this.sucursales = res;
         }
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.loading = false;
         toast.error('Error cargando sucursales');
+        this.cdr.detectChanges();
       }
     });
   }
 
   loadCatalogoEspecialidades() {
-      this.api.get<Especialidad[]>('/auxilio/especialidades').subscribe({
+      // Cambio de la ruta al router correcto (Catálogos)
+      this.api.get<Especialidad[]>('/catalogos/especialidades').subscribe({
           next: (res) => {
               this.todasEspecialidades = res;
               // Group by category
@@ -361,6 +451,7 @@ export class TalleresComponent implements OnInit {
                   categoria: k,
                   items: groups[k]
               }));
+              this.cdr.detectChanges();
           }
       });
   }
@@ -387,11 +478,17 @@ export class TalleresComponent implements OnInit {
     
     // Cargar candidatos a admin
     this.api.get<any[]>(`/sucursales/taller/${tallerCod}/candidatos-admin`).subscribe({
-       next: (res) => this.candidatosAdmin = res,
+       next: (res) => {
+           this.candidatosAdmin = res;
+           this.cdr.detectChanges();
+       },
        error: () => toast.error('Error cargando candidatos a administrador')
     });
 
-    setTimeout(() => this.initMap(), 100);
+    setTimeout(() => {
+        this.initMap();
+        this.cdr.detectChanges();
+    }, 100);
   }
 
   initMap() {
@@ -432,6 +529,7 @@ export class TalleresComponent implements OnInit {
           .then(data => {
             if (data && data.display_name) {
               this.newSucursal.direccion = data.display_name;
+              this.cdr.detectChanges();
             }
           });
     });
@@ -464,14 +562,145 @@ export class TalleresComponent implements OnInit {
           error: (err) => {
             toast.error('Sucursal creada, pero falló la asignación de admin: ' + err.error?.detail);
             this.creatingSucursal = false;
+            this.cdr.detectChanges();
           }
         });
       },
       error: (err) => {
         toast.error('Error al registrar sucursal: ' + err.error?.detail);
         this.creatingSucursal = false;
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  // --- EDIT SUCURSAL LOGIC ---
+  openEditSucursalModal(sucursal: SucursalCard) {
+    this.editingSucursal = sucursal;
+    this.editSucursalData = {
+      nombre: sucursal.nombre,
+      direccion: sucursal.direccion,
+      latitud: (sucursal as any).latitud || null,
+      longitud: (sucursal as any).longitud || null,
+      estado: sucursal.estado || 'ACTIVO',
+      admin_usuario_id: '' // Empezamos en blanco para solo asignar si cambian
+    };
+    this.showEditSucursalModal = true;
+    
+    // Cargar candidatos a admin
+    this.api.get<any[]>(`/sucursales/taller/${sucursal.id_taller}/candidatos-admin`).subscribe({
+       next: (res) => {
+           this.candidatosAdmin = res;
+           this.cdr.detectChanges();
+       },
+       error: () => toast.error('Error cargando candidatos a administrador')
+    });
+
+    setTimeout(() => {
+        this.initEditMap();
+        this.cdr.detectChanges();
+    }, 100);
+  }
+
+  initEditMap() {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+    const mapElement = document.getElementById('editSucursalMap');
+    if (!mapElement) return;
+
+    let centerLat = this.editSucursalData.latitud || -12.0464;
+    let centerLng = this.editSucursalData.longitud || -77.0428;
+
+    this.map = L.map('editSucursalMap').setView([centerLat, centerLng], 10);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CARTO'
+    }).addTo(this.map);
+
+    const customIcon = L.divIcon({
+        className: 'custom-pin',
+        html: '<div style="background-color: #FF5733; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(255,87,51,0.8);"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+    });
+
+    if (this.editSucursalData.latitud && this.editSucursalData.longitud) {
+        this.marker = L.marker([this.editSucursalData.latitud, this.editSucursalData.longitud], { icon: customIcon }).addTo(this.map!);
+    } else {
+        this.marker = null;
+    }
+
+    this.map.on('click', (e: L.LeafletMouseEvent) => {
+        const lat = parseFloat(e.latlng.lat.toFixed(6));
+        const lng = parseFloat(e.latlng.lng.toFixed(6));
+        
+        this.editSucursalData.latitud = lat;
+        this.editSucursalData.longitud = lng;
+
+        if (this.marker) {
+            this.marker.setLatLng([lat, lng]);
+        } else {
+            this.marker = L.marker([lat, lng], { icon: customIcon }).addTo(this.map!);
+        }
+
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.display_name) {
+              this.editSucursalData.direccion = data.display_name;
+              this.cdr.detectChanges();
+            }
+          });
+    });
+  }
+
+  submitSucursalEdit() {
+    if (!this.editSucursalData.nombre || !this.editSucursalData.direccion) {
+      toast.warning('Complete el nombre y dirección');
+      return;
+    }
+    this.updatingSucursal = true;
+
+    const sucursalData = {
+      nombre: this.editSucursalData.nombre,
+      direccion: this.editSucursalData.direccion,
+      latitud: this.editSucursalData.latitud,
+      longitud: this.editSucursalData.longitud,
+      estado: this.editSucursalData.estado
+    };
+
+    this.api.put<any>(`/sucursales/${this.editingSucursal!.id}`, sucursalData).subscribe({
+      next: () => {
+        if (this.editSucursalData.admin_usuario_id) {
+          this.api.put<any>(`/sucursales/${this.editingSucursal!.id}/asignar-admin/${this.editSucursalData.admin_usuario_id}`, {}).subscribe({
+            next: () => {
+              toast.success('Sucursal actualizada y administrador reasignado');
+              this.finishEdit();
+            },
+            error: (err) => {
+              toast.error('Sucursal actualizada, pero falló la asignación de admin: ' + err.error?.detail);
+              this.updatingSucursal = false;
+              this.cdr.detectChanges();
+            }
+          });
+        } else {
+          toast.success('Sucursal actualizada correctamente');
+          this.finishEdit();
+        }
+      },
+      error: (err) => {
+        toast.error('Error al actualizar sucursal: ' + err.error?.detail);
+        this.updatingSucursal = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  finishEdit() {
+      this.updatingSucursal = false;
+      this.showEditSucursalModal = false;
+      this.loadAuthAndData(); // Recargar todo
   }
 
   // --- ESPECIALIDADES LOGIC ---
@@ -485,10 +714,12 @@ export class TalleresComponent implements OnInit {
           next: (res) => {
               this.selectedEspecialidadesIds = res.map(r => r.id_especialidad);
               this.loadingEspecialidades = false;
+              this.cdr.detectChanges();
           },
           error: () => {
               toast.error('Error al cargar especialidades de la sucursal');
               this.loadingEspecialidades = false;
+              this.cdr.detectChanges();
           }
       });
   }
@@ -517,10 +748,12 @@ export class TalleresComponent implements OnInit {
               toast.success('Especialidades guardadas correctamente');
               this.savingEspecialidades = false;
               this.showEspecialidadesModal = false;
+              this.cdr.detectChanges();
           },
           error: (err) => {
               toast.error('Error guardando especialidades: ' + err.error?.detail);
               this.savingEspecialidades = false;
+              this.cdr.detectChanges();
           }
       });
   }
