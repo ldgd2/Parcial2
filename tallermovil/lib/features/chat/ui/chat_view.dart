@@ -37,6 +37,7 @@ class _ChatViewState extends State<ChatView> {
   bool _isFinished = false;
   bool _isRecording = false;
   bool _isTyping = false;
+  String? _userRole;
   late final AudioRecorder _audioRecorder;
   String? _audioPath;
 
@@ -59,6 +60,8 @@ class _ChatViewState extends State<ChatView> {
       final storage = LocalStorage();
       final apiClient = ApiClient(localStorage: storage);
       
+      final role = await storage.getRol();
+
       // Obtener mensajes y estado de la emergencia
       final responses = await Future.wait([
         apiClient.dio.get('/chat/${widget.emergenciaId}'),
@@ -73,6 +76,7 @@ class _ChatViewState extends State<ChatView> {
 
       if (mounted) {
         setState(() {
+          _userRole = role;
           _messages.addAll(messagesData.map((m) => ChatMessage.fromJson(m)).toList());
           _isLoading = false;
         });
@@ -246,8 +250,7 @@ class _ChatViewState extends State<ChatView> {
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     final msg = _messages[index];
-                    // En Flutter (app del cliente), asumimos que los mensajes del cliente son 'isMe'
-                    final isMe = msg.rolRemitente == 'cliente';
+                    final isMe = msg.rolRemitente == (_userRole ?? 'cliente');
                     return _ChatBubble(message: msg, isMe: isMe);
                   },
                 ),

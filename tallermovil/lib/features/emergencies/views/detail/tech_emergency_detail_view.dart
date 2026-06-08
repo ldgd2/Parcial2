@@ -12,6 +12,7 @@ import '../../../../shared/components/typography/t_text.dart';
 import '../../../../shared/components/buttons/t_button.dart';
 import '../../../chat/ui/chat_view.dart';
 import 'live_tracking_screen.dart';
+import 'widgets/tech_quote_adjustment_dialog.dart';
 
 class TechEmergencyDetailView extends StatefulWidget {
   final Map<String, dynamic> emergency;
@@ -59,6 +60,22 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
     }
   }
 
+  Future<void> _updateState(int stateId) async {
+    setState(() => _isLoading = true);
+    try {
+      final storage = LocalStorage();
+      final apiClient = ApiClient(localStorage: storage);
+      await apiClient.dio.patch(
+        '/talleres/solicitudes/${widget.emergency['id']}/estado',
+        data: {'idEstado': stateId},
+      );
+      await _refreshData();
+    } catch (e) {
+      debugPrint('Error updating state: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
@@ -88,9 +105,9 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
     switch (status.toUpperCase()) {
       case 'PENDIENTE': bg = Colors.grey; break;
       case 'ASIGNADO': bg = Colors.blue; break;
-      case 'EN_CAMINO': bg = Colors.orange; break;
-      case 'ARREGLADO': bg = Colors.green; break;
-      case 'COMPLETADO': bg = AppColors.success; break;
+      case 'EN_RUTA': bg = Colors.orange; break;
+      case 'ATENDIENDO': bg = Colors.green; break;
+      case 'FINALIZADO': bg = AppColors.success; break;
       case 'PAGADO': bg = Colors.teal; break;
       default: bg = Colors.grey;
     }
@@ -145,11 +162,62 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
               TSpacing.verticalLarge(),
 
               // BOTÓN PARA ENTRAR A OPERAR
-              if (['ASIGNADO', 'EN_CAMINO', 'ARREGLADO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
+              // ACCIONES DEL TÉCNICO SEGÚN ESTADO
+              if (e['estado_actual']?.toString().toUpperCase() == 'ASIGNADO') ...[
+                 TButton(
+                   label: 'Comenzar Viaje',
+                   icon: Icons.directions_car,
+                   variant: TButtonVariant.primary,
+                   onPressed: () => _updateState(3), // 3 = EN_RUTA
+                 ),
+                 TSpacing.verticalLarge(),
+              ] else if (e['estado_actual']?.toString().toUpperCase() == 'EN_RUTA') ...[
+                 TButton(
+                   label: 'Llegué al lugar / Comenzar Trabajo',
+                   icon: Icons.build,
+                   variant: TButtonVariant.primary,
+                   onPressed: () => _updateState(4), // 4 = ATENDIENDO
+                 ),
+                 TSpacing.verticalLarge(),
+              ] else if (e['estado_actual']?.toString().toUpperCase() == 'ATENDIENDO') ...[
+                 TButton(
+                   label: 'Finalizar y Ajustar Cotización',
+                   icon: Icons.check_circle,
+                   variant: TButtonVariant.primary,
+                   onPressed: () async {
+                     final total = await showDialog<double>(
+                       context: context,
+                       builder: (_) => TechQuoteAdjustmentDialog(emergenciaId: e['id']),
+                     );
+                     
+                     if (total != null) {
+                       setState(() => _isLoading = true);
+                       try {
+                         final storage = LocalStorage();
+                         final apiClient = ApiClient(localStorage: storage);
+                         await apiClient.dio.post(
+                           '/talleres/solicitudes/${e['id']}/finalizar',
+                           data: {'monto_total': total},
+                         );
+                         await _refreshData();
+                         if (mounted) {
+                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trabajo finalizado y enviado al cliente.')));
+                         }
+                       } catch (e) {
+                         debugPrint('Error al finalizar: $e');
+                         if (mounted) setState(() => _isLoading = false);
+                       }
+                     }
+                   },
+                 ),
+                 TSpacing.verticalLarge(),
+              ],
+
+              if (['ASIGNADO', 'EN_RUTA', 'ATENDIENDO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
                  TButton(
                    label: 'Abrir Panel de Operación y Mapa',
                    icon: Icons.map,
-                   variant: TButtonVariant.primary,
+                   variant: TButtonVariant.secondary,
                    onPressed: () {
                      Navigator.push(
                        context,
