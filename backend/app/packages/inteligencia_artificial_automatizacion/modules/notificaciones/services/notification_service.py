@@ -3,6 +3,7 @@ from firebase_admin import credentials, messaging
 from sqlalchemy.ext.asyncio import AsyncSession
 import os
 from app.core.socket_manager import manager
+from app.packages.inteligencia_artificial_automatizacion.modules.notificaciones.models.fcm_token import FCMToken
 
 class NotificationService:
     _initialized = False

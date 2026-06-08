@@ -35,8 +35,10 @@ class Tecnico(GenericModel):
         return res.scalar_one_or_none()
 
     @classmethod
-    async def get_by_taller_with_especialidades(cls, db: AsyncSession, idTaller: str) -> list["Tecnico"]:
+    async def get_by_taller_with_especialidades(cls, db: AsyncSession, idTaller: str, idSucursal: Optional[int] = None) -> list["Tecnico"]:
         stmt = select(cls).options(selectinload(cls.especialidades)).where(cls.idTaller == idTaller)
+        if idSucursal is not None:
+            stmt = stmt.where(cls.idSucursal == idSucursal)
         result = await db.execute(stmt)
         return list(result.scalars().all())
 

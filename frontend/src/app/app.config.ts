@@ -12,7 +12,7 @@ import {
   ArrowRight, Camera, Mail, KeyRound, Loader2, CheckSquare, Check, Image as ImageIcon, Tag, X, Radio, Video, Info, MessageSquare,
   TrendingUp, DollarSign, FileText, Calendar, CheckCircle, Cpu, ShieldCheck, CreditCard, Zap,
   ArrowUpCircle, BarChart2, Radar, Star, UserCog, Server, Download, Search, FolderOpen, MessageSquareOff, Store, Car, EyeOff, FileSpreadsheet,
-  GitBranch, Building2, Save
+  GitBranch, Building2, Save, Calculator, Trash2
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -41,7 +41,7 @@ export const appConfig: ApplicationConfig = {
         ArrowRight, Camera, Mail, KeyRound, Loader2, CheckSquare, Check, Image: ImageIcon, Tag, X, Radio, Video, Info, MessageSquare,
         TrendingUp, DollarSign, FileText, Calendar, CheckCircle, Cpu, ShieldCheck, CreditCard, Zap,
         ArrowUpCircle, BarChart2, Radar, Star, UserCog, Server, Download, Search, FolderOpen, MessageSquareOff, Store, Car, EyeOff, FileSpreadsheet,
-        GitBranch, Building2, Save
+        GitBranch, Building2, Save, Calculator, Trash2
     })),
     provideServiceWorker('ngsw-worker.js', {
         enabled: !isDevMode(),

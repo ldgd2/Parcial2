@@ -34,9 +34,25 @@ async def crear_tecnico(
     current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Solo admins del taller pueden registrar técnicos."""
+    # Forzar el taller del admin
+    if current.get("taller"):
+        data.idTaller = current.get("taller")
+        
+    # Asignar sucursal
     if not data.idSucursal:
-        data.idSucursal = current.get("sucursal")
+        if current.get("sucursal"):
+            data.idSucursal = current.get("sucursal")
+        else:
+            # Si el admin no tiene sucursal específica (es de la matriz/taller en general),
+            # buscar la primera sucursal del taller.
+            from sqlalchemy import select
+            from app.packages.gestion_usuarios_seguridad.modules.tenants.models.sucursal import Sucursal
+            stmt = select(Sucursal).where(Sucursal.id_taller == data.idTaller)
+            result = await db.execute(stmt)
+            primera_sucursal = result.scalars().first()
+            if primera_sucursal:
+                data.idSucursal = primera_sucursal.id
+
     return await tecnico_service.crear_tecnico(data, db)
 
 
@@ -50,7 +66,8 @@ async def listar_tecnicos_taller(
     current=Depends(require_role("admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
-    return await tecnico_service.obtener_tecnicos_taller(idTaller, db)
+    id_sucursal = current.get("sucursal")
+    return await tecnico_service.obtener_tecnicos_taller(idTaller, db, id_sucursal)
 
 
 @router.get(

@@ -50,8 +50,8 @@ async def crear_tecnico(data: TecnicoCreate, db: AsyncSession) -> Tecnico:
 async def obtener_tecnico_by_id(tecnico_id: int, db: AsyncSession) -> Tecnico:
     return await Tecnico.get_with_especialidades(db, tecnico_id)
 
-async def obtener_tecnicos_taller(idTaller: str, db: AsyncSession):
-    return await Tecnico.get_by_taller_with_especialidades(db, idTaller)
+async def obtener_tecnicos_taller(idTaller: str, db: AsyncSession, idSucursal: int = None):
+    return await Tecnico.get_by_taller_with_especialidades(db, idTaller, idSucursal)
 
 async def actualizar_tecnico(tecnico_id: int, data: TecnicoUpdate, db: AsyncSession) -> Tecnico:
     tecnico = await Tecnico.get(db, tecnico_id) # get from base repository

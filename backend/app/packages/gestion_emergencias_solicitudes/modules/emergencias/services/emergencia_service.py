@@ -640,7 +640,7 @@ async def finalizar_emergencia(
         # Log para depuración de IntegrityError
         print(f"DEBUG PAGOS: idCliente={emergencia.idCliente}, idEmergencia={emergencia_id}, monto={monto}")
         if emergencia.pago:
-            await Pago.update(db, db_obj=emergencia.pago, obj_in={
+            await emergencia.pago.update(db, obj_in={
                 "monto": monto,
                 "monto_comision": comision,
                 "estado": "PENDIENTE",
