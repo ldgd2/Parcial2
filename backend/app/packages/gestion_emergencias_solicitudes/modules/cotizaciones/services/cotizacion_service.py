@@ -44,7 +44,15 @@ class CotizacionService:
             "condiciones": data.condiciones,
             "estado": "PENDIENTE"
         })
-        return cotizacion
+        
+        from sqlalchemy import select
+        from sqlalchemy.orm import joinedload
+        result = await self.db.execute(
+            select(self.repo.model)
+            .options(joinedload(self.repo.model.taller))
+            .where(self.repo.model.id == cotizacion.id)
+        )
+        return result.scalar_one()
 
     async def get_cotizaciones_by_emergencia(self, id_emergencia: int):
         return await self.repo.get_by_emergencia(id_emergencia)
