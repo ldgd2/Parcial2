@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup - Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                    },
+                    colors: {
+                        primary: '#3b82f6', // Assuming standard blue for angular web
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: #ffffff; font-family: 'Inter', sans-serif; }
+        /* Scrollbar hides for mockups */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden selection:bg-primary selection:text-white">
+
+    <!-- SIDEBAR -->
+    <aside class="w-72 bg-[#050505] border-r border-zinc-800 flex flex-col relative z-20">
+        <!-- Brand Section -->
+        <div class="h-20 p-6 flex items-center gap-3 border-b border-zinc-900 overflow-hidden">
+            <div class="min-w-[12px] w-3 h-3 bg-primary shrink-0"></div>
+            <h2 class="font-bold tracking-[.25em] text-xs uppercase">
+                Fieldwork <span class="text-zinc-500 font-normal">_OS</span>
+            </h2>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto pt-8">
+            <a href="dashboard.html" class="flex items-center gap-4 px-5 py-4 transition-all bg-zinc-900 border-l border-primary group relative">
+                <i data-lucide="layout-dashboard" class="shrink-0 text-white w-4 h-4 transition-colors"></i>
+                <span class="font-bold text-[10px] uppercase tracking-[.2em]">Tablero</span>
+            </a>
+            <a href="gestion_tenants.html" class="flex items-center gap-4 px-5 py-4 transition-all hover:bg-zinc-900/50 group relative">
+                <i data-lucide="server" class="shrink-0 text-zinc-500 group-hover:text-white w-4 h-4 transition-colors"></i>
+                <span class="font-bold text-[10px] uppercase tracking-[.2em] text-zinc-500 group-hover:text-white">SaaS Tenants</span>
+            </a>
+            <a href="usuarios_tenant.html" class="flex items-center gap-4 px-5 py-4 transition-all hover:bg-zinc-900/50 group relative">
+                <i data-lucide="users" class="shrink-0 text-zinc-500 group-hover:text-white w-4 h-4 transition-colors"></i>
+                <span class="font-bold text-[10px] uppercase tracking-[.2em] text-zinc-500 group-hover:text-white">Usuarios</span>
+            </a>
+            <a href="reportes_vehicular.html" class="flex items-center gap-4 px-5 py-4 transition-all hover:bg-zinc-900/50 group relative">
+                <i data-lucide="history" class="shrink-0 text-zinc-500 group-hover:text-white w-4 h-4 transition-colors"></i>
+                <span class="font-bold text-[10px] uppercase tracking-[.2em] text-zinc-500 group-hover:text-white">Historial Vehicular</span>
+            </a>
+        </nav>
+
+        <!-- Footer Actions -->
+        <div class="p-6 border-t border-zinc-900 flex flex-col gap-6">
+            <a href="#" class="flex items-center gap-4 text-zinc-500 hover:text-white transition-all group">
+                <i data-lucide="globe" class="w-3 h-3"></i>
+                <span class="font-bold text-[10px] uppercase tracking-[.15em]">Portal Público</span>
+            </a>
+            <button class="flex items-center gap-4 text-zinc-500 hover:text-red-500 transition-all pt-4 border-t border-zinc-900 mt-2 group text-left">
+                <i data-lucide="log-out" class="w-3 h-3"></i>
+                <span class="font-bold text-[10px] uppercase tracking-[.15em]">Salir</span>
+            </button>
+            <button class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center hover:bg-primary transition-colors z-30">
+                <i data-lucide="chevrons-left" class="w-2.5 h-2.5"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 flex flex-col min-w-0 h-full relative">
+        
+        <!-- Top Status Bar -->
+        <header class="h-20 border-b border-zinc-900 flex items-center justify-between px-8 bg-[#050505]">
+            <div class="flex items-center gap-4">
+                <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                <span class="font-bold text-[10px] uppercase tracking-[.25em] text-zinc-600">Conexión Segura Establecida</span>
+                <span class="ml-4 px-2 py-1 bg-zinc-800 text-xs font-mono rounded tracking-widest uppercase border border-zinc-700 text-zinc-300">
+                    PLAN: PRO
+                </span>
+            </div>
+
+            <div class="flex items-center gap-8">
+                <i data-lucide="bell" class="w-4 h-4 text-zinc-600 hover:text-white cursor-pointer"></i>
+                <div class="flex items-center gap-4 border-l border-zinc-800 pl-8">
+                    <div class="text-right">
+                        <div class="font-bold text-xs">Admin Root</div>
+                        <div class="font-bold text-[10px] uppercase tracking-widest text-zinc-600">SaaS ADMIN</div>
+                    </div>
+                    <div class="w-10 h-10 bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold uppercase">
+                        AR
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content (Dashboard view) -->
+        <div class="flex-1 overflow-y-auto bg-[#0a0a0a]">
+            
+            <div class="p-8 lg:p-12 min-h-screen">
+                <!-- HEADER DASHBOARD -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 border-b border-zinc-900 pb-8">
+                    <div>
+                        <h1 class="text-4xl font-bold tracking-tight mb-2 uppercase">Inteligencia Operacional</h1>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 bg-primary"></div>
+                            <p class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-500">Analítica de Desempeño</p>
+                        </div>
+                    </div>
+
+                    <!-- RANGE SELECTOR -->
+                    <div class="flex items-center gap-px bg-zinc-900 border border-zinc-800 p-1">
+                        <button class="px-5 py-2 font-bold text-[9px] uppercase tracking-[.2em] transition-all bg-transparent text-zinc-600 hover:text-white">
+                            Diario
+                        </button>
+                        <button class="px-5 py-2 font-bold text-[9px] uppercase tracking-[.2em] transition-all bg-transparent text-zinc-600 hover:text-white">
+                            Semanal
+                        </button>
+                        <button class="px-5 py-2 font-bold text-[9px] uppercase tracking-[.2em] transition-all bg-[#050505] text-primary">
+                            Mensual
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    
+                    <!-- STATS GRID -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-px bg-zinc-900 border border-zinc-800 shadow-2xl">
+                        
+                        <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+                            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+                                <i data-lucide="radio" class="w-3.5 h-3.5 text-primary animate-pulse"></i> Sol. Activas
+                            </span>
+                            <span class="font-mono text-3xl font-bold">24</span>
+                        </div>
+
+                        <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+                            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-500"></i> Atendidas
+                            </span>
+                            <span class="font-mono text-3xl font-bold text-emerald-500">142</span>
+                        </div>
+
+                        <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+                            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500"></i> T. Asignación
+                            </span>
+                            <span class="font-mono text-3xl font-bold">4.2<span class="text-xs text-zinc-600 font-normal">m</span></span>
+                        </div>
+
+                        <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+                            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-orange-500"></i> T. Llegada
+                            </span>
+                            <span class="font-mono text-3xl font-bold">18.5<span class="text-xs text-zinc-600 font-normal">m</span></span>
+                        </div>
+
+                        <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+                            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-primary"></i> T. Resolución
+                            </span>
+                            <span class="font-mono text-3xl font-bold">45.0<span class="text-xs text-zinc-600 font-normal">m</span></span>
+                        </div>
+
+                        <div class="bg-[#050505] p-5 flex flex-col hover:bg-zinc-950 transition-colors">
+                            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-2">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-blue-500"></i> Cump. SLA
+                            </span>
+                            <span class="font-mono text-3xl font-bold">94<span class="text-xs text-zinc-600 font-normal">%</span></span>
+                        </div>
+                    </div>
+
+                    <!-- CHARTS AREA ROW 1 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-[#050505] border border-zinc-800 p-8 shadow-xl">
+                            <h3 class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-400 mb-6 flex items-center gap-2">
+                                <div class="w-1 h-3 bg-emerald-500"></div> Tendencia de Solicitudes
+                            </h3>
+                            <div class="h-[300px] flex items-end justify-between border-b border-l border-zinc-800 pb-2 pl-2">
+                                <!-- Mock de grafica (Simulada con barras por html para no usar canvas) -->
+                                <div class="w-full bg-emerald-500/20 border-t-2 border-emerald-500 h-[30%]"></div>
+                                <div class="w-full bg-emerald-500/20 border-t-2 border-emerald-500 h-[50%]"></div>
+                                <div class="w-full bg-emerald-500/20 border-t-2 border-emerald-500 h-[40%]"></div>
+                                <div class="w-full bg-emerald-500/20 border-t-2 border-emerald-500 h-[70%]"></div>
+                                <div class="w-full bg-emerald-500/20 border-t-2 border-emerald-500 h-[60%]"></div>
+                                <div class="w-full bg-emerald-500/20 border-t-2 border-emerald-500 h-[90%]"></div>
+                                <div class="w-full bg-emerald-500/20 border-t-2 border-emerald-500 h-[100%]"></div>
+                            </div>
+                            <div class="flex justify-between mt-2 font-mono text-[9px] text-zinc-600 uppercase tracking-widest px-2">
+                                <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-[#050505] border border-zinc-800 p-8 shadow-xl">
+                            <h3 class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-400 mb-6 flex items-center gap-2">
+                                <div class="w-1 h-3 bg-primary"></div> Incidentes por Tipo
+                            </h3>
+                            <div class="h-[300px] flex flex-col justify-center gap-4">
+                                <div>
+                                    <div class="flex justify-between font-mono text-[9px] text-zinc-400 uppercase tracking-widest mb-1">
+                                        <span>Mecánica</span> <span>45%</span>
+                                    </div>
+                                    <div class="w-full bg-zinc-900 h-2"><div class="bg-primary h-2" style="width: 45%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-mono text-[9px] text-zinc-400 uppercase tracking-widest mb-1">
+                                        <span>Eléctrica</span> <span>30%</span>
+                                    </div>
+                                    <div class="w-full bg-zinc-900 h-2"><div class="bg-emerald-500 h-2" style="width: 30%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-mono text-[9px] text-zinc-400 uppercase tracking-widest mb-1">
+                                        <span>Neumáticos</span> <span>15%</span>
+                                    </div>
+                                    <div class="w-full bg-zinc-900 h-2"><div class="bg-amber-500 h-2" style="width: 15%"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-mono text-[9px] text-zinc-400 uppercase tracking-widest mb-1">
+                                        <span>Cerrajería</span> <span>10%</span>
+                                    </div>
+                                    <div class="w-full bg-zinc-900 h-2"><div class="bg-purple-500 h-2" style="width: 10%"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CHARTS AREA ROW 2 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-[#050505] border border-zinc-800 p-8 shadow-xl">
+                            <h3 class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-400 mb-6 flex items-center gap-2">
+                                <div class="w-1 h-3 bg-blue-500"></div> Top 5 Zonas (Incidentes)
+                            </h3>
+                            <div class="h-[300px] flex items-end justify-around border-b border-l border-zinc-800 pb-2 pl-2">
+                                <div class="w-12 bg-blue-500 h-[80%]"></div>
+                                <div class="w-12 bg-blue-500 h-[60%]"></div>
+                                <div class="w-12 bg-blue-500 h-[45%]"></div>
+                                <div class="w-12 bg-blue-500 h-[30%]"></div>
+                                <div class="w-12 bg-blue-500 h-[15%]"></div>
+                            </div>
+                            <div class="flex justify-around mt-2 font-mono text-[9px] text-zinc-600 uppercase tracking-widest px-2">
+                                <span>Centro</span><span>Norte</span><span>Sur</span><span>Este</span><span>Oeste</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#050505] border border-zinc-800 p-8 shadow-xl flex flex-col">
+                            <h3 class="font-mono text-[10px] uppercase tracking-[.3em] text-zinc-400 mb-6 flex items-center gap-2">
+                                <div class="w-1 h-3 bg-yellow-500"></div> Ranking de Sucursales (Eficiencia)
+                            </h3>
+                            <div class="flex-1 overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-zinc-800">
+                                            <th class="py-3 px-4 font-mono text-[10px] uppercase tracking-widest text-zinc-500">Rank</th>
+                                            <th class="py-3 px-4 font-mono text-[10px] uppercase tracking-widest text-zinc-500">Sucursal</th>
+                                            <th class="py-3 px-4 font-mono text-[10px] uppercase tracking-widest text-zinc-500">Atendidas</th>
+                                            <th class="py-3 px-4 font-mono text-[10px] uppercase tracking-widest text-zinc-500 text-right">T. Promedio</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-zinc-900/50 hover:bg-zinc-900/20 transition-colors">
+                                            <td class="py-3 px-4">
+                                                <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs bg-yellow-500/20 text-yellow-500">1</div>
+                                            </td>
+                                            <td class="py-3 px-4 font-bold text-sm">Sucursal Centro</td>
+                                            <td class="py-3 px-4 text-zinc-400">85</td>
+                                            <td class="py-3 px-4 text-right">
+                                                <span class="text-primary font-mono font-bold">38 m</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b border-zinc-900/50 hover:bg-zinc-900/20 transition-colors">
+                                            <td class="py-3 px-4">
+                                                <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs bg-zinc-300/20 text-zinc-300">2</div>
+                                            </td>
+                                            <td class="py-3 px-4 font-bold text-sm">Sucursal Norte</td>
+                                            <td class="py-3 px-4 text-zinc-400">42</td>
+                                            <td class="py-3 px-4 text-right">
+                                                <span class="text-primary font-mono font-bold">45 m</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b border-zinc-900/50 hover:bg-zinc-900/20 transition-colors">
+                                            <td class="py-3 px-4">
+                                                <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs bg-orange-500/20 text-orange-500">3</div>
+                                            </td>
+                                            <td class="py-3 px-4 font-bold text-sm">Sucursal Sur</td>
+                                            <td class="py-3 px-4 text-zinc-400">15</td>
+                                            <td class="py-3 px-4 text-right">
+                                                <span class="text-primary font-mono font-bold">52 m</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+      lucide.createIcons();
+    </script>
+</body>
+</html>

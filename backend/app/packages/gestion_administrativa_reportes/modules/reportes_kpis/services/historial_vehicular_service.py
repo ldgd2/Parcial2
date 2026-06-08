@@ -43,7 +43,7 @@ class HistorialVehicularService:
         ).where(
             Emergencia.placaVehiculo == placa,
             Emergencia.idTaller == id_taller
-        ).order_by(Emergencia.fechaEmision.desc())
+        ).order_by(Emergencia.fecha.desc(), Emergencia.hora.desc())
 
         result = await db.execute(query)
         filas = result.all()
@@ -52,7 +52,7 @@ class HistorialVehicularService:
         for emg, calif, estado in filas:
             historial.append({
                 "id_emergencia": emg.id,
-                "fecha": emg.fechaEmision,
+                "fecha": emg.fecha,
                 "estado_final": estado.nombre,
                 "tipo_emergencia": getattr(emg, 'tipo_emergencia', 'Mecánica'),
                 "diagnostico_inicial": emg.descripcion,

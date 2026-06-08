@@ -250,7 +250,13 @@ async def get_me(current_user: dict, db: AsyncSession):
     taller_cod = current_user.get("taller") or current_user.get("idTaller")
     rol = current_user.get("role")
     
-    usuario = await Usuario.get(db, int(user_id))
+    if rol == "tecnico":
+        usuario = await Tecnico.get(db, int(user_id))
+    elif rol == "cliente":
+        usuario = await Cliente.get(db, int(user_id))
+    else:
+        usuario = await Usuario.get(db, int(user_id))
+        
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
@@ -259,27 +265,30 @@ async def get_me(current_user: dict, db: AsyncSession):
     if taller and taller.plan_id:
         plan = await db.get(PlanSuscripcion, taller.plan_id)
         
-    if getattr(usuario, 'id_rol', None):
-        stmt_rol = select(Permiso.codigo).join(RolPermiso).where(RolPermiso.id_rol == usuario.id_rol)
+    if rol in ["tecnico", "cliente"]:
+        permisos_finales = ["PERMISO_VER_EMERGENCIAS", "PERMISO_ACTUALIZAR_EMERGENCIAS", "PERMISO_VER_TABLERO"] if rol == "tecnico" else ["PERMISO_VER_EMERGENCIAS", "PERMISO_CREAR_EMERGENCIA"]
     else:
-        stmt_rol = select(Permiso.codigo).join(RolPermiso).join(Rol).where(Rol.nombre == "ADMIN_TALLER")
+        if getattr(usuario, 'id_rol', None):
+            stmt_rol = select(Permiso.codigo).join(RolPermiso).where(RolPermiso.id_rol == usuario.id_rol)
+        else:
+            stmt_rol = select(Permiso.codigo).join(RolPermiso).join(Rol).where(Rol.nombre == "ADMIN_TALLER")
+            
+        result_rol = await db.execute(stmt_rol)
+        permisos_rol = set(result_rol.scalars().all())
         
-    result_rol = await db.execute(stmt_rol)
-    permisos_rol = set(result_rol.scalars().all())
-    
-    permisos_plan = set()
-    if taller and taller.plan_id:
-        stmt_plan = select(Permiso.codigo).join(PlanPermiso).where(PlanPermiso.id_plan == taller.plan_id)
-        result_plan = await db.execute(stmt_plan)
-        permisos_plan = set(result_plan.scalars().all())
-        
-    permisos_finales = list(permisos_rol.intersection(permisos_plan)) if plan else list(permisos_rol) # fallback si no hay plan estricto
+        permisos_plan = set()
+        if taller and taller.plan_id:
+            stmt_plan = select(Permiso.codigo).join(PlanPermiso).where(PlanPermiso.id_plan == taller.plan_id)
+            result_plan = await db.execute(stmt_plan)
+            permisos_plan = set(result_plan.scalars().all())
+            
+        permisos_finales = list(permisos_rol.intersection(permisos_plan)) if plan else list(permisos_rol) # fallback si no hay plan estricto
     
     return {
         "usuario": {
             "id": usuario.id,
             "nombre": usuario.nombre,
-            "apellido": usuario.apellido,
+            "apellido": getattr(usuario, 'apellido', ''),
             "correo": usuario.correo
         },
         "taller": {
@@ -293,6 +302,6 @@ async def get_me(current_user: dict, db: AsyncSession):
             "max_sucursales": plan.max_sucursales if plan else 1,
             "max_tecnicos": plan.max_tecnicos if plan else 3
         },
-        "sucursal": usuario.idSucursal,
+        "sucursal": getattr(usuario, 'idSucursal', None),
         "permisos": permisos_finales
     }
