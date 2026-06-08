@@ -256,7 +256,7 @@ async def obtener_kpis_dashboard(
             grafica_dict[fecha_str]["canceladas"] += 1
 
         # Categoria
-        cat_name = em.categoria.nombre if em.categoria else "Otra"
+        cat_name = em.categoria.descripcion if em.categoria else "Otra"
         incidentes_por_tipo[cat_name] = incidentes_por_tipo.get(cat_name, 0) + 1
 
         # Zona (usando un split simple de la direccion para extraer sector/zona)

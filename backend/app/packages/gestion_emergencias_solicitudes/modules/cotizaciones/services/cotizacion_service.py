@@ -30,20 +30,20 @@ class CotizacionService:
         subtotal_servicios = sum(item.precio for item in data.lista_servicios)
         total_general = subtotal_productos + subtotal_servicios
 
-        cotizacion = await self.repo.create(
-            idEmergencia=id_emergencia,
-            idTaller=id_taller,
-            descripcion_servicio=data.descripcion_servicio,
-            moneda=data.moneda,
-            lista_productos=[item.dict() for item in data.lista_productos],
-            lista_servicios=[item.dict() for item in data.lista_servicios],
-            subtotal_productos=subtotal_productos,
-            subtotal_servicios=subtotal_servicios,
-            total_general=total_general,
-            tiempo_estimado=data.tiempo_estimado,
-            condiciones=data.condiciones,
-            estado="PENDIENTE"
-        )
+        cotizacion = await self.repo.create(obj_in={
+            "idEmergencia": id_emergencia,
+            "idTaller": id_taller,
+            "descripcion_servicio": data.descripcion_servicio,
+            "moneda": data.moneda,
+            "lista_productos": [item.dict() for item in data.lista_productos],
+            "lista_servicios": [item.dict() for item in data.lista_servicios],
+            "subtotal_productos": subtotal_productos,
+            "subtotal_servicios": subtotal_servicios,
+            "total_general": total_general,
+            "tiempo_estimado": data.tiempo_estimado,
+            "condiciones": data.condiciones,
+            "estado": "PENDIENTE"
+        })
         return cotizacion
 
     async def get_cotizaciones_by_emergencia(self, id_emergencia: int):

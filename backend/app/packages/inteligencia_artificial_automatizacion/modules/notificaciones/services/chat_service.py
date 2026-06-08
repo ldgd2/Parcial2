@@ -4,7 +4,10 @@ from app.core.socket_manager import manager
 from fastapi import HTTPException
 
 # Repositorios
-
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.emergencia import Emergencia
+from app.packages.gestion_usuarios_seguridad.modules.tenants.models.taller import Taller
+from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.models.tecnico import Tecnico
+from app.packages.inteligencia_artificial_automatizacion.modules.notificaciones.models.mensaje_chat import MensajeChat
 async def enviar_mensaje(
     emergencia_id: int,
     data: MensajeChatCreate,

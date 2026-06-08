@@ -23,9 +23,9 @@ class MensajeChat(GenericModel):
     @classmethod
     async def get_historial_por_emergencia(cls, db: AsyncSession, emergencia_id: int) -> list["MensajeChat"]:
         stmt = (
-            select(self.model)
-            .where(self.model.idEmergencia == emergencia_id)
-            .order_by(self.model.fecha_envio.asc())
+            select(cls)
+            .where(cls.idEmergencia == emergencia_id)
+            .order_by(cls.fecha_envio.asc())
         )
         result = await db.execute(stmt)
         return result.scalars().all()
