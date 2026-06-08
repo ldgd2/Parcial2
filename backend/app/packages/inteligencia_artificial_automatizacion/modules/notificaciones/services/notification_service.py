@@ -53,18 +53,18 @@ class NotificationService:
 
         # 2. Registrar directamente en la tabla específica para visibilidad inmediata
         if role == "cliente":
-            from app.packages.gestion_usuarios_seguridad.modules.usuarios.models.cliente import Cliente
+            from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.models.cliente import Cliente
             cliente = await Cliente.get(db, user_id)
             if cliente:
                 await cliente.update(db, obj_in={"fcm_token": token})
         elif role == "tecnico":
-            from app.packages.gestion_usuarios_seguridad.modules.usuarios.models.tecnico import Tecnico
+            from app.packages.gestion_usuarios_seguridad.modules.tecnicos.models.tecnico import Tecnico
             tecnico = await Tecnico.get(db, user_id)
             # asumiendo que tecnico no tiene columna fcm_token por ahora, si la tiene se actualiza
             if tecnico and hasattr(tecnico, 'fcm_token'):
                 await tecnico.update(db, obj_in={"fcm_token": token})
         else:
-            from app.packages.gestion_usuarios_seguridad.modules.usuarios.models.usuario import Usuario
+            from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.models.usuario import Usuario
             usuario = await Usuario.get(db, user_id)
             if usuario:
                 await usuario.update(db, obj_in={"fcm_token": token})

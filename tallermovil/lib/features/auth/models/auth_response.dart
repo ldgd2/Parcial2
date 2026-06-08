@@ -20,7 +20,7 @@ class AuthResponse {
       tokenType: json['token_type'] as String,
       rol: json['rol'] as String,
       userId: json['user_id'] as int,
-      taller: json['taller'] as String?,
+      taller: json['cod_taller'] as String? ?? json['taller'] as String?,
     );
   }
 }
