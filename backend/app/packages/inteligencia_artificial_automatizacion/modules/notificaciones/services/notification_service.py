@@ -11,20 +11,14 @@ class NotificationService:
     @classmethod
     def initialize(cls):
         if not cls._initialized:
-            # Obtener la ruta base del proyecto (app/) de forma dinámica
-            # __file__ es .../app/services/notification_service.py
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            base_app_dir = os.path.dirname(current_dir) # .../app
+            import app
+            from pathlib import Path
             
-            cred_path = os.path.join(
-                base_app_dir, 
-                "core", 
-                "notification", 
-                "universidadtest-cccae-firebase-adminsdk-fbsvc-178b0378fd.json"
-            )
+            app_dir = Path(app.__file__).parent
+            cred_path = app_dir / "core" / "notification" / "universidadtest-cccae-firebase-adminsdk-fbsvc-178b0378fd.json"
 
-            if os.path.exists(cred_path):
-                cred = credentials.Certificate(cred_path)
+            if cred_path.exists():
+                cred = credentials.Certificate(str(cred_path))
                 firebase_admin.initialize_app(cred)
                 cls._initialized = True
                 print("Firebase Admin SDK inicializado correctamente (Ruta Relativa).")
