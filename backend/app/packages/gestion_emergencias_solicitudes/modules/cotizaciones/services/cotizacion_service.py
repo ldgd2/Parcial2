@@ -51,6 +51,7 @@ class CotizacionService:
             select(self.repo.model)
             .options(joinedload(self.repo.model.taller))
             .where(self.repo.model.id == cotizacion.id)
+            .execution_options(populate_existing=True)
         )
         return result.scalar_one()
 
