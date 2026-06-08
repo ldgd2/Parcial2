@@ -168,7 +168,22 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
                    label: 'Comenzar Viaje',
                    icon: Icons.directions_car,
                    variant: TButtonVariant.primary,
-                   onPressed: () => _updateState(3), // 3 = EN_RUTA
+                   onPressed: () async {
+                     await _updateState(3); // 3 = EN_RUTA
+                     if (mounted) {
+                       Navigator.push(
+                         context,
+                         MaterialPageRoute(
+                           builder: (_) => LiveTrackingScreen(
+                             emergenciaId: e['id'],
+                             destLat: lat ?? 0.0,
+                             destLng: lng ?? 0.0,
+                             statusInicial: 'EN_RUTA',
+                           ),
+                         ),
+                       ).then((_) => _refreshData());
+                     }
+                   },
                  ),
                  TSpacing.verticalLarge(),
               ] else if (e['estado_actual']?.toString().toUpperCase() == 'EN_RUTA') ...[
