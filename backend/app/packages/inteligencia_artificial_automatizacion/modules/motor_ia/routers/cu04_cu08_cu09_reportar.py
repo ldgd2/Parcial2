@@ -146,7 +146,7 @@ async def reportar(
 @router.get("/{emergencia_id}", response_model=EmergenciaOut)
 async def obtener_emergencia(
     emergencia_id: int,
-    current=Depends(require_role("cliente", "taller")),
+    current=Depends(require_role("cliente", "taller", "tecnico", "admin", "admin_sucursal")),
     db: AsyncSession = Depends(get_db),
 ):
     """
