@@ -230,7 +230,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
 
               if (['ASIGNADO', 'EN_RUTA', 'ATENDIENDO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
                  TButton(
-                   label: 'Abrir Panel de Operación y Mapa',
+                   label: 'Ver Mapa / Seguir Ruta',
                    icon: Icons.map,
                    variant: TButtonVariant.secondary,
                    onPressed: () {

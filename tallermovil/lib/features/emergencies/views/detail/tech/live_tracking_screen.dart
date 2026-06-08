@@ -5,11 +5,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../../../../../../core/network/web_socket_service.dart';
-import '../../../../../../core/storage/local_storage.dart';
+import 'package:tallermovil/core/network/web_socket_service.dart';
+import 'package:tallermovil/core/storage/local_storage.dart';
+import 'package:tallermovil/core/network/api_client.dart';
 
-import '../../../../../../shared/components/typography/t_text.dart';
-import '../../../../../../core/theme/app_colors.dart';
+import 'package:tallermovil/shared/components/typography/t_text.dart';
+import 'package:tallermovil/core/theme/app_colors.dart';
 
 class LiveTrackingScreen extends StatefulWidget {
   final int emergenciaId;
@@ -284,16 +285,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     point: _tecnicoPos,
                     width: 60,
                     height: 60,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.rectangle,
-                        boxShadow: [
-                          BoxShadow(color: Colors.black26, blurRadius: 4, spreadRadius: 2)
-                        ],
-                      ),
-                      child: const Icon(Icons.drive_eta, color: Colors.blueAccent, size: 36),
-                    ),
+                    child: const Icon(Icons.location_on, color: Colors.blueAccent, size: 50),
                   ),
                 ],
               ),
@@ -340,6 +332,37 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                       ),
                     ],
                   ),
+                  if (_currentStatus.toUpperCase() == 'EN_RUTA' || _currentStatus.toUpperCase() == 'EN CAMINO') ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        icon: const Icon(Icons.build),
+                        label: const Text('Llegué al lugar / Comenzar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        onPressed: () async {
+                          try {
+                            final storage = LocalStorage();
+                            final apiClient = ApiClient(localStorage: storage);
+                            await apiClient.dio.patch(
+                              '/talleres/solicitudes/${widget.emergenciaId}/estado',
+                              data: {'idEstado': 4}, // 4 = ATENDIENDO
+                            );
+                            if (mounted) {
+                              setState(() => _currentStatus = 'ATENDIENDO');
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Estado actualizado a Atendiendo')));
+                            }
+                          } catch (e) {
+                            debugPrint('Error actualizando estado a atendiendo: $e');
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
