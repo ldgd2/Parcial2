@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/storage/local_storage.dart';
-import '../../emergencies/views/detail/tech_emergency_detail_view.dart';
-import '../../../../shared/components/cards/t_card.dart';
-import '../../../../shared/components/typography/t_text.dart';
-import '../../../../shared/components/layout/t_spacing.dart';
+import '../../../../../core/network/api_client.dart';
+import '../../../../../core/storage/local_storage.dart';
+import '../../../emergencies/views/detail/tech/tech_emergency_detail_view.dart';
+import '../../../../../shared/components/cards/t_card.dart';
+import '../../../../../shared/components/typography/t_text.dart';
+import '../../../../../shared/components/layout/t_spacing.dart';
 
 class TechHomeScreen extends StatefulWidget {
   const TechHomeScreen({super.key});
@@ -45,7 +45,7 @@ class _TechHomeScreenState extends State<TechHomeScreen> {
         setState(() {
           _emergencies = data.where((e) {
             final estado = e['estado_actual']?.toString().toUpperCase() ?? '';
-            return ['ASIGNADO', 'EN_CAMINO', 'ARREGLADO'].contains(estado);
+            return estado == 'ASIGNADO';
           }).toList();
         });
       }

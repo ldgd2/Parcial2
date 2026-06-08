@@ -74,7 +74,7 @@ class _ReportEmergencyViewState extends State<ReportEmergencyView> {
                           height: 80,
                           decoration: BoxDecoration(
                             color: controller.isRecording ? AppColors.danger : AppColors.primary,
-                            shape: BoxShape.circle,
+                            shape: BoxShape.rectangle,
                             boxShadow: controller.isRecording ? [
                               BoxShadow(color: AppColors.danger.withAlpha(128), blurRadius: 20, spreadRadius: 5)
                             ] : [],
@@ -142,7 +142,7 @@ class _ReportEmergencyViewState extends State<ReportEmergencyView> {
                           width: 80,
                           decoration: BoxDecoration(
                             color: AppColors.neutral100_map,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                           ),
                           child: const Center(child: Icon(Icons.image, color: AppColors.textMuted)),
                           // Nota ideal: Usar Image.file(File(controller.imagePaths[index]))

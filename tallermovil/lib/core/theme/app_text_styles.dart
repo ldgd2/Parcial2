@@ -5,7 +5,7 @@ import 'app_colors.dart';
 /// Tipografía Global alineada con la Web (Inter font)
 class AppTextStyles {
   // Configuración base de la fuente
-  static TextStyle get _baseStyle => GoogleFonts.inter(
+  static TextStyle get _baseStyle => GoogleFonts.spaceMono(
         color: AppColors.textPrimary,
       );
 
@@ -31,9 +31,9 @@ class AppTextStyles {
       );
 
   static TextStyle get h4 => _baseStyle.copyWith(
-        fontSize: 20, // --t-size-xl
-        fontWeight: FontWeight.w600,
-        height: 1.25,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.0,
       );
 
   // --- Cuerpo de Texto (Body) ---
@@ -58,16 +58,15 @@ class AppTextStyles {
 
   // --- Elementos de Interfaz (Botones, Labels, etc) ---
   static TextStyle get label => _baseStyle.copyWith(
-        fontSize: 14, // --t-size-sm
-        fontWeight: FontWeight.w500,
-        height: 1.25,
+        fontSize: 10, // Angular uses text-[9px] or similar
+        fontWeight: FontWeight.bold,
+        letterSpacing: 2.5,
       );
 
   static TextStyle get button => _baseStyle.copyWith(
-        fontSize: 16, // --t-size-base
-        fontWeight: FontWeight.w600,
-        height: 1.25,
-        letterSpacing: 0.2,
+        fontSize: 11, // Angular uses text-[11px] for main buttons
+        fontWeight: FontWeight.bold,
+        letterSpacing: 2.5,
       );
 
   static TextStyle get overline => _baseStyle.copyWith(

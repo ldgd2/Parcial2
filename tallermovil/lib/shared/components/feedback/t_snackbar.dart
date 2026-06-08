@@ -15,13 +15,13 @@ class TSnackbar {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          message,
-          style: const TextStyle(color: Colors.white),
+          message.toUpperCase(),
+          style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontWeight: FontWeight.bold, letterSpacing: 1.5),
         ),
         backgroundColor: bgColor,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
         ),
       ),
     );

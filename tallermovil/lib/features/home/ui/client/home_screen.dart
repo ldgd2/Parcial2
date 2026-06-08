@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../shared/components/cards/t_card.dart';
-import '../../../shared/components/feedback/t_badge.dart';
-import '../../../shared/components/layout/t_spacing.dart';
-import '../../../shared/components/typography/t_text.dart';
-import '../../../shared/components/loaders/t_loader.dart';
-// import '../../../shared/components/buttons/t_button.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../../shared/components/cards/t_card.dart';
+import '../../../../shared/components/feedback/t_badge.dart';
+import '../../../../shared/components/layout/t_spacing.dart';
+import '../../../../shared/components/typography/t_text.dart';
+import '../../../../shared/components/loaders/t_loader.dart';
+// import '../../../../shared/components/buttons/t_button.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'home_controller.dart';
-import '../../emergencies/views/report_emergency/report_emergency_view.dart';
-import '../../emergencies/views/report_emergency/emergency_upload_controller.dart';
-import '../../../core/network/socket_service.dart';
+import '../../../emergencies/views/report_emergency/report_emergency_view.dart';
+import '../../../emergencies/views/report_emergency/emergency_upload_controller.dart';
+import '../../../../core/network/socket_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -215,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10, bottom: 15, left: 20, right: 20),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.9),
-                      borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
+                      borderRadius: BorderRadius.zero,
                       boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, spreadRadius: 2)],
                     ),
                     child: Row(

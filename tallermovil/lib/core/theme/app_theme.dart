@@ -51,25 +51,25 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
         labelStyle: AppTextStyles.label.copyWith(color: AppColors.textSecondary),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.border),
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.border),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.border),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.border),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.borderFocus, width: 2),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.borderFocus, width: 2),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.danger),
+        errorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.danger),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.danger, width: 2),
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.danger, width: 2),
         ),
       ),
 
@@ -81,8 +81,8 @@ class AppTheme {
           elevation: 0,
           textStyle: AppTextStyles.button,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero,
           ),
         ),
       ),
@@ -94,8 +94,8 @@ class AppTheme {
           side: const BorderSide(color: AppColors.border),
           textStyle: AppTextStyles.button,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero,
           ),
         ),
       ),
@@ -114,9 +114,9 @@ class AppTheme {
         color: AppColors.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.border),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+          side: BorderSide(color: AppColors.border),
         ),
       ),
       
@@ -129,6 +129,26 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         selectedLabelStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
         unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+      ),
+      
+      // Dialogs (Alertas)
+      dialogTheme: const DialogThemeData(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+          side: BorderSide(color: AppColors.border),
+        ),
+      ),
+      
+      // Snackbars
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: AppColors.surface,
+        contentTextStyle: TextStyle(color: AppColors.textPrimary, fontFamily: 'monospace'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+          side: BorderSide(color: AppColors.border),
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

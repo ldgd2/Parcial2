@@ -6,7 +6,7 @@ import '../../../../shared/components/layout/t_spacing.dart';
 import '../../../../shared/components/typography/t_text.dart';
 import '../../../../shared/components/loaders/t_loader.dart';
 import 'emergency_history_controller.dart';
-import '../detail/emergency_detail_view.dart';
+import '../detail/client/emergency_detail_view.dart';
 
 class EmergencyHistoryView extends StatefulWidget {
   const EmergencyHistoryView({super.key});
@@ -77,7 +77,7 @@ class _EmergencyHistoryViewState extends State<EmergencyHistoryView> {
                         height: 60,
                         decoration: BoxDecoration(
                           color: color,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.zero,
                         ),
                       ),
                       TSpacing.horizontalMedium(),
@@ -128,7 +128,7 @@ class _EmergencyHistoryViewState extends State<EmergencyHistoryView> {
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: AppColors.success.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.zero,
                                   border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
                                 ),
                                 child: Row(

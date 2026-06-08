@@ -19,11 +19,11 @@ class GlassCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.zero,
         child: Ink(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.border, width: 1),
           ),
           child: Padding(

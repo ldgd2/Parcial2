@@ -299,7 +299,7 @@ class _ChatViewState extends State<ChatView> {
                 decoration: InputDecoration(
                   hintText: _isRecording ? 'Grabando audio...' : 'Escribe un mensaje...',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.zero,
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
@@ -338,7 +338,7 @@ class _ChatViewState extends State<ChatView> {
                 padding: EdgeInsets.all(_isRecording ? 16 : 12),
                 decoration: BoxDecoration(
                   color: _isRecording ? Colors.red : AppColors.primary,
-                  shape: BoxShape.circle,
+                  shape: BoxShape.rectangle,
                 ),
                 child: SvgPicture.string(_isTyping ? _sendSvg : _micSvg),
               ),
@@ -406,12 +406,7 @@ class _ChatBubbleState extends State<_ChatBubble> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: widget.isMe ? AppColors.primary : AppColors.neutral200,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(widget.isMe ? 16 : 0),
-            bottomRight: Radius.circular(widget.isMe ? 0 : 16),
-          ),
+          borderRadius: BorderRadius.zero,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,7 +445,7 @@ class _ChatBubbleState extends State<_ChatBubble> {
                   );
                 },
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.zero,
                   child: Image.network(
                     '${ApiClient.serverUrl}/${widget.message.imagenUrl}',
                     errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),

@@ -35,27 +35,70 @@ class TCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Card(
-        color: color,
+      child: Container(
         margin: margin ?? EdgeInsets.zero,
-        child: Padding(
-          padding: EdgeInsets.all(padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min, // Ajustar al contenido
-            children: [
-              if (title != null) ...[
-                Text(
-                  title!,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 16),
-                const Divider(height: 1), // Línea separadora tenue
-                const SizedBox(height: 16),
-              ],
-              child,
-            ],
-          ),
+        decoration: BoxDecoration(
+          color: color ?? const Color(0xFF0A0A0A),
+          border: Border.all(color: const Color(0xFF222222)),
+        ),
+        child: Stack(
+          children: [
+            // Contenido Principal
+            Padding(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min, // Ajustar al contenido
+                children: [
+                  if (title != null) ...[
+                    Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                          margin: const EdgeInsets.only(right: 8),
+                        ),
+                        Expanded(
+                          child: Text(
+                            title!.toUpperCase(),
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(height: 1, color: Color(0xFF222222)),
+                    const SizedBox(height: 16),
+                  ],
+                  child,
+                ],
+              ),
+            ),
+            
+            // Esquinas Arquitectónicas (Cyber style)
+            Positioned(top: 0, left: 0, child: _buildCorner(top: true, left: true, context: context)),
+            Positioned(top: 0, right: 0, child: _buildCorner(top: true, left: false, context: context)),
+            Positioned(bottom: 0, left: 0, child: _buildCorner(top: false, left: true, context: context)),
+            Positioned(bottom: 0, right: 0, child: _buildCorner(top: false, left: false, context: context)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCorner({required bool top, required bool left, required BuildContext context}) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        border: Border(
+          top: top ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5) : BorderSide.none,
+          bottom: !top ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5) : BorderSide.none,
+          left: left ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5) : BorderSide.none,
+          right: !left ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5) : BorderSide.none,
         ),
       ),
     );

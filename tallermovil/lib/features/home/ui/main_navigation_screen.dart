@@ -4,8 +4,9 @@ import '../../emergencies/views/history/emergency_history_view.dart';
 import '../../emergencies/views/report_emergency/report_emergency_view.dart';
 import '../../vehicles/ui/vehicle_settings_screen.dart';
 import '../../settings/ui/settings_screen.dart';
-import 'home_screen.dart';
-import 'tech_home_screen.dart';
+import 'client/home_screen.dart';
+import 'tech/tech_home_screen.dart';
+import 'tech/tech_activity_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -37,7 +38,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (_role == 'tecnico') {
       return [
         const TechHomeScreen(),
-        const EmergencyHistoryView(),
+        const TechActivityScreen(),
         const SettingsScreen(),
       ];
     }
@@ -58,28 +59,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final isTecnico = _role == 'tecnico';
 
     final baseTheme = Theme.of(context);
-    final themeToApply = isTecnico
-        ? baseTheme.copyWith(
-            scaffoldBackgroundColor: const Color(0xFF09090B), // Zinc 950
-            colorScheme: baseTheme.colorScheme.copyWith(
-              primary: Colors.redAccent.shade700,
-            ),
-            appBarTheme: baseTheme.appBarTheme.copyWith(
-              backgroundColor: const Color(0xFF09090B),
-            ),
-            cardTheme: baseTheme.cardTheme.copyWith(
-              color: const Color(0xFF18181B), // Zinc 900
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: Color(0xFF27272A)), // Zinc 800
-              ),
-            ),
-            bottomNavigationBarTheme: baseTheme.bottomNavigationBarTheme.copyWith(
-              backgroundColor: const Color(0xFF09090B),
-              selectedItemColor: Colors.redAccent.shade700,
-            ),
-          )
-        : baseTheme;
+    final dynamicColor = isTecnico ? const Color(0xFFFF5733) : const Color(0xFF3B82F6);
+    
+    final themeToApply = baseTheme.copyWith(
+      colorScheme: baseTheme.colorScheme.copyWith(
+        primary: dynamicColor,
+        outlineVariant: const Color(0xFF222222),
+      ),
+      bottomNavigationBarTheme: baseTheme.bottomNavigationBarTheme.copyWith(
+        selectedItemColor: dynamicColor,
+      ),
+    );
 
     return AnimatedTheme(
       data: themeToApply,

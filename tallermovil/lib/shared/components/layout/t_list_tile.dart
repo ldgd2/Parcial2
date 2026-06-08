@@ -23,9 +23,9 @@ class TListTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       tileColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        side: const BorderSide(color: AppColors.border),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(color: AppColors.border),
       ),
       leading: leading,
       title: TText.label(title),

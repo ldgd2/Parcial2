@@ -20,7 +20,7 @@ class TAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
+        shape: BoxShape.rectangle,
         color: AppColors.neutral800,
         border: Border.all(color: AppColors.primary, width: 1.5),
       ),

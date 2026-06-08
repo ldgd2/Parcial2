@@ -42,14 +42,14 @@ class AppColors {
   static const Color infoBg = Color(0xFF1E3A8A);
 
   // --- Mapeo Semántico para Dark Mode ---
-  static const Color background = neutral950;
-  static const Color surface = neutral900;
-  static const Color neutral100_map = neutral800; // Para compatibilidad de componentes en dark mode
+  static const Color background = Color(0xFF050505);
+  static const Color surface = Color(0xFF0A0A0A);
+  static const Color neutral100_map = Color(0xFF111111); // Para compatibilidad de componentes en dark mode
   
-  static const Color textPrimary = neutral50;
-  static const Color textSecondary = neutral300;
-  static const Color textMuted = neutral400;
+  static const Color textPrimary = Color(0xFFF4F4F5); // zinc-50
+  static const Color textSecondary = Color(0xFFA1A1AA); // zinc-400
+  static const Color textMuted = Color(0xFF71717A); // zinc-500
 
-  static const Color border = neutral700;
+  static const Color border = Color(0xFF222222);
   static const Color borderFocus = primary;
 }

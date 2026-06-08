@@ -5,21 +5,21 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/storage/local_storage.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/components/cards/t_card.dart';
-import '../../../../shared/components/feedback/t_badge.dart';
-import '../../../../shared/components/layout/t_spacing.dart';
-import '../../../../shared/components/typography/t_text.dart';
-import '../../../../shared/components/buttons/t_button.dart';
-import '../../../../shared/components/loaders/t_loader.dart';
-import '../../../chat/ui/chat_view.dart';
-import '../../../payments/views/payment_selection_view.dart';
-import '../../data/cotizacion_service.dart';
+import '../../../../../core/network/api_client.dart';
+import '../../../../../core/storage/local_storage.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../shared/components/cards/t_card.dart';
+import '../../../../../shared/components/feedback/t_badge.dart';
+import '../../../../../shared/components/layout/t_spacing.dart';
+import '../../../../../shared/components/typography/t_text.dart';
+import '../../../../../shared/components/buttons/t_button.dart';
+import '../../../../../shared/components/loaders/t_loader.dart';
+import '../../../../chat/ui/chat_view.dart';
+import '../../../../payments/views/payment_selection_view.dart';
+import '../../../data/cotizacion_service.dart';
 import 'quote_review_view.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'live_tracking_screen.dart';
+import '../tech/live_tracking_screen.dart';
 import 'rating_dialog.dart';
 
 class EmergencyDetailView extends StatefulWidget {
@@ -541,10 +541,10 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
                             width: 100,
                             decoration: BoxDecoration(
                               color: AppColors.neutral100,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.zero,
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.zero,
                               child: Image.network(
                                 imgUrl,
                                 fit: BoxFit.cover,
@@ -572,7 +572,7 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
                     SizedBox(
                       height: 200,
                       child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        borderRadius: BorderRadius.zero,
                         child: FlutterMap(
                           options: MapOptions(
                             initialCenter: LatLng(lat, lng),

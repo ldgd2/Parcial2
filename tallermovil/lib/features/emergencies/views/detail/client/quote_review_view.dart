@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/storage/local_storage.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/components/typography/t_text.dart';
-import '../../../../shared/components/buttons/t_button.dart';
-import '../../../../shared/components/cards/t_card.dart';
-import '../../../../shared/components/layout/t_spacing.dart';
-import '../../data/cotizacion_service.dart';
+import '../../../../../core/network/api_client.dart';
+import '../../../../../core/storage/local_storage.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../shared/components/typography/t_text.dart';
+import '../../../../../shared/components/buttons/t_button.dart';
+import '../../../../../shared/components/cards/t_card.dart';
+import '../../../../../shared/components/layout/t_spacing.dart';
+import '../../../data/cotizacion_service.dart';
 
 class QuoteReviewView extends StatefulWidget {
   final Map<String, dynamic> quote;
@@ -239,7 +239,7 @@ class _QuoteReviewViewState extends State<QuoteReviewView> {
       context: context,
       backgroundColor: AppColors.surface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (ctx) {
         return DraggableScrollableSheet(
           initialChildSize: 0.6,
@@ -253,7 +253,7 @@ class _QuoteReviewViewState extends State<QuoteReviewView> {
                   margin: const EdgeInsets.only(top: 12, bottom: 24),
                   width: 40,
                   height: 4,
-                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.zero),
                 ),
                 TText.h2('Reseñas de $nombreTaller'),
                 TSpacing.verticalMedium(),

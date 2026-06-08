@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../network/api_client.dart';
 import '../storage/local_storage.dart';
 import '../../main.dart';
-import '../../features/emergencies/views/detail/emergency_detail_view.dart';
+import '../../features/emergencies/views/detail/client/emergency_detail_view.dart';
 import '../../features/chat/ui/chat_view.dart';
 
 class NotificationController {

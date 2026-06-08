@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/storage/local_storage.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/components/typography/t_text.dart';
-import '../../controllers/adjust_quote_controller.dart';
+import '../../../../../core/network/api_client.dart';
+import '../../../../../core/storage/local_storage.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../shared/components/typography/t_text.dart';
+import '../../../controllers/adjust_quote_controller.dart';
 
 class AdjustQuoteDialog extends StatefulWidget {
   final int emergenciaId;
@@ -181,7 +181,7 @@ class _AdjustQuoteDialogState extends State<AdjustQuoteDialog> {
     }
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: Container(
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
         padding: const EdgeInsets.all(16),

@@ -36,7 +36,7 @@ class PrimaryButton extends StatelessWidget {
           backgroundColor: bgColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.zero,
           ),
           elevation: 0,
         ),

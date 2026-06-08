@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/storage/local_storage.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/components/cards/t_card.dart';
-import '../../../../shared/components/layout/t_spacing.dart';
-import '../../../../shared/components/typography/t_text.dart';
-import '../../../../shared/components/buttons/t_button.dart';
-import '../../../chat/ui/chat_view.dart';
+import '../../../../../core/network/api_client.dart';
+import '../../../../../core/storage/local_storage.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../shared/components/cards/t_card.dart';
+import '../../../../../shared/components/layout/t_spacing.dart';
+import '../../../../../shared/components/typography/t_text.dart';
+import '../../../../../shared/components/buttons/t_button.dart';
+import '../../../../chat/ui/chat_view.dart';
 import 'live_tracking_screen.dart';
 import 'widgets/tech_quote_adjustment_dialog.dart';
 
@@ -113,7 +113,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: bg.withOpacity(0.2), borderRadius: BorderRadius.circular(12), border: Border.all(color: bg)),
+      decoration: BoxDecoration(color: bg.withOpacity(0.2), borderRadius: BorderRadius.zero, border: Border.all(color: bg)),
       child: Text(status, style: TextStyle(color: bg, fontWeight: FontWeight.bold, fontSize: 12)),
     );
   }
@@ -288,9 +288,9 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
                             return Container(
                               margin: const EdgeInsets.only(right: 8),
                               width: 100,
-                              decoration: BoxDecoration(color: AppColors.neutral100, borderRadius: BorderRadius.circular(8)),
+                              decoration: BoxDecoration(color: AppColors.neutral100, borderRadius: BorderRadius.zero),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.zero,
                                 child: Image.network(imgUrl, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.broken_image)),
                               ),
                             );
@@ -314,7 +314,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
                       SizedBox(
                         height: 200,
                         child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                          borderRadius: BorderRadius.zero,
                           child: FlutterMap(
                             options: MapOptions(initialCenter: LatLng(lat, lng), initialZoom: 15.0),
                             children: [

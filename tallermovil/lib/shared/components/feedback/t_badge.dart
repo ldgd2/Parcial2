@@ -64,7 +64,7 @@ class TBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: textColor.withValues(alpha: 0.3)),
       ),
       child: Row(

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/network/api_client.dart';
-import '../../../../../core/storage/local_storage.dart';
-import '../../../../../shared/components/typography/t_text.dart';
-import '../../../../../shared/components/buttons/t_button.dart';
-import '../../../../../shared/components/loaders/t_loader.dart';
+import '../../../../../../core/network/api_client.dart';
+import '../../../../../../core/storage/local_storage.dart';
+import '../../../../../../shared/components/typography/t_text.dart';
+import '../../../../../../shared/components/buttons/t_button.dart';
+import '../../../../../../shared/components/loaders/t_loader.dart';
 
 class TechQuoteAdjustmentDialog extends StatefulWidget {
   final int emergenciaId;
@@ -121,7 +121,7 @@ class _TechQuoteAdjustmentDialogState extends State<TechQuoteAdjustmentDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: _isLoading
           ? const SizedBox(height: 200, child: Center(child: TLoader()))
           : _cotizacion == null

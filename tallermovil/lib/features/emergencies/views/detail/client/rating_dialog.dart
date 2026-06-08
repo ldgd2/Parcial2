@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/storage/local_storage.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/components/typography/t_text.dart';
-import '../../../../shared/components/buttons/t_button.dart';
-import '../../../../shared/components/layout/t_spacing.dart';
+import '../../../../../core/network/api_client.dart';
+import '../../../../../core/storage/local_storage.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../shared/components/typography/t_text.dart';
+import '../../../../../shared/components/buttons/t_button.dart';
+import '../../../../../shared/components/layout/t_spacing.dart';
 
 class RatingDialog extends StatefulWidget {
   final int idEmergencia;
@@ -93,7 +93,7 @@ class _RatingDialogState extends State<RatingDialog> {
     final isEdit = widget.calificacionExistente != null;
     return Dialog(
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
