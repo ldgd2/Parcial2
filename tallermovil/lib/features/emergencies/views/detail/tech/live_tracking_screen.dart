@@ -353,8 +353,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                               data: {'idEstado': 4}, // 4 = ATENDIENDO
                             );
                             if (mounted) {
-                              setState(() => _currentStatus = 'ATENDIENDO');
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Estado actualizado a Atendiendo')));
+                              Navigator.pop(context); // Volver al detalle para ver el botón de finalizar
                             }
                           } catch (e) {
                             debugPrint('Error actualizando estado a atendiendo: $e');

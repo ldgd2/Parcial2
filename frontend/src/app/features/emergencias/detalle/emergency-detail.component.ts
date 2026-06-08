@@ -46,7 +46,7 @@ import { ReportesService, HistorialVehicularItem } from '../../../core/services/
         </div>
 
         <div class="flex gap-4">
-            <button *ngIf="!emergency?.idTaller && emergency?.estado_actual !== 'CANCELADO'"
+            <button *ngIf="emergency?.idTaller === currentWorkshop && emergency?.estado_actual === 'INICIADA'"
                     (click)="openAssignModal()"
                     class="bg-red-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.4)] flex items-center gap-2">
               <lucide-icon name="shield-alert" size="14"></lucide-icon>
@@ -68,7 +68,7 @@ import { ReportesService, HistorialVehicularItem } from '../../../core/services/
                     class="bg-emerald-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-emerald-500 shadow-lg">
               Finalizar
             </button>
-            <button *ngIf="emergency?.idTaller === currentWorkshop && emergency?.estado_actual !== 'FINALIZADA' && emergency?.estado_actual !== 'CANCELADO'"
+            <button *ngIf="(!emergency?.idTaller || emergency?.idTaller === currentWorkshop) && emergency?.estado_actual !== 'FINALIZADA' && emergency?.estado_actual !== 'CANCELADO'"
                     (click)="openCotizacionModal()"
                     class="bg-orange-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-orange-500 flex items-center gap-2">
               <lucide-icon name="calculator" size="14"></lucide-icon>
@@ -181,8 +181,8 @@ import { ReportesService, HistorialVehicularItem } from '../../../core/services/
                      </div>
                      <p class="text-[11px] text-zinc-400 mb-2">{{ cot.descripcion_servicio }}</p>
                      <div class="text-xs font-mono text-orange-400 font-bold flex justify-between">
-                       <span>Total:</span>
-                       <span>$ {{ (cot.costo_mano_obra + cot.costo_repuestos) | number:'1.2-2' }}</span>
+                       <span>Total Estimado:</span>
+                       <span>$ {{ (cot.subtotal_servicios + cot.subtotal_productos) | number:'1.2-2' }}</span>
                      </div>
                      <div *ngIf="cot.estado === 'PENDIENTE' && !emergency.idTaller" class="mt-4 pt-3 border-t border-zinc-900 flex justify-end">
                        <button (click)="aceptarCotizacion(cot.id)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-[9px] font-bold uppercase tracking-widest transition-colors">
@@ -842,7 +842,20 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
       return;
     }
     
-    this.api.post(`/cotizaciones/${this.emergency.id}`, this.newCotizacion).subscribe({
+    const payload = {
+      descripcion_servicio: this.newCotizacion.descripcion_servicio,
+      tiempo_estimado: this.newCotizacion.tiempo_estimado,
+      condiciones: this.newCotizacion.condiciones,
+      moneda: "BOB",
+      lista_servicios: [
+        { nombre: "Mano de Obra", precio: this.newCotizacion.costo_mano_obra }
+      ],
+      lista_productos: this.newCotizacion.costo_repuestos > 0 
+        ? [{ nombre: "Repuestos Estimados", precio: this.newCotizacion.costo_repuestos, cantidad: 1 }] 
+        : []
+    };
+    
+    this.api.post(`/cotizaciones/${this.emergency.id}`, payload).subscribe({
       next: (res) => {
         toast.success('Cotización enviada al cliente.');
         this.showCotizacionModal = false;

@@ -81,13 +81,10 @@ class CotizacionService:
             result_emergencia = await self.db.execute(select(Emergencia).where(Emergencia.id == cotizacion.idEmergencia))
             emergencia = result_emergencia.scalar_one_or_none()
             if emergencia:
-                # Buscar estado ASIGNADO
-                estado_asignado = await Estado.get_by_nombre(self.db, "ASIGNADO")
-                nuevo_id_estado = estado_asignado.id if estado_asignado else 2
-                
+                # Mantener en estado INICIADA (1) para que el Taller luego asigne al mecánico
                 await emergencia.update(self.db, obj_in={
                     "idTaller": cotizacion.idTaller,
-                    "idEstado": nuevo_id_estado
+                    "idEstado": 1
                 })
                 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.historial_estado import HistorialEstado
                 await HistorialEstado.create(self.db, obj_in={

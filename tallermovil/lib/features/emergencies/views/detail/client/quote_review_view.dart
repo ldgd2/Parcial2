@@ -30,7 +30,7 @@ class _QuoteReviewViewState extends State<QuoteReviewView> {
 
   Future<void> _updateStatus(String status) async {
     if (status == 'ACEPTADA') {
-      final double total = (widget.quote['costo_mano_obra'] ?? 0).toDouble() + (widget.quote['costo_repuestos'] ?? 0).toDouble();
+      final double total = (widget.quote['subtotal_servicios'] ?? 0).toDouble() + (widget.quote['subtotal_productos'] ?? 0).toDouble();
       final tallerNombre = widget.quote['taller']?['nombre'] ?? 'este taller';
       
       bool? confirm = await showDialog<bool>(
@@ -74,8 +74,8 @@ class _QuoteReviewViewState extends State<QuoteReviewView> {
   @override
   Widget build(BuildContext context) {
     final q = widget.quote;
-    final double manoObra = (q['costo_mano_obra'] ?? 0).toDouble();
-    final double repuestos = (q['costo_repuestos'] ?? 0).toDouble();
+    final double manoObra = (q['subtotal_servicios'] ?? 0).toDouble();
+    final double repuestos = (q['subtotal_productos'] ?? 0).toDouble();
     final double total = manoObra + repuestos;
 
     return Scaffold(

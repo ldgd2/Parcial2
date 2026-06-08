@@ -374,8 +374,8 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
                     final sortedQuotes = List<Map<String, dynamic>>.from(_cotizaciones);
                     sortedQuotes.sort((a, b) {
                       if (_sortOption == 'Menor Precio') {
-                        final totalA = (a['costo_mano_obra'] ?? 0) + (a['costo_repuestos'] ?? 0);
-                        final totalB = (b['costo_mano_obra'] ?? 0) + (b['costo_repuestos'] ?? 0);
+                        final totalA = (a['subtotal_servicios'] ?? 0) + (a['subtotal_productos'] ?? 0);
+                        final totalB = (b['subtotal_servicios'] ?? 0) + (b['subtotal_productos'] ?? 0);
                         return totalA.compareTo(totalB);
                       } else if (_sortOption == 'Mejor Calificación') {
                         final califA = a['taller']?['calificacion_promedio'] ?? 0.0;
@@ -391,8 +391,8 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
                     });
 
                     final cot = sortedQuotes[index];
-                    final double manoObra = (cot['costo_mano_obra'] ?? 0).toDouble();
-                    final double repuestos = (cot['costo_repuestos'] ?? 0).toDouble();
+                    final double manoObra = (cot['subtotal_servicios'] ?? 0).toDouble();
+                    final double repuestos = (cot['subtotal_productos'] ?? 0).toDouble();
                     final double total = manoObra + repuestos;
                     
                     int etaMinutos = _calculateEta(cot);
