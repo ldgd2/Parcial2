@@ -146,22 +146,39 @@ class _QuoteReviewViewState extends State<QuoteReviewView> {
             TCard(
               color: AppColors.surface.withValues(alpha: 0.5),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TText.body('Mano de Obra:'),
-                      TText.body('\$${manoObra.toStringAsFixed(2)}'),
-                    ],
-                  ),
-                  TSpacing.verticalSmall(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TText.body('Repuestos:'),
-                      TText.body('\$${repuestos.toStringAsFixed(2)}'),
-                    ],
-                  ),
+                  if (q['lista_servicios'] != null && (q['lista_servicios'] as List).isNotEmpty) ...[
+                    TText.label('Servicios / Mano de Obra', color: AppColors.primary),
+                    TSpacing.verticalSmall(),
+                    ...(q['lista_servicios'] as List).map((s) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: TText.body(s['nombre'])),
+                          TText.body('\$${(s['precio'] ?? 0).toDouble().toStringAsFixed(2)}'),
+                        ],
+                      ),
+                    )),
+                    TSpacing.verticalSmall(),
+                  ],
+
+                  if (q['lista_productos'] != null && (q['lista_productos'] as List).isNotEmpty) ...[
+                    TText.label('Repuestos / Productos', color: AppColors.primary),
+                    TSpacing.verticalSmall(),
+                    ...(q['lista_productos'] as List).map((p) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: TText.body('${p['nombre']} (x${p['cantidad']})')),
+                          TText.body('\$${((p['precio'] ?? 0) * (p['cantidad'] ?? 1)).toDouble().toStringAsFixed(2)}'),
+                        ],
+                      ),
+                    )),
+                  ],
+
                   const Divider(color: AppColors.border, height: 32),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -181,7 +198,7 @@ class _QuoteReviewViewState extends State<QuoteReviewView> {
                   const Icon(Icons.timer, color: AppColors.primary),
                   TSpacing.horizontalMedium(),
                   Expanded(
-                    child: TText.body('Tiempo estimado de entrega: ${q['tiempo_estimado_horas']} horas'),
+                    child: TText.body('Tiempo estimado de entrega: ${q['tiempo_estimado'] ?? 'No especificado'}'),
                   )
                 ],
               ),

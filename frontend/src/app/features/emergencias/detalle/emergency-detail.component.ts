@@ -377,20 +377,56 @@ import { ReportesService, HistorialVehicularItem } from '../../../core/services/
                   <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Descripción del Servicio</label>
                   <textarea [(ngModel)]="newCotizacion.descripcion_servicio" rows="3" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500"></textarea>
                </div>
-               <div class="grid grid-cols-2 gap-4">
-                 <div>
-                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Mano de Obra ($)</label>
-                    <input type="number" [(ngModel)]="newCotizacion.costo_mano_obra" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+               <div>
+                  <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Agregar Ítem a Cotización</label>
+                  <div class="flex gap-2">
+                    <select [(ngModel)]="newItem.tipo" class="bg-zinc-900 border border-zinc-800 p-2 text-xs outline-none text-white w-24">
+                       <option value="servicio">Servicio</option>
+                       <option value="repuesto">Repuesto</option>
+                    </select>
+                    <input [(ngModel)]="newItem.nombre" placeholder="Nombre (Ej. Cambio de rueda)" class="flex-1 bg-zinc-900 border border-zinc-800 p-2 text-xs outline-none text-white">
+                    <input *ngIf="newItem.tipo === 'repuesto'" [(ngModel)]="newItem.cantidad" type="number" min="1" placeholder="Cant." class="w-16 bg-zinc-900 border border-zinc-800 p-2 text-xs outline-none text-white text-center">
+                    <input [(ngModel)]="newItem.precio" type="number" min="0" placeholder="Precio ($)" class="w-20 bg-zinc-900 border border-zinc-800 p-2 text-xs outline-none text-white text-right">
+                    <button (click)="addCotizacionItem()" class="bg-zinc-800 hover:bg-orange-600 px-3 text-white transition-colors"><lucide-icon name="plus" size="14"></lucide-icon></button>
+                  </div>
+               </div>
+
+               <!-- List of items -->
+               <div class="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar" *ngIf="newCotizacion.servicios.length > 0 || newCotizacion.productos.length > 0">
+                 <div *ngFor="let s of newCotizacion.servicios; let i = index" class="flex justify-between items-center bg-black/50 p-2 border border-zinc-900">
+                    <div class="text-[11px] text-zinc-300"><span class="text-orange-500 font-bold mr-2 text-[9px] uppercase">Servicio</span>{{ s.nombre }}</div>
+                    <div class="flex items-center gap-4">
+                       <span class="text-xs font-mono text-orange-400 font-bold">$ {{ s.precio | number:'1.2-2' }}</span>
+                       <button (click)="removeCotizacionItem('servicio', i)" class="text-zinc-500 hover:text-red-500 transition-colors"><lucide-icon name="trash-2" size="14"></lucide-icon></button>
+                    </div>
                  </div>
-                 <div>
-                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Repuestos ($)</label>
-                    <input type="number" [(ngModel)]="newCotizacion.costo_repuestos" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                 <div *ngFor="let p of newCotizacion.productos; let i = index" class="flex justify-between items-center bg-black/50 p-2 border border-zinc-900">
+                    <div class="text-[11px] text-zinc-300"><span class="text-orange-500 font-bold mr-2 text-[9px] uppercase">Repuesto</span>{{ p.nombre }} <span class="text-zinc-500 ml-1">x{{ p.cantidad }}</span></div>
+                    <div class="flex items-center gap-4">
+                       <span class="text-xs font-mono text-orange-400 font-bold">$ {{ (p.precio * p.cantidad) | number:'1.2-2' }}</span>
+                       <button (click)="removeCotizacionItem('producto', i)" class="text-zinc-500 hover:text-red-500 transition-colors"><lucide-icon name="trash-2" size="14"></lucide-icon></button>
+                    </div>
                  </div>
                </div>
+
                <div class="grid grid-cols-2 gap-4">
                  <div>
-                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Tiempo Est. (Ej. 4 a 6 horas)</label>
-                    <input type="text" [(ngModel)]="newCotizacion.tiempo_estimado" placeholder="4 a 6 horas" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Tipo de Tiempo Estimado</label>
+                    <select [(ngModel)]="tiempoTipo" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500">
+                       <option value="simple">Hora simple (Ej. 4 horas)</option>
+                       <option value="rango">Hora aproximada (Ej. 4 a 5 horas)</option>
+                    </select>
+                 </div>
+                 <div>
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 block">Valor (horas)</label>
+                    <div class="flex gap-2" *ngIf="tiempoTipo === 'simple'">
+                      <input type="number" [(ngModel)]="tiempoValor1" min="1" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500 text-center">
+                    </div>
+                    <div class="flex gap-2 items-center" *ngIf="tiempoTipo === 'rango'">
+                      <input type="number" [(ngModel)]="tiempoValor1" min="1" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500 text-center">
+                      <span class="text-zinc-500">a</span>
+                      <input type="number" [(ngModel)]="tiempoValor2" min="1" class="w-full bg-black border border-zinc-800 p-3 text-[12px] text-white outline-none focus:border-orange-500 text-center">
+                    </div>
                  </div>
                </div>
                <div>
@@ -401,9 +437,9 @@ import { ReportesService, HistorialVehicularItem } from '../../../core/services/
                <div class="pt-4 border-t border-zinc-900 mt-6 flex flex-col gap-4">
                   <div class="flex justify-between items-center text-[11px] font-mono font-bold text-orange-400">
                      <span>TOTAL ESTIMADO:</span>
-                     <span class="text-lg">$ {{ (newCotizacion.costo_mano_obra + newCotizacion.costo_repuestos) | number:'1.2-2' }}</span>
+                     <span class="text-lg">$ {{ calcCotizacionTotal() | number:'1.2-2' }}</span>
                   </div>
-                  <button (click)="enviarCotizacion()" class="w-full bg-orange-700 py-4 font-bold text-[10px] uppercase tracking-widest transition-colors hover:bg-orange-600 text-white">
+                  <button (click)="enviarCotizacion()" [disabled]="newCotizacion.servicios.length === 0 && newCotizacion.productos.length === 0" class="w-full bg-orange-700 disabled:bg-zinc-800 disabled:text-zinc-600 py-4 font-bold text-[10px] uppercase tracking-widest transition-colors hover:bg-orange-600 text-white">
                     Enviar al Cliente
                   </button>
                </div>
@@ -470,11 +506,22 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
   showCotizacionModal = false;
   newCotizacion = {
     descripcion_servicio: '',
-    costo_mano_obra: 0,
-    costo_repuestos: 0,
     tiempo_estimado: '',
-    condiciones: ''
+    condiciones: '',
+    productos: [] as any[],
+    servicios: [] as any[]
   };
+
+  newItem = {
+    tipo: 'servicio',
+    nombre: '',
+    precio: 0,
+    cantidad: 1
+  };
+
+  tiempoTipo = 'simple';
+  tiempoValor1 = 1;
+  tiempoValor2 = 2;
 
   // Chat logic
   showChatModal = false;
@@ -828,31 +875,69 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
   openCotizacionModal() {
     this.newCotizacion = {
       descripcion_servicio: '',
-      costo_mano_obra: 0,
-      costo_repuestos: 0,
       tiempo_estimado: '',
-      condiciones: ''
+      condiciones: '',
+      productos: [],
+      servicios: []
     };
+    this.newItem = { tipo: 'servicio', nombre: '', precio: 0, cantidad: 1 };
+    this.tiempoTipo = 'simple';
+    this.tiempoValor1 = 1;
+    this.tiempoValor2 = 2;
     this.showCotizacionModal = true;
   }
 
-  enviarCotizacion() {
-    if (!this.newCotizacion.descripcion_servicio || this.newCotizacion.costo_mano_obra < 0) {
-      toast.error('Complete la descripción y asigne un costo válido.');
+  addCotizacionItem() {
+    if (!this.newItem.nombre || this.newItem.precio <= 0) {
+      toast.error('Complete el nombre y asigne un precio válido.');
       return;
+    }
+    if (this.newItem.tipo === 'servicio') {
+      this.newCotizacion.servicios.push({ nombre: this.newItem.nombre, precio: this.newItem.precio });
+    } else {
+      this.newCotizacion.productos.push({ nombre: this.newItem.nombre, precio: this.newItem.precio, cantidad: this.newItem.cantidad });
+    }
+    this.newItem = { tipo: this.newItem.tipo, nombre: '', precio: 0, cantidad: 1 };
+  }
+
+  removeCotizacionItem(tipo: 'servicio'|'producto', index: number) {
+    if (tipo === 'servicio') {
+      this.newCotizacion.servicios.splice(index, 1);
+    } else {
+      this.newCotizacion.productos.splice(index, 1);
+    }
+  }
+
+  calcCotizacionTotal(): number {
+    const totalServ = this.newCotizacion.servicios.reduce((acc, s) => acc + s.precio, 0);
+    const totalProd = this.newCotizacion.productos.reduce((acc, p) => acc + (p.precio * p.cantidad), 0);
+    return totalServ + totalProd;
+  }
+
+  enviarCotizacion() {
+    if (!this.newCotizacion.descripcion_servicio || (this.newCotizacion.servicios.length === 0 && this.newCotizacion.productos.length === 0)) {
+      toast.error('Complete la descripción y agregue al menos un ítem.');
+      return;
+    }
+
+    let tiempoStr = '';
+    if (this.tiempoTipo === 'simple') {
+      tiempoStr = `${this.tiempoValor1} horas`;
+    } else {
+      if (this.tiempoValor1 >= this.tiempoValor2) {
+        toast.error('El rango de horas aproximadas es inválido.');
+        return;
+      }
+      tiempoStr = `entre ${this.tiempoValor1} a ${this.tiempoValor2} horas`;
     }
     
     const payload = {
       descripcion_servicio: this.newCotizacion.descripcion_servicio,
-      tiempo_estimado: this.newCotizacion.tiempo_estimado,
+      tiempo_estimado: tiempoStr,
       condiciones: this.newCotizacion.condiciones,
       moneda: "BOB",
-      lista_servicios: [
-        { nombre: "Mano de Obra", precio: this.newCotizacion.costo_mano_obra }
-      ],
-      lista_productos: this.newCotizacion.costo_repuestos > 0 
-        ? [{ nombre: "Repuestos Estimados", precio: this.newCotizacion.costo_repuestos, cantidad: 1 }] 
-        : []
+      lista_servicios: this.newCotizacion.servicios,
+      lista_productos: this.newCotizacion.productos
     };
     
     this.api.post(`/cotizaciones/${this.emergency.id}`, payload).subscribe({
