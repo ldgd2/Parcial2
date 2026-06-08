@@ -75,6 +75,9 @@ class TButton extends StatelessWidget {
     switch (variant) {
       case TButtonVariant.primary:
         buttonWidget = ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+          ),
           onPressed: action,
           child: buttonContent,
         );
@@ -92,8 +95,8 @@ class TButton extends StatelessWidget {
       case TButtonVariant.secondary:
         buttonWidget = ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.secondary.withValues(alpha: 0.1),
-            foregroundColor: theme.colorScheme.secondary,
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            foregroundColor: theme.colorScheme.primary,
             elevation: 0,
           ),
           onPressed: action,
@@ -102,12 +105,19 @@ class TButton extends StatelessWidget {
         break;
       case TButtonVariant.outline:
         buttonWidget = OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: theme.colorScheme.primary),
+            foregroundColor: theme.colorScheme.primary,
+          ),
           onPressed: action,
           child: buttonContent,
         );
         break;
       case TButtonVariant.text:
         buttonWidget = TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: theme.colorScheme.primary,
+          ),
           onPressed: action,
           child: buttonContent,
         );

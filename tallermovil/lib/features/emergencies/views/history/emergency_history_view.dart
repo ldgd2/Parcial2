@@ -55,7 +55,7 @@ class _EmergencyHistoryViewState extends State<EmergencyHistoryView> {
             itemBuilder: (context, index) {
               final emergency = controller.emergencies[index];
               final status = emergency['estado_actual'] ?? 'PENDIENTE';
-              final color = _getStatusColor(status);
+              final color = _getStatusColor(status, context);
               
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
@@ -160,11 +160,11 @@ class _EmergencyHistoryViewState extends State<EmergencyHistoryView> {
     );
   }
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(String status, BuildContext context) {
     switch (status.toUpperCase()) {
       case 'PENDIENTE': return AppColors.warning;
       case 'ASIGNADO':
-      case 'EN PROCESO': return AppColors.primary;
+      case 'EN PROCESO': return Theme.of(context).colorScheme.primary;
       case 'COMPLETADO':
       case 'ATENDIDO': return AppColors.success;
       case 'CANCELADO': return AppColors.danger;

@@ -56,6 +56,21 @@ class EmergencyService {
     }
   }
 
+  /// Obtiene el historial de emergencias del taller (para el técnico)
+  Future<List<Map<String, dynamic>>> getTallerHistory(String codTaller) async {
+    try {
+      final response = await apiClient.dio.get('/talleres/$codTaller/solicitudes');
+      final List<dynamic> allRequests = response.data;
+      // Filtrar para mostrar solo las que están en proceso, completadas, o atendidas
+      return allRequests.where((e) {
+        final estado = e['estado_actual']?.toString().toUpperCase() ?? '';
+        return ['ASIGNADO', 'EN_CAMINO', 'EN PROCESO', 'ARREGLADO', 'COMPLETADO', 'ATENDIDO'].contains(estado);
+      }).cast<Map<String, dynamic>>().toList();
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['detail'] ?? 'Error al cargar historial del taller');
+    }
+  }
+
   /// Actualiza una emergencia (ej: corregir una rechazada por IA)
   Future<void> updateEmergency(int id, EmergencyReport report) async {
     try {

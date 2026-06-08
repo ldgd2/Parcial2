@@ -20,7 +20,19 @@ class EmergencyHistoryController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      emergencies = await _emergencyService.getHistory();
+      final storage = LocalStorage();
+      final rol = await storage.getRol();
+      
+      if (rol == 'tecnico') {
+        final codTaller = await storage.getCodTaller();
+        if (codTaller != null && codTaller.isNotEmpty) {
+          emergencies = await _emergencyService.getTallerHistory(codTaller);
+        } else {
+          emergencies = [];
+        }
+      } else {
+        emergencies = await _emergencyService.getHistory();
+      }
     } catch (e) {
       debugPrint('Error loading emergency history: $e');
     } finally {

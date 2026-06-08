@@ -10,6 +10,7 @@ class FCMToken(GenericModel):
     id = Column(Integer, primary_key=True, index=True)
     idUsuario = Column(Integer, ForeignKey("public.usuario.id"), nullable=True, index=True)
     idCliente = Column(Integer, ForeignKey("public.cliente.id"), nullable=True, index=True)
+    idTecnico = Column(Integer, ForeignKey("public.tecnico.id"), nullable=True, index=True)
     token = Column(String(512), nullable=False, unique=True)
     dispositivo = Column(String(50), nullable=True) # ej: android, ios, web
     fecha_registro = Column(DateTime, default=datetime.datetime.utcnow)
@@ -17,17 +18,20 @@ class FCMToken(GenericModel):
     # Relaciones
     usuario = relationship("Usuario", backref="fcm_tokens")
     cliente = relationship("Cliente", backref="fcm_tokens")
+    tecnico = relationship("Tecnico", backref="fcm_tokens")
 
     @classmethod
     async def delete_by_token(cls, db: AsyncSession, token: str) -> None:
-        await db.execute(delete(self.model).where(self.model.token == token))
+        await db.execute(delete(cls).where(cls.token == token))
         
     @classmethod
     async def get_by_user_or_client(cls, db: AsyncSession, user_id: int) -> list["FCMToken"]:
-        stmt = select(self.model).where(
+        from sqlalchemy import or_
+        stmt = select(cls).where(
             or_(
-                self.model.idUsuario == user_id, 
-                self.model.idCliente == user_id
+                cls.idUsuario == user_id, 
+                cls.idCliente == user_id,
+                cls.idTecnico == user_id
             )
         )
         result = await db.execute(stmt)

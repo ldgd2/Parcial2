@@ -57,75 +57,103 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     final isTecnico = _role == 'tecnico';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Image.asset('assets/logo_small.png', height: 30, errorBuilder: (_, __, ___) => Text(isTecnico ? 'Panel Técnico' : 'Taller OS')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              setState(() => _currentIndex = isTecnico ? 2 : 3); // Ir a Ajustes
-            },
-          ),
-        ],
-      ),
-      body: _screens[_currentIndex],
-      floatingActionButton: isTecnico ? null : FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportEmergencyView()));
-        },
-        backgroundColor: Colors.redAccent,
-        elevation: 8,
-        tooltip: 'Reportar Emergencia S.O.S',
-        child: const Icon(Icons.sos, color: Colors.white, size: 32),
-      ),
-      floatingActionButtonLocation: isTecnico ? null : FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        items: isTecnico ? const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history_outlined),
-            activeIcon: Icon(Icons.history),
-            label: 'Actividad',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Ajustes',
-          ),
-        ] : const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.directions_car_outlined),
-            activeIcon: Icon(Icons.directions_car),
-            label: 'Vehículos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history_outlined),
-            activeIcon: Icon(Icons.history),
-            label: 'Actividad',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Ajustes',
-          ),
-        ],
+    final baseTheme = Theme.of(context);
+    final themeToApply = isTecnico
+        ? baseTheme.copyWith(
+            scaffoldBackgroundColor: const Color(0xFF09090B), // Zinc 950
+            colorScheme: baseTheme.colorScheme.copyWith(
+              primary: Colors.redAccent.shade700,
+            ),
+            appBarTheme: baseTheme.appBarTheme.copyWith(
+              backgroundColor: const Color(0xFF09090B),
+            ),
+            cardTheme: baseTheme.cardTheme.copyWith(
+              color: const Color(0xFF18181B), // Zinc 900
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0xFF27272A)), // Zinc 800
+              ),
+            ),
+            bottomNavigationBarTheme: baseTheme.bottomNavigationBarTheme.copyWith(
+              backgroundColor: const Color(0xFF09090B),
+              selectedItemColor: Colors.redAccent.shade700,
+            ),
+          )
+        : baseTheme;
+
+    return AnimatedTheme(
+      data: themeToApply,
+      duration: const Duration(milliseconds: 500),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Image.asset('assets/logo_small.png', height: 30, errorBuilder: (_, __, ___) => Text(isTecnico ? 'Panel Técnico' : 'Taller OS')),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () {
+                setState(() => _currentIndex = isTecnico ? 2 : 3); // Ir a Ajustes
+              },
+            ),
+          ],
+        ),
+        body: _screens[_currentIndex],
+        floatingActionButton: isTecnico ? null : FloatingActionButton(
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportEmergencyView()));
+          },
+          backgroundColor: Colors.redAccent,
+          elevation: 8,
+          tooltip: 'Reportar Emergencia S.O.S',
+          child: const Icon(Icons.sos, color: Colors.white, size: 32),
+        ),
+        floatingActionButtonLocation: isTecnico ? null : FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          type: BottomNavigationBarType.fixed,
+          items: isTecnico ? const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Inicio',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history_outlined),
+              activeIcon: Icon(Icons.history),
+              label: 'Actividad',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Ajustes',
+            ),
+          ] : const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Inicio',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.directions_car_outlined),
+              activeIcon: Icon(Icons.directions_car),
+              label: 'Vehículos',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history_outlined),
+              activeIcon: Icon(Icons.history),
+              label: 'Actividad',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Ajustes',
+            ),
+          ],
+        ),
       ),
     );
   }

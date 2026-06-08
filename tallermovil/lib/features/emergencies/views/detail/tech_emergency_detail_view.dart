@@ -109,10 +109,10 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
     final double? lng = e['longitud'] != null ? (e['longitud'] is String ? double.tryParse(e['longitud']) : (e['longitud'] as num).toDouble()) : null;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Detalle de Asignación'),
-        backgroundColor: AppColors.surface,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshData)
         ],
@@ -173,7 +173,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
               TCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.directions_car, color: AppColors.primary, size: 32),
+                    Icon(Icons.directions_car, color: Theme.of(context).colorScheme.primary, size: 32),
                     TSpacing.horizontalMedium(),
                     Expanded(
                       child: Column(
@@ -279,7 +279,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => ChatView(emergenciaId: e['id'])));
         },
-        backgroundColor: AppColors.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         icon: const Icon(Icons.chat_bubble, color: Colors.white),
         label: const Text('Chat con Cliente', style: TextStyle(color: Colors.white)),
       ),

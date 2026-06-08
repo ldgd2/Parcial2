@@ -63,7 +63,7 @@ class _TechHomeScreenState extends State<TechHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900], // Fondo oscuro para coincidir con el resto
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // Usar tema
       appBar: AppBar(
         title: const Text('Panel del Técnico'),
         actions: [
@@ -82,7 +82,7 @@ class _TechHomeScreenState extends State<TechHomeScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+                          Icon(Icons.check_circle_outline, size: 64, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(height: 16),
                           TText.h3('Todo en orden'),
                           TText.body('No tienes emergencias activas en este momento.', color: Colors.grey),
@@ -107,7 +107,7 @@ class _TechHomeScreenState extends State<TechHomeScreen> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       TText.h3('Reporte #${e['id']}'),
-                                      _buildStatusBadge(e['estado_actual'] ?? 'DESCONOCIDO'),
+                                      _buildStatusBadge(e['estado_actual'] ?? 'DESCONOCIDO', context),
                                     ],
                                   ),
                                   TSpacing.verticalSmall(),
@@ -115,7 +115,7 @@ class _TechHomeScreenState extends State<TechHomeScreen> {
                                   TSpacing.verticalMedium(),
                                   Row(
                                     children: [
-                                      const Icon(Icons.location_on, size: 16, color: Colors.redAccent),
+                                      Icon(Icons.location_on, size: 16, color: Theme.of(context).colorScheme.primary),
                                       const SizedBox(width: 4),
                                       Expanded(child: TText.label(e['direccion'] ?? 'GPS')),
                                     ],
@@ -124,6 +124,9 @@ class _TechHomeScreenState extends State<TechHomeScreen> {
                                   SizedBox(
                                     width: double.infinity,
                                     child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(context).colorScheme.primary,
+                                      ),
                                       onPressed: () async {
                                         await Navigator.push(
                                           context,
@@ -131,7 +134,7 @@ class _TechHomeScreenState extends State<TechHomeScreen> {
                                         );
                                         _loadAssignedEmergencies();
                                       },
-                                      child: const Text('VER DETALLE E IR AL LUGAR'),
+                                      child: const Text('VER DETALLE E IR AL LUGAR', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                                     ),
                                   )
                                 ],
@@ -144,7 +147,7 @@ class _TechHomeScreenState extends State<TechHomeScreen> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, BuildContext context) {
     Color bg;
     switch (status.toUpperCase()) {
       case 'ASIGNADO': bg = Colors.blue; break;

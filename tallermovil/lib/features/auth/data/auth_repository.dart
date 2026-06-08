@@ -13,9 +13,9 @@ class AuthRepository {
   });
 
   /// Orquesta el flujo de negocio: llama a la API y persiste si fue exitoso
-  Future<void> loginAndSaveSession(String username, String password) async {
+  Future<void> loginAndSaveSession(String username, String password, {String rol = 'cliente'}) async {
     // 1. Crear el objeto DTO
-    final request = LoginRequest(correo: username, contrasena: password);
+    final request = LoginRequest(correo: username, contrasena: password, rol: rol);
     
     // 2. Hacer la llamada de Red
     final authResponse = await apiService.login(request);

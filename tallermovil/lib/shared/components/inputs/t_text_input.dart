@@ -95,6 +95,12 @@ class _TTextInputState extends State<TTextInput> {
                   },
                 )
               : null,
+          focusedBorder: Theme.of(context).inputDecorationTheme.focusedBorder?.copyWith(
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+              ),
         ),
       ),
     );

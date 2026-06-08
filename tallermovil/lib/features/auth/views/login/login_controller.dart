@@ -30,6 +30,13 @@ class LoginController extends ChangeNotifier {
     super.dispose();
   }
 
+  bool isTecnico = false;
+
+  void toggleRole() {
+    isTecnico = !isTecnico;
+    notifyListeners();
+  }
+
   Future<void> login(BuildContext context) async {
     if (formKey.currentState?.validate() ?? false) {
       isLoading = true;
@@ -39,6 +46,7 @@ class LoginController extends ChangeNotifier {
         await _repository.loginAndSaveSession(
           emailController.text.trim(),
           passwordController.text,
+          rol: isTecnico ? 'tecnico' : 'cliente',
         );
 
         // Registrar token de notificaciones al iniciar sesión

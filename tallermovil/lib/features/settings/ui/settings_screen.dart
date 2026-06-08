@@ -41,7 +41,7 @@ class SettingsScreen extends StatelessWidget {
           TListTile(
             title: 'Mis Tarjetas',
             subtitle: 'Gestionar métodos de pago y tarjetas guardadas',
-            leading: const Icon(Icons.credit_card_outlined, color: AppColors.primary),
+            leading: Icon(Icons.credit_card_outlined, color: Theme.of(context).colorScheme.primary),
             onTap: () {
               Navigator.push(
                 context,
@@ -55,14 +55,14 @@ class SettingsScreen extends StatelessWidget {
           TListTile(
             title: 'Notificaciones',
             subtitle: 'Gestionar alertas y avisos',
-            leading: const Icon(Icons.notifications_outlined, color: AppColors.primary),
+            leading: Icon(Icons.notifications_outlined, color: Theme.of(context).colorScheme.primary),
             onTap: () {},
           ),
           TSpacing.verticalMedium(),
           TListTile(
             title: 'Privacidad y Seguridad',
             subtitle: 'Configurar accesos y datos',
-            leading: const Icon(Icons.security_outlined, color: AppColors.primary),
+            leading: Icon(Icons.security_outlined, color: Theme.of(context).colorScheme.primary),
             onTap: () {},
           ),
         ],
