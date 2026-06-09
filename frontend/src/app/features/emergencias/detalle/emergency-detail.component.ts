@@ -757,6 +757,14 @@ export class EmergencyDetailComponent implements OnInit, OnDestroy {
   }
 
   openAssignModal() {
+    // Si la emergencia ya tiene un taller asignado (flujo de cotizaciones),
+    // no necesitamos el paso de "analizar/bloquear" — ir directo a asignar.
+    if (this.emergency.idTaller) {
+      this.loadTechs();
+      this.showModal = true;
+      return;
+    }
+
     if (!this.emergency.is_locked) {
       this.api.post(`/gestion-emergencia/${this.emergency.id}/analizar`, {}).subscribe({
         next: () => { this.loadTechs(); this.showModal = true; },

@@ -470,7 +470,8 @@ async def listar_emergencias_disponibles(taller_cod: str, current_user: dict, db
 async def bloquear_emergencia_temporal(emergencia_id: int, taller_cod: str, db: AsyncSession):
     """Establece un mutex temporal de 2 minutos."""
     emergencia = await Emergencia.get(db, emergencia_id)
-    if not emergencia or emergencia.idTaller:
+    # Bloquear solo si no existe o si ya fue tomada por OTRO taller
+    if not emergencia or (emergencia.idTaller and emergencia.idTaller != taller_cod):
         raise HTTPException(status_code=400, detail="Emergencia no disponible para análisis.")
     
     await emergencia.update(db, obj_in={
