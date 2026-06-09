@@ -227,7 +227,8 @@ class _ChatViewState extends State<ChatView> {
   @override
   void dispose() {
     _socketSubscription?.cancel();
-    SocketService().disconnect(); // Cerrar socket al salir del chat
+    // NO desconectamos el socket aquí porque es un singleton global.
+    // Otros módulos (home, detalle) dependen de él para recibir notificaciones.
     _messageController.dispose();
     _scrollController.dispose();
     _audioRecorder.dispose();

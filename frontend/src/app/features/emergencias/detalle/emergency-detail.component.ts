@@ -46,7 +46,7 @@ import { ReportesService, HistorialVehicularItem } from '../../../core/services/
         </div>
 
         <div class="flex gap-4">
-            <button *ngIf="emergency?.idTaller === currentWorkshop && emergency?.estado_actual === 'INICIADA'"
+            <button *ngIf="emergency?.idTaller === currentWorkshop && ['INICIADA','ASIGNADO','PENDIENTE'].includes(emergency?.estado_actual)"
                     (click)="openAssignModal()"
                     class="bg-red-600 text-white px-6 py-3 font-bold text-[9px] uppercase tracking-[.25em] transition-all hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.4)] flex items-center gap-2">
               <lucide-icon name="shield-alert" size="14"></lucide-icon>

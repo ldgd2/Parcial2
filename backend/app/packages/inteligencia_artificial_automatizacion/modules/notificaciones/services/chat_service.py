@@ -38,8 +38,11 @@ async def enviar_mensaje(
             if not tecnico or tecnico.idTaller != emergencia.idTaller:
                 raise HTTPException(status_code=403, detail="No perteneces al taller asignado")
         elif rol == "admin":
-            taller = await Taller.get_by_admin(db, remitente_id)
-            if not taller or taller.cod != emergencia.idTaller:
+            from sqlalchemy import select as sa_select
+            from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.models.usuario import Usuario
+            usuario_admin = await db.execute(sa_select(Usuario).where(Usuario.id == remitente_id))
+            usuario_admin = usuario_admin.scalar_one_or_none()
+            if not usuario_admin or usuario_admin.idTaller != emergencia.idTaller:
                 raise HTTPException(status_code=403, detail="No eres el administrador del taller asignado")
 
     # 2. Guardar mensaje
