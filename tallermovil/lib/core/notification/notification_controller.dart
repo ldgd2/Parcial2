@@ -23,14 +23,18 @@ class NotificationController {
       print('✅ Permisos de notificaciones concedidos.');
       
       // 2. Obtener Token
-      String? token = await _messaging.getToken();
-      if (token != null) {
-        print('FCM Token: $token');
-        await _saveTokenToBackend(token);
-      }
+      try {
+        String? token = await _messaging.getToken();
+        if (token != null) {
+          print('FCM Token: $token');
+          await _saveTokenToBackend(token);
+        }
 
-      // 3. Suscribirse a tópico general
-      await _messaging.subscribeToTopic('todos');
+        // 3. Suscribirse a tópico general
+        await _messaging.subscribeToTopic('todos');
+      } catch (e) {
+        print('Advertencia FCM: No se pudo obtener el token (probablemente falten los Google Play Services, común en WSA o emuladores): $e');
+      }
     }
 
     // 4. Configurar notificaciones locales para Android en primer plano
