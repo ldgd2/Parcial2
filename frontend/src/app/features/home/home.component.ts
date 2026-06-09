@@ -1,9 +1,20 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { RouterModule, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+import { HttpClient } from '@angular/common/http';
+
+interface Plan {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  precio_mensual: number;
+  max_sucursales: number;
+  max_tecnicos: number;
+  max_admins_sucursal: number;
+}
 
 @Component({
   selector: 'app-home',
@@ -131,64 +142,45 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
               <p class="mt-6 text-zinc-400 text-lg">Planes diseñados para talleres de un solo hombre hasta flotas corporativas.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div class="flex justify-center items-center h-20" *ngIf="cargandoPlanes">
+              <div class="w-6 h-6 border-2 border-[#FF5733] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto" *ngIf="!cargandoPlanes">
                
-               <!-- PLAN GRATIS -->
-               <div class="border border-[#222222] bg-[#0a0a0a] p-10 flex flex-col hover:-translate-y-2 transition-transform duration-300 stagger-item">
-                  <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-2">Gratuito</h3>
+               <div *ngFor="let plan of planes; let i = index" 
+                    [ngClass]="{'border-2 border-[#FF5733] shadow-[0_0_40px_rgba(255,87,51,0.1)]': plan.precio_mensual > 0 && i === 1, 'border border-[#222222] hover:border-[#333333]': plan.precio_mensual === 0 || i !== 1}"
+                    class="bg-[#0a0a0a] p-10 flex flex-col hover:-translate-y-2 transition-transform duration-300 relative stagger-item">
+                  
+                  <div *ngIf="plan.precio_mensual > 0 && i === 1" class="absolute top-0 right-0 bg-[#FF5733] text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1">RECOMENDADO</div>
+                  
+                  <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-2">{{ plan.nombre }}</h3>
                   <div class="flex items-baseline gap-2 mb-6">
-                    <span class="text-4xl font-extrabold">$0</span>
+                    <span class="text-4xl font-extrabold">\${{ plan.precio_mensual }}</span>
                     <span class="text-zinc-500 font-mono text-sm">/ mes</span>
                   </div>
-                  <p class="text-zinc-400 text-sm mb-8 flex-1">Perfecto para mecánicos independientes que quieren empezar a digitalizarse.</p>
+                  <p class="text-zinc-400 text-sm mb-8 flex-1">{{ plan.descripcion || 'Plan ideal para potenciar la gestión de tu taller mecáncio y llevarlo al siguiente nivel.' }}</p>
                   
                   <ul class="space-y-4 mb-8 font-mono text-xs text-zinc-300">
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> 1 Taller / Sucursal</li>
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Hasta 3 Técnicos</li>
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Gestión básica de clientes</li>
-                    <li class="flex items-center gap-3 text-zinc-600"><lucide-icon name="x" size="14"></lucide-icon> Reportes Avanzados</li>
+                    <li class="flex items-center gap-3">
+                      <lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> 
+                      {{ plan.max_sucursales === 9999 ? 'Sucursales Ilimitadas' : 'Hasta ' + plan.max_sucursales + ' Sucursales' }}
+                    </li>
+                    <li class="flex items-center gap-3">
+                      <lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> 
+                      {{ plan.max_tecnicos === 9999 ? 'Técnicos Ilimitados' : 'Hasta ' + plan.max_tecnicos + ' Técnicos' }}
+                    </li>
+                    <li class="flex items-center gap-3">
+                      <lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> 
+                      {{ plan.max_admins_sucursal === 9999 ? 'Administradores Ilimitados' : 'Hasta ' + plan.max_admins_sucursal + ' Administradores' }}
+                    </li>
                   </ul>
                   
-                  <button (click)="irARegistro(1)" class="w-full py-4 border border-[#333333] hover:bg-[#111111] font-bold text-[10px] uppercase tracking-[.2em] transition-colors">Seleccionar</button>
-               </div>
-
-               <!-- PLAN PRO (Destacado) -->
-               <div class="border-2 border-[#FF5733] bg-[#111111] p-10 flex flex-col hover:-translate-y-2 transition-transform duration-300 relative stagger-item shadow-[0_0_40px_rgba(255,87,51,0.1)]">
-                  <div class="absolute top-0 right-0 bg-[#FF5733] text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1">RECOMENDADO</div>
-                  <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-2">Profesional</h3>
-                  <div class="flex items-baseline gap-2 mb-6">
-                    <span class="text-4xl font-extrabold">$49</span>
-                    <span class="text-zinc-500 font-mono text-sm">/ mes</span>
-                  </div>
-                  <p class="text-zinc-400 text-sm mb-8 flex-1">Para talleres establecidos con flujo constante de emergencias y equipo.</p>
-                  
-                  <ul class="space-y-4 mb-8 font-mono text-xs text-zinc-300">
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Hasta 3 Sucursales</li>
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Hasta 15 Técnicos</li>
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Reportes y Analíticas (KPIs)</li>
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Soporte Prioritario</li>
-                  </ul>
-                  
-                  <button (click)="irARegistro(2)" class="w-full py-4 bg-[#FF5733] text-white font-bold text-[10px] uppercase tracking-[.2em] hover:bg-[#e04c2c] transition-colors shadow-lg">Seleccionar</button>
-               </div>
-
-               <!-- PLAN ENTERPRISE -->
-               <div class="border border-[#222222] bg-[#0a0a0a] p-10 flex flex-col hover:-translate-y-2 transition-transform duration-300 stagger-item">
-                  <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-2">Corporativo</h3>
-                  <div class="flex items-baseline gap-2 mb-6">
-                    <span class="text-4xl font-extrabold">$149</span>
-                    <span class="text-zinc-500 font-mono text-sm">/ mes</span>
-                  </div>
-                  <p class="text-zinc-400 text-sm mb-8 flex-1">Cadenas de servicio automotriz con cobertura nacional o regional.</p>
-                  
-                  <ul class="space-y-4 mb-8 font-mono text-xs text-zinc-300">
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Sucursales Ilimitadas</li>
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Técnicos Ilimitados</li>
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Acceso API (Webhook)</li>
-                    <li class="flex items-center gap-3"><lucide-icon name="check" size="14" class="text-[#FF5733]"></lucide-icon> Marca Blanca (White-label)</li>
-                  </ul>
-                  
-                  <button (click)="irARegistro(3)" class="w-full py-4 border border-[#333333] hover:bg-[#111111] font-bold text-[10px] uppercase tracking-[.2em] transition-colors">Seleccionar</button>
+                  <button (click)="irARegistro(plan.id)" 
+                          [ngClass]="{'bg-[#FF5733] text-white hover:bg-[#e04c2c]': plan.precio_mensual > 0 && i === 1, 'bg-transparent border border-[#333333] hover:bg-[#111111] text-white': plan.precio_mensual === 0 || i !== 1}"
+                          class="w-full py-4 font-bold text-[10px] uppercase tracking-[.2em] transition-colors shadow-lg">
+                    Seleccionar
+                  </button>
                </div>
 
             </div>
@@ -208,8 +200,29 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     </div>
   `
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
+  private http = inject(HttpClient);
+  planes: Plan[] = [];
+  cargandoPlanes = true;
+
   constructor(private router: Router) {}
+
+  ngOnInit(): void {
+    this.cargarPlanes();
+  }
+
+  cargarPlanes() {
+    this.http.get<Plan[]>(`${environment.apiUrl}/auth/planes`).subscribe({
+      next: (data) => {
+        this.planes = data;
+        this.cargandoPlanes = false;
+      },
+      error: (err) => {
+        console.error('Error cargando planes', err);
+        this.cargandoPlanes = false;
+      }
+    });
+  }
 
   irALogin() {
     this.router.navigate(['/auth/login']);
