@@ -1,71 +1,5 @@
 import 'dart:async';
-import 'da
-          // TAB 2: COTIZACIONES
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (['ACEPTADA'].contains(e['estado_actual']?.toString().toUpperCase()) || _cotizaciones.any((c) => c['estado'] == 'ACEPTADA')) ...[
-                  TCard(
-                    color: AppColors.danger.withValues(alpha: 0.1),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TText.body('Puedes cancelar la reparación si el técnico aún no llega, pero se cobrará una comisión.'),
-                        TSpacing.verticalSmall(),
-                        TButton(
-                          label: 'Cancelar Reparación (Cargo $5.00)',
-                          icon: Icons.cancel,
-                          variant: TButtonVariant.outline,
-                          onPressed: () async {
-                            bool? confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                backgroundColor: AppColors.surface,
-                                title: TText.h3('Cancelar Reparación'),
-                                content: TText.body('Se aplicará un cargo de $5.00 a tu cuenta por desplazamiento del técnico. ¿Deseas continuar?'),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('VOLVER')),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, true), 
-                                    child: const Text('SÍ, CANCELAR', style: TextStyle(color: AppColors.danger))
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm == true) {
-                              try {
-                                final cotAceptada = _cotizaciones.firstWhere((c) => c['estado'] == 'ACEPTADA');
-                                final storage = LocalStorage();
-                                final apiClient = ApiClient(localStorage: storage);
-                                final cotService = CotizacionService(apiClient: apiClient);
-                                await cotService.cancelarCotizacionCliente(cotAceptada['id']);
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Servicio cancelado exitosamente.')));
-                                  _refreshData();
-                                }
-                              } catch (err) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ' + err.toString())));
-                                }
-                              }
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  TSpacing.verticalLarge(),
-                ],
-
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-rt:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -214,11 +148,11 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
     final lng = e['longitud'] as double?;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
       appBar: AppBar(
         title: TText.h3('Detalle de Emergencia'),
-        bottom: const TabBar(tabs: [Tab(text: 'Detalle'), Tab(text: 'Cotizaciones')]),
+        bottom: const TabBar(tabs: [Tab(text: 'Detalle'), Tab(text: 'Cotizaciones'), Tab(text: 'Chat')]),
         actions: [
           if (['PENDIENTE', 'INICIADA'].contains(e['estado_actual']?.toString().toUpperCase()))
             IconButton(
@@ -322,7 +256,7 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TText.body('Monto Total a Pagar:'),
-                        TText.h2('\$${e['monto_pago'] ?? e['pago']?['monto'] ?? '--.--'}'),
+                        TText.h2('\$${(double.tryParse((e['monto_pago'] ?? e['pago']?['monto'] ?? '0').toString()) ?? 0.0) + (e['deuda_acumulada'] != null ? double.tryParse(e['deuda_acumulada'].toString()) ?? 0.0 : 0.0)}'),
                       ],
                     ),
                     TSpacing.verticalSmall(),
@@ -368,6 +302,15 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
                           Text('\$${e['pago']['detalle_factura']['impuestos']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                         ],
                       ),
+                      if (e['deuda_acumulada'] != null && (double.tryParse(e['deuda_acumulada'].toString()) ?? 0.0) > 0) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Deuda Acumulada (Cancelaciones previas):', style: TextStyle(color: AppColors.danger, fontSize: 12)),
+                            Text('\$${e['deuda_acumulada']}', style: const TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ],
                       TSpacing.verticalMedium(),
                       TButton(
                         label: 'Descargar Factura PDF',
@@ -402,157 +345,6 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
                       _PaymentButton(emergency: e),
                     ],
                   ],
-                ),
-              ),
-              TSpacing.verticalLarge(),
-            ],
-
-            // Cotizaciones (Marketplace)
-            if (_cotizaciones.isNotEmpty) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TText.h3('Ofertas de Talleres (${_cotizaciones.length})'),
-                  DropdownButton<String>(
-                    value: _sortOption,
-                    dropdownColor: AppColors.surface,
-                    style: const TextStyle(color: Colors.white),
-                    underline: Container(height: 1, color: AppColors.primary),
-                    onChanged: (String? newValue) {
-                      if (newValue != null && mounted) {
-                        setState(() {
-                          _sortOption = newValue;
-                        });
-                      }
-                    },
-                    items: <String>['Menor Precio', 'Mejor Calificación', 'Más Rápido']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-              TSpacing.verticalSmall(),
-              SizedBox(
-                height: 230,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _cotizaciones.length,
-                  itemBuilder: (context, index) {
-                    // Sorting localmente la copia
-                    final sortedQuotes = List<Map<String, dynamic>>.from(_cotizaciones);
-                    sortedQuotes.sort((a, b) {
-                      if (_sortOption == 'Menor Precio') {
-                        final totalA = (a['subtotal_servicios'] ?? 0) + (a['subtotal_productos'] ?? 0);
-                        final totalB = (b['subtotal_servicios'] ?? 0) + (b['subtotal_productos'] ?? 0);
-                        return totalA.compareTo(totalB);
-                      } else if (_sortOption == 'Mejor Calificación') {
-                        final califA = a['taller']?['calificacion_promedio'] ?? 0.0;
-                        final califB = b['taller']?['calificacion_promedio'] ?? 0.0;
-                        return califB.compareTo(califA); // Mayor a menor
-                      } else if (_sortOption == 'Más Rápido') {
-                        // Comparamos el ETA
-                        final etaA = _calculateEta(a);
-                        final etaB = _calculateEta(b);
-                        return etaA.compareTo(etaB);
-                      }
-                      return 0;
-                    });
-
-                    final cot = sortedQuotes[index];
-                    final double manoObra = (cot['subtotal_servicios'] ?? 0).toDouble();
-                    final double repuestos = (cot['subtotal_productos'] ?? 0).toDouble();
-                    final double total = manoObra + repuestos;
-                    
-                    int etaMinutos = _calculateEta(cot);
-                    final double calificacion = cot['taller']?['calificacion_promedio'] ?? 5.0;
-                    
-                    return Container(
-                      width: 280,
-                      margin: const EdgeInsets.only(right: 16.0),
-                      child: TCard(
-                        color: cot['estado'] == 'ACEPTADA' ? AppColors.successBg.withValues(alpha: 0.1) : AppColors.surface,
-                        padding: 16.0,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      TText.h3(
-                                        cot['taller']?['nombre'] ?? 'Taller Desconocido',
-                                        color: cot['estado'] == 'ACEPTADA' ? AppColors.success : Colors.white,
-                                        maxLines: 1,
-                                      ),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.star, color: Colors.amber, size: 14),
-                                          const SizedBox(width: 4),
-                                          Text(calificacion.toStringAsFixed(1), style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                ),
-                                _buildStatusBadge(cot['estado']),
-                              ],
-                            ),
-                            TSpacing.verticalSmall(),
-                            TText.body(
-                              cot['descripcion_servicio'] ?? '',
-                              maxLines: 2,
-                            ),
-                            const Spacer(),
-                            if (etaMinutos > 0)
-                              Row(
-                                children: [
-                                  const Icon(Icons.electric_moped, size: 14, color: AppColors.primary),
-                                  const SizedBox(width: 4),
-                                  TText.label('Llega en aprox. $etaMinutos min'),
-                                ],
-                              ),
-                            const Divider(color: AppColors.border),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                TText.label('Total Estimado:'),
-                                TText.h2('\$${total.toStringAsFixed(2)}', color: AppColors.primary),
-                              ],
-                            ),
-                            TSpacing.verticalSmall(),
-                            if (cot['estado'] == 'PENDIENTE')
-                              TButton(
-                                label: 'Revisar y Aceptar',
-                                variant: TButtonVariant.primary,
-                                onPressed: () async {
-                                  final changed = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => QuoteReviewView(quote: cot, emergencyId: e['id']))
-                                  );
-                                  if (changed == true) {
-                                    _refreshData();
-                                  }
-                                },
-                              )
-                            else if (cot['estado'] == 'ACEPTADA')
-                              TButton(
-                                label: 'Oferta Ganadora',
-                                variant: TButtonVariant.outline,
-                                icon: Icons.check_circle,
-                                onPressed: () {},
-                              )
-                          ],
-                        ),
-                      ),
-                    );
-                  },
                 ),
               ),
               TSpacing.verticalLarge(),
@@ -711,21 +503,225 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ChatView(emergenciaId: e['id']),
-            ),
-          );
-        },
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.chat_bubble, color: Colors.white),
-        label: const Text('Chat con Taller', style: TextStyle(color: Colors.white)),
+        // TAB 2: COTIZACIONES
+        SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+                if (['ACEPTADA'].contains(e['estado_actual']?.toString().toUpperCase()) || _cotizaciones.any((c) => c['estado'] == 'ACEPTADA')) ...[
+                  TCard(
+                    color: AppColors.danger.withValues(alpha: 0.1),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TText.body('Puedes cancelar la reparación si el técnico aún no llega, pero se cobrará una comisión.'),
+                        TSpacing.verticalSmall(),
+                        TButton(
+                          label: 'Cancelar Reparación (Cargo \$5.00)',
+                          icon: Icons.cancel,
+                          variant: TButtonVariant.outline,
+                          onPressed: () async {
+                            bool? confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: AppColors.surface,
+                                title: TText.h3('Cancelar Reparación'),
+                                content: TText.body('Se aplicará un cargo de \$5.00 a tu cuenta por desplazamiento del técnico. ¿Deseas continuar?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('VOLVER')),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true), 
+                                    child: const Text('SÍ, CANCELAR', style: TextStyle(color: AppColors.danger))
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              try {
+                                final cotAceptada = _cotizaciones.firstWhere((c) => c['estado'] == 'ACEPTADA');
+                                final storage = LocalStorage();
+                                final apiClient = ApiClient(localStorage: storage);
+                                final cotService = CotizacionService(apiClient: apiClient);
+                                await cotService.cancelarCotizacionCliente(cotAceptada['id']);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Servicio cancelado exitosamente.')));
+                                  _refreshData();
+                                }
+                              } catch (err) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ' + err.toString())));
+                                }
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  TSpacing.verticalLarge(),
+                ],
+
+            // Cotizaciones (Marketplace)
+            if (_cotizaciones.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TText.h3('Ofertas de Talleres (${_cotizaciones.length})'),
+                  DropdownButton<String>(
+                    value: _sortOption,
+                    dropdownColor: AppColors.surface,
+                    style: const TextStyle(color: Colors.white),
+                    underline: Container(height: 1, color: AppColors.primary),
+                    onChanged: (String? newValue) {
+                      if (newValue != null && mounted) {
+                        setState(() {
+                          _sortOption = newValue;
+                        });
+                      }
+                    },
+                    items: <String>['Menor Precio', 'Mejor Calificación', 'Más Rápido']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+              TSpacing.verticalSmall(),
+              SizedBox(
+                height: 230,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _cotizaciones.length,
+                  itemBuilder: (context, index) {
+                    // Sorting localmente la copia
+                    final sortedQuotes = List<Map<String, dynamic>>.from(_cotizaciones);
+                    sortedQuotes.sort((a, b) {
+                      if (_sortOption == 'Menor Precio') {
+                        final totalA = (a['subtotal_servicios'] ?? 0) + (a['subtotal_productos'] ?? 0);
+                        final totalB = (b['subtotal_servicios'] ?? 0) + (b['subtotal_productos'] ?? 0);
+                        return totalA.compareTo(totalB);
+                      } else if (_sortOption == 'Mejor Calificación') {
+                        final califA = a['taller']?['calificacion_promedio'] ?? 0.0;
+                        final califB = b['taller']?['calificacion_promedio'] ?? 0.0;
+                        return califB.compareTo(califA); // Mayor a menor
+                      } else if (_sortOption == 'Más Rápido') {
+                        // Comparamos el ETA
+                        final etaA = _calculateEta(a);
+                        final etaB = _calculateEta(b);
+                        return etaA.compareTo(etaB);
+                      }
+                      return 0;
+                    });
+
+                    final cot = sortedQuotes[index];
+                    final double manoObra = (cot['subtotal_servicios'] ?? 0).toDouble();
+                    final double repuestos = (cot['subtotal_productos'] ?? 0).toDouble();
+                    final double total = manoObra + repuestos;
+                    
+                    int etaMinutos = _calculateEta(cot);
+                    final double calificacion = cot['taller']?['calificacion_promedio'] ?? 5.0;
+                    
+                    return Container(
+                      width: 280,
+                      margin: const EdgeInsets.only(right: 16.0),
+                      child: TCard(
+                        color: cot['estado'] == 'ACEPTADA' ? AppColors.successBg.withValues(alpha: 0.1) : AppColors.surface,
+                        padding: 16.0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      TText.h3(
+                                        cot['taller']?['nombre'] ?? 'Taller Desconocido',
+                                        color: cot['estado'] == 'ACEPTADA' ? AppColors.success : Colors.white,
+                                        maxLines: 1,
+                                      ),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.star, color: Colors.amber, size: 14),
+                                          const SizedBox(width: 4),
+                                          Text(calificacion.toStringAsFixed(1), style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                _buildStatusBadge(cot['estado']),
+                              ],
+                            ),
+                            TSpacing.verticalSmall(),
+                            TText.body(
+                              cot['descripcion_servicio'] ?? '',
+                              maxLines: 2,
+                            ),
+                            const Spacer(),
+                            if (etaMinutos > 0)
+                              Row(
+                                children: [
+                                  const Icon(Icons.electric_moped, size: 14, color: AppColors.primary),
+                                  const SizedBox(width: 4),
+                                  TText.label('Llega en aprox. $etaMinutos min'),
+                                ],
+                              ),
+                            const Divider(color: AppColors.border),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TText.label('Total Estimado:'),
+                                TText.h2('\$${total.toStringAsFixed(2)}', color: AppColors.primary),
+                              ],
+                            ),
+                            TSpacing.verticalSmall(),
+                            if (cot['estado'] == 'PENDIENTE')
+                              TButton(
+                                label: 'Revisar y Aceptar',
+                                variant: TButtonVariant.primary,
+                                onPressed: () async {
+                                  final changed = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => QuoteReviewView(quote: cot, emergencyId: e['id']))
+                                  );
+                                  if (changed == true) {
+                                    _refreshData();
+                                  }
+                                },
+                              )
+                            else if (cot['estado'] == 'ACEPTADA')
+                              TButton(
+                                label: 'Oferta Ganadora',
+                                variant: TButtonVariant.outline,
+                                icon: Icons.check_circle,
+                                onPressed: () {},
+                              )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              TSpacing.verticalLarge(),
+            ],
+            ],
+          ),
+        ),
+        // TAB 3: CHAT
+        ChatView(emergenciaId: e['id'], showAppBar: false),
+      ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatusBadge(String status) {
     switch (status.toUpperCase()) {
@@ -782,9 +778,11 @@ class _PaymentButtonState extends State<_PaymentButton> {
       isLoading: _isPaying,
       onPressed: _isPaying ? null : () async {
         final montoStr = e['monto_pago'] ?? e['pago']?['monto'] ?? '0';
-        final double monto = double.tryParse(montoStr.toString()) ?? 0.0;
+        final double montoServicio = double.tryParse(montoStr.toString()) ?? 0.0;
+        final double deudaAcumulada = e['deuda_acumulada'] != null ? double.tryParse(e['deuda_acumulada'].toString()) ?? 0.0 : 0.0;
+        final double montoTotal = montoServicio + deudaAcumulada;
         
-        if (monto <= 0) {
+        if (montoTotal <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('El monto debe ser mayor a 0')),
           );
@@ -798,13 +796,23 @@ class _PaymentButtonState extends State<_PaymentButton> {
             MaterialPageRoute(
               builder: (_) => PaymentSelectionView(
                 emergenciaId: e['id'],
-                monto: monto,
+                monto: montoTotal,
               ),
             ),
           );
 
           if (result == true && mounted) {
-            Navigator.pop(context, true); 
+            // Mostrar modal de calificación automáticamente después de pago exitoso
+            await showDialog(
+              context: context,
+              builder: (_) => RatingDialog(
+                idEmergencia: e['id'],
+                calificacionExistente: null,
+              ),
+            );
+            if (mounted) {
+              Navigator.pop(context, true); 
+            }
           }
         } finally {
           if (mounted) setState(() => _isPaying = false);
@@ -863,5 +871,6 @@ class _RatingSectionState extends State<_RatingSection> {
       variant: TButtonVariant.primary,
       isLoading: _isLoading,
       onPressed: _openRating,
+    );
   }
 }

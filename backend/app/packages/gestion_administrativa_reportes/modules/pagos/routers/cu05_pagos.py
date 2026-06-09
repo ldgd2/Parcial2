@@ -103,6 +103,7 @@ async def registrar_pago(
     estado_fin = estado_fin_res.scalar_one_or_none()
     if estado_fin:
         emergencia.idEstado = estado_fin.id
+        emergencia.deuda_acumulada = 0.0
         historial = HistorialEstado(
             idEmergencia=emergencia.id,
             idEstado=estado_fin.id
@@ -344,6 +345,7 @@ async def create_payment_intent(
         estado_fin = estado_fin_res.scalar_one_or_none()
         if estado_fin:
             emergencia.idEstado = estado_fin.id
+            emergencia.deuda_acumulada = 0.0
             historial = HistorialEstado(
                 idEmergencia=emergencia.id,
                 idEstado=estado_fin.id

@@ -22,8 +22,9 @@ const _photoSvg = '''<svg width="24" height="24" viewBox="0 0 24 24" fill="none"
 
 class ChatView extends StatefulWidget {
   final int emergenciaId;
+  final bool showAppBar;
 
-  const ChatView({super.key, required this.emergenciaId});
+  const ChatView({super.key, required this.emergenciaId, this.showAppBar = true});
 
   @override
   State<ChatView> createState() => _ChatViewState();
@@ -236,9 +237,9 @@ class _ChatViewState extends State<ChatView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: widget.showAppBar ? AppBar(
         title: TText.h3('Chat de Auxilio'),
-      ),
+      ) : null,
       body: Column(
         children: [
           Expanded(
