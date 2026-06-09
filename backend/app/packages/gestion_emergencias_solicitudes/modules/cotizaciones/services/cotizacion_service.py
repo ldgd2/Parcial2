@@ -132,7 +132,7 @@ class CotizacionService:
                 from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.historial_estado import HistorialEstado
                 await HistorialEstado.create(self.db, obj_in={
                     "idEmergencia": emergencia.id,
-                    "idEstado": nuevo_id_estado
+                    "idEstado": 1
                 })
                 await self.db.commit()
 
