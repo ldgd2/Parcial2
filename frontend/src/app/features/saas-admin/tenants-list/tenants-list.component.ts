@@ -764,3 +764,4 @@ export class TenantsListComponent implements OnInit {
     }[plan || ''] ?? 'border-zinc-800 text-zinc-600';
   }
 }
+// Triggering TS server update
