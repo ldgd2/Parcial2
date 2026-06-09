@@ -197,8 +197,7 @@ async def login_web(data: LoginRequest, db: AsyncSession) -> TokenResponse:
             role_name = rol_obj.nombre.lower()
             if role_name == "admin_taller":
                 role_name = "admin"
-            elif role_name == "super_admin":
-                role_name = "admin" # temporal compat, depends requires 'admin' + GLOBAL check
+            # super_admin keeps its name so the frontend can differentiate
                 
     # Verificar acceso web
     # Todos menos cliente y mecanico/tecnico pueden acceder a la web (a menos que se especifique lo contrario)
@@ -233,12 +232,11 @@ async def login_web(data: LoginRequest, db: AsyncSession) -> TokenResponse:
 
     return TokenResponse(
         access_token=token, 
-        rol="admin", 
+        rol=role_name,
         user_id=user.id,
         nombre=user.nombre, 
         cod_taller=user.idTaller,
         nombre_taller=workshop_name,
-        # TODO: si el frontend espera idSucursal en el response, podemos añadirlo al schema en el futuro.
     )
 
 from sqlalchemy import select
@@ -282,6 +280,12 @@ async def get_me(current_user: dict, db: AsyncSession):
             result_plan = await db.execute(stmt_plan)
             permisos_plan = set(result_plan.scalars().all())
             
+    is_super_admin = (rol == "super_admin" or (not taller_cod and rol not in ["tecnico", "cliente"]))
+    
+    # Super admins get all permissions
+    if is_super_admin:
+        permisos_finales = ["ALL_PERMISSIONS_FALLBACK_IF_ANY"]
+    else:
         permisos_finales = list(permisos_rol.intersection(permisos_plan)) if plan else list(permisos_rol) # fallback si no hay plan estricto
     
     return {
@@ -292,10 +296,10 @@ async def get_me(current_user: dict, db: AsyncSession):
             "correo": usuario.correo
         },
         "taller": {
-            "cod": taller.cod if taller else None,
-            "nombre": taller.nombre if taller else None,
-            "estado": taller.estado if taller else None
-        },
+            "cod": taller.cod,
+            "nombre": taller.nombre,
+            "estado": taller.estado
+        } if taller else None,
         "plan": {
             "nombre": plan.nombre if plan else "Gratuito (Fallback)",
             "precio_mensual": float(plan.precio_mensual) if plan and plan.precio_mensual else 0.0,
@@ -303,5 +307,7 @@ async def get_me(current_user: dict, db: AsyncSession):
             "max_tecnicos": plan.max_tecnicos if plan else 3
         },
         "sucursal": getattr(usuario, 'idSucursal', None),
-        "permisos": permisos_finales
+        "permisos": permisos_finales,
+        "is_super_admin": is_super_admin,
+        "role": rol
     }

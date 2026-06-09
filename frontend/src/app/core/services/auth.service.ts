@@ -13,10 +13,12 @@ export interface PlanInfo {
 
 export interface AuthMeResponse {
   usuario: any;
-  taller: any;
+  taller: any | null;  // null para super admins sin taller
   plan: PlanInfo;
   sucursal?: number;
   permisos: string[];
+  is_super_admin?: boolean;
+  role?: string;
 }
 
 @Injectable({

@@ -42,6 +42,9 @@ class PlanInfo(BaseModel):
 
 class AuthMeResponse(BaseModel):
     usuario: dict
-    taller: dict
+    taller: Optional[dict] = None  # None para super admins sin taller asignado
     plan: PlanInfo
     permisos: list[str]
+    sucursal: Optional[int] = None
+    is_super_admin: bool = False
+    role: Optional[str] = None

@@ -134,8 +134,9 @@ export class LoginComponent {
       next: () => {
         this.loading = false;
         const user = this.authService.currentUser();
-        const isSuperAdmin = !user?.taller;
+        const isSuperAdmin = user?.is_super_admin === true || (!user?.taller?.cod);
         const target = isSuperAdmin ? '/app/super/dashboard' : '/app/dashboard';
+        console.log('[Login] Rol detectado:', user?.role, '| is_super_admin:', isSuperAdmin, '| taller:', user?.taller?.cod);
         this.router.navigate([target]).then(success => {
           if (!success) {
             console.error('[Router] Navegación cancelada o fallida.');

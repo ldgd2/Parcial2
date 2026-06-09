@@ -111,7 +111,7 @@ export class MainLayoutComponent implements OnInit {
 
   navItems = computed(() => {
     const user = this.auth.currentUser();
-    const isSuperAdmin = !user?.taller;
+    const isSuperAdmin = user?.is_super_admin === true || (!user?.taller?.cod);
 
     if (isSuperAdmin) {
       return [
