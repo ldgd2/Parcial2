@@ -255,17 +255,22 @@ async def actualizar_estado_emergencia(
         )
 
     # Verificar que el estado existe
-    estado = await Estado.get(db, data.idEstado)
+    estado = None
+    if getattr(data, "estado_nombre", None):
+        estado = await Estado.get_by_nombre(db, data.estado_nombre)
+    elif getattr(data, "idEstado", None) is not None:
+        estado = await Estado.get(db, data.idEstado)
+
     if estado is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Estado no válido.",
         )
 
-    emergencia = await emergencia.update(db, obj_in={"idEstado": data.idEstado})
+    emergencia = await emergencia.update(db, obj_in={"idEstado": estado.id})
     nuevo_historial = await HistorialEstado.create(db, obj_in={
         "idEmergencia": emergencia_id,
-        "idEstado": data.idEstado
+        "idEstado": estado.id
     })
     await db.flush()
 

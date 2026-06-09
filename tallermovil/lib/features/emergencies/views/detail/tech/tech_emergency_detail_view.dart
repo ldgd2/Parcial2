@@ -60,14 +60,14 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
     }
   }
 
-  Future<void> _updateState(int stateId) async {
+  Future<void> _updateState(String stateName) async {
     setState(() => _isLoading = true);
     try {
       final storage = LocalStorage();
       final apiClient = ApiClient(localStorage: storage);
       await apiClient.dio.patch(
         '/talleres/solicitudes/${widget.emergency['id']}/estado',
-        data: {'idEstado': stateId},
+        data: {'estado_nombre': stateName},
       );
       await _refreshData();
     } catch (e) {
@@ -169,7 +169,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
                    icon: Icons.directions_car,
                    variant: TButtonVariant.primary,
                    onPressed: () async {
-                     await _updateState(3); // 3 = EN_RUTA
+                     await _updateState('EN_RUTA');
                      if (mounted) {
                        Navigator.push(
                          context,
@@ -191,7 +191,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
                    label: 'Llegué al lugar / Comenzar Trabajo',
                    icon: Icons.build,
                    variant: TButtonVariant.primary,
-                   onPressed: () => _updateState(4), // 4 = ATENDIENDO
+                   onPressed: () => _updateState('ATENDIENDO'),
                  ),
                  TSpacing.verticalLarge(),
               ] else if (e['estado_actual']?.toString().toUpperCase() == 'ATENDIENDO') ...[

@@ -61,7 +61,8 @@ class EmergenciaOut(BaseModel):
 # ─── Actualizar estado (CU15 — Taller) ───────────────────────────
 
 class ActualizarEstadoRequest(BaseModel):
-    idEstado: int
+    idEstado: Optional[int] = None
+    estado_nombre: Optional[str] = None
     comentario: Optional[str] = None
 
 class FinalizarEmergenciaRequest(BaseModel):

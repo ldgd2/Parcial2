@@ -100,7 +100,15 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             setState(() {
               _tecnicoPos = LatLng(position.latitude, position.longitude);
             });
-            _mapController.move(_tecnicoPos, 16.0);
+            _mapController.fitCamera(
+              CameraFit.bounds(
+                bounds: LatLngBounds.fromPoints([
+                  _tecnicoPos,
+                  LatLng(widget.destLat, widget.destLng),
+                ]),
+                padding: const EdgeInsets.all(50.0),
+              ),
+            );
             await _fetchRoute(); // Calcular ruta de inmediato
           }
         } catch (e) {
@@ -154,7 +162,17 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
         });
 
         if (_autoFollow) {
-          _mapController.move(_tecnicoPos, _mapController.camera.zoom);
+          final bounds = LatLngBounds.fromPoints([
+            _tecnicoPos,
+            LatLng(widget.destLat, widget.destLng),
+            if (_routePoints.isNotEmpty) ..._routePoints,
+          ]);
+          _mapController.fitCamera(
+            CameraFit.bounds(
+              bounds: bounds,
+              padding: const EdgeInsets.all(50.0),
+            ),
+          );
         }
 
         _wsService.sendGpsUpdate(
@@ -326,7 +344,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                             final apiClient = ApiClient(localStorage: storage);
                             await apiClient.dio.patch(
                               '/talleres/solicitudes/${widget.emergenciaId}/estado',
-                              data: {'idEstado': 4}, // 4 = ATENDIENDO
+                              data: {'estado_nombre': 'ATENDIENDO'},
                             );
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Estado actualizado a Atendiendo')));
