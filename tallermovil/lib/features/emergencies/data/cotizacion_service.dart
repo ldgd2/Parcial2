@@ -30,4 +30,13 @@ class CotizacionService {
       throw Exception(e.response?.data?['detail'] ?? 'Error al actualizar cotización');
     }
   }
+
+  /// Cancela una cotización aceptada previamente (Cliente)
+  Future<void> cancelarCotizacionCliente(int idCotizacion) async {
+    try {
+      await apiClient.dio.post('/cotizaciones/$idCotizacion/cancelar_cliente');
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['detail'] ?? 'Error al cancelar la cotización');
+    }
+  }
 }

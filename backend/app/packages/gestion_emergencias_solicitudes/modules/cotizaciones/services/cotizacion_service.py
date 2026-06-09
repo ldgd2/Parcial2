@@ -158,3 +158,38 @@ class CotizacionService:
         })
 
         return cotizacion
+
+    async def cancelar_por_cliente(self, id_cotizacion: int):
+        from sqlalchemy import select
+        from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.emergencia import Emergencia
+        
+        cotizacion = await self.repo.get(id_cotizacion)
+        if not cotizacion:
+            raise HTTPException(status_code=404, detail="Cotizacin no encontrada")
+        if cotizacion.estado != "ACEPTADA":
+            raise HTTPException(status_code=400, detail="Solo se pueden cancelar cotizaciones aceptadas.")
+
+        # Actualizamos cotizacin
+        cotizacion = await self.repo.update(db_obj=cotizacion, obj_in={"estado": "CANCELADA"})
+
+        # Obtenemos la emergencia para quitarle el taller asignado y sumar deuda
+        result_emergencia = await self.db.execute(select(Emergencia).where(Emergencia.id == cotizacion.idEmergencia))
+        emergencia = result_emergencia.scalar_one_or_none()
+        
+        if emergencia:
+            await emergencia.update(self.db, obj_in={
+                "idTaller": None,
+                "deuda_acumulada": emergencia.deuda_acumulada + 5.0
+            })
+            
+            # Notificar al taller
+            await manager.send_personal_message(
+                {
+                    "type": "cotizacion_cancelada_cliente",
+                    "emergencia_id": emergencia.id,
+                    "mensaje": "El cliente cancel el servicio en curso. Se le ha cobrado una comisin a tu favor."
+                },
+                f"taller_{cotizacion.idTaller}"
+            )
+
+        return cotizacion

@@ -1,5 +1,71 @@
 import 'dart:async';
-import 'dart:io';
+import 'da
+          // TAB 2: COTIZACIONES
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (['ACEPTADA'].contains(e['estado_actual']?.toString().toUpperCase()) || _cotizaciones.any((c) => c['estado'] == 'ACEPTADA')) ...[
+                  TCard(
+                    color: AppColors.danger.withValues(alpha: 0.1),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TText.body('Puedes cancelar la reparación si el técnico aún no llega, pero se cobrará una comisión.'),
+                        TSpacing.verticalSmall(),
+                        TButton(
+                          label: 'Cancelar Reparación (Cargo $5.00)',
+                          icon: Icons.cancel,
+                          variant: TButtonVariant.outline,
+                          onPressed: () async {
+                            bool? confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: AppColors.surface,
+                                title: TText.h3('Cancelar Reparación'),
+                                content: TText.body('Se aplicará un cargo de $5.00 a tu cuenta por desplazamiento del técnico. ¿Deseas continuar?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('VOLVER')),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true), 
+                                    child: const Text('SÍ, CANCELAR', style: TextStyle(color: AppColors.danger))
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              try {
+                                final cotAceptada = _cotizaciones.firstWhere((c) => c['estado'] == 'ACEPTADA');
+                                final storage = LocalStorage();
+                                final apiClient = ApiClient(localStorage: storage);
+                                final cotService = CotizacionService(apiClient: apiClient);
+                                await cotService.cancelarCotizacionCliente(cotAceptada['id']);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Servicio cancelado exitosamente.')));
+                                  _refreshData();
+                                }
+                              } catch (err) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ' + err.toString())));
+                                }
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  TSpacing.verticalLarge(),
+                ],
+
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+rt:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -147,9 +213,12 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
     final lat = e['latitud'] as double?;
     final lng = e['longitud'] as double?;
 
-    return Scaffold(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
       appBar: AppBar(
         title: TText.h3('Detalle de Emergencia'),
+        bottom: const TabBar(tabs: [Tab(text: 'Detalle'), Tab(text: 'Cotizaciones')]),
         actions: [
           if (['PENDIENTE', 'INICIADA'].contains(e['estado_actual']?.toString().toUpperCase()))
             IconButton(
@@ -191,7 +260,10 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: TabBarView(
+        children: [
+          // TAB 1: DETALLE
+          SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -791,6 +863,5 @@ class _RatingSectionState extends State<_RatingSection> {
       variant: TButtonVariant.primary,
       isLoading: _isLoading,
       onPressed: _openRating,
-    );
   }
 }

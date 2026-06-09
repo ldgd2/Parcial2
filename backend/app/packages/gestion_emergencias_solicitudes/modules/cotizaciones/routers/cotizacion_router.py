@@ -50,3 +50,12 @@ async def update_estado_cotizacion(
     """(Cliente/Taller) Actualiza el estado (ACEPTADA, RECHAZADA) o re-negocia."""
     service = CotizacionService(db)
     return await service.update_estado_async(id_cotizacion, data)
+
+@router.post("/{id_cotizacion}/cancelar_cliente", response_model=CotizacionOut)
+async def cancelar_cotizacion_cliente(
+    id_cotizacion: int,
+    db: Session = Depends(get_db)
+):
+    """(Cliente) Cancela una cotizacin aceptada previamente, cobrando $5 de multa."""
+    service = CotizacionService(db)
+    return await service.cancelar_por_cliente(id_cotizacion)

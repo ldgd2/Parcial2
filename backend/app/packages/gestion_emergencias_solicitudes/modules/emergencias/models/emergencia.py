@@ -38,6 +38,9 @@ class Emergencia(GenericModel):
     # Audio raw (Whisper source)
     audio_url = Column(String(500), nullable=True)
 
+    # Deuda acumulada por cancelaciones de cotizaciones
+    deuda_acumulada = Column(Float, nullable=False, default=0.0)
+
     # Relaciones
     taller = relationship("Taller", back_populates="emergencias", foreign_keys=[idTaller])
     sucursal = relationship("Sucursal", foreign_keys=[idSucursal])
