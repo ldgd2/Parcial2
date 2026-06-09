@@ -91,7 +91,14 @@ class CotizacionService:
         return await self.repo.get_by_emergencia(id_emergencia)
 
     async def update_estado_async(self, id_cotizacion: int, data: CotizacionUpdate):
-        cotizacion = await self.repo.get(id_cotizacion)
+        from sqlalchemy import select
+        from sqlalchemy.orm import joinedload
+        result = await self.db.execute(
+            select(self.repo.model)
+            .options(joinedload(self.repo.model.taller))
+            .where(self.repo.model.id == id_cotizacion)
+        )
+        cotizacion = result.scalar_one_or_none()
         if not cotizacion:
             raise HTTPException(status_code=404, detail="Cotización no encontrada")
             
