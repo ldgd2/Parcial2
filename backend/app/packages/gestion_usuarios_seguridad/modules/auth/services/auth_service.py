@@ -188,25 +188,35 @@ async def login_web(data: LoginRequest, db: AsyncSession) -> TokenResponse:
         )
         
     # Obtener el nombre del rol desde la base de datos
-    role_name = "admin" # fallback
+    role_name = None  # se resuelve más abajo
     if getattr(user, 'id_rol', None):
         from app.packages.gestion_usuarios_seguridad.modules.suscripciones_roles.models.permisos import Rol
         rol_obj = await db.get(Rol, user.id_rol)
         if rol_obj:
-            # Mapeamos algunos nombres para mantener compatibilidad si es necesario
             role_name = rol_obj.nombre.lower()
             if role_name == "admin_taller":
                 role_name = "admin"
             # super_admin keeps its name so the frontend can differentiate
-                
+
+    # Si no tiene rol asignado en la BD:
+    # - Sin taller → es super admin global
+    # - Con taller  → fallback a admin de taller
+    if role_name is None:
+        if not user.idTaller:
+            role_name = "super_admin"
+        else:
+            role_name = "admin"
+
+    print(f"[login_web] usuario={user.correo} | id_rol={user.id_rol} | idTaller={user.idTaller} | role_name={role_name}")
+
     # Verificar acceso web
-    # Todos menos cliente y mecanico/tecnico pueden acceder a la web (a menos que se especifique lo contrario)
+    # Todos menos cliente y mecanico/tecnico pueden acceder a la web
     if role_name in ["cliente", "tecnico", "mecanico"]:
-         raise HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Acceso denegado. Este portal es solo para personal administrativo.",
         )
-    
+
     token = create_access_token(
         subject=user.id,
         extra_claims={"role": role_name, "taller": user.idTaller, "sucursal": user.idSucursal},
@@ -280,7 +290,11 @@ async def get_me(current_user: dict, db: AsyncSession):
             result_plan = await db.execute(stmt_plan)
             permisos_plan = set(result_plan.scalars().all())
             
-    is_super_admin = (rol == "super_admin" or (not taller_cod and rol not in ["tecnico", "cliente"]))
+    is_super_admin = (
+        rol == "super_admin"
+        or (not taller_cod and rol not in ["tecnico", "cliente"])
+    )
+    print(f"[get_me] user_id={user_id} | rol={rol} | taller_cod={taller_cod} | is_super_admin={is_super_admin}")
     
     # Super admins get all permissions
     if is_super_admin:
