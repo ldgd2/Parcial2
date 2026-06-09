@@ -90,7 +90,7 @@ class TenantUserResetPassword(BaseModel):
 
 # ── Auth guard ─────────────────────────────────────────────────────────────────
 
-def require_super_admin(current_user: dict = Depends(require_role("admin", "admin_sucursal"))):
+def require_super_admin(current_user: dict = Depends(require_role("super_admin"))):
     if current_user.get("taller") != "GLOBAL":
         raise HTTPException(status_code=403, detail="Permiso denegado. Solo Super Admin.")
     return current_user

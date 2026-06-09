@@ -217,9 +217,14 @@ async def login_web(data: LoginRequest, db: AsyncSession) -> TokenResponse:
             detail="Acceso denegado. Este portal es solo para personal administrativo.",
         )
 
+    # Determinar qué poner en el claim de taller
+    taller_claim = user.idTaller
+    if role_name == "super_admin":
+        taller_claim = "GLOBAL"
+
     token = create_access_token(
         subject=user.id,
-        extra_claims={"role": role_name, "taller": user.idTaller, "sucursal": user.idSucursal},
+        extra_claims={"role": role_name, "taller": taller_claim, "sucursal": user.idSucursal},
     )
 
     # Registrar en bitácora
