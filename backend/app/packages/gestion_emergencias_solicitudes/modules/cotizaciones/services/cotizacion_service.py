@@ -124,17 +124,38 @@ class CotizacionService:
             result_emergencia = await self.db.execute(select(Emergencia).where(Emergencia.id == cotizacion.idEmergencia))
             emergencia = result_emergencia.scalar_one_or_none()
             if emergencia:
-                # Mantener en estado INICIADA (1) para que el Taller luego asigne al mecánico
-                await emergencia.update(self.db, obj_in={
-                    "idTaller": cotizacion.idTaller,
-                    "idEstado": 1
-                })
-                from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.historial_estado import HistorialEstado
-                await HistorialEstado.create(self.db, obj_in={
-                    "idEmergencia": emergencia.id,
-                    "idEstado": 1
-                })
-                await self.db.commit()
+                from app.packages.gestion_usuarios_seguridad.modules.tecnicos.models.tecnico import Tecnico
+                from app.packages.gestion_emergencias_solicitudes.modules.emergencias.services.emergencia_service import asignar_emergencia_taller
+                
+                # Buscar al mejor técnico activo del taller
+                stmt_tecnico = select(Tecnico).where(
+                    Tecnico.idTaller == cotizacion.idTaller,
+                    Tecnico.estado == "ACTIVO"
+                ).order_by(Tecnico.calificacion_promedio.desc()).limit(1)
+                
+                mejor_tecnico = (await self.db.execute(stmt_tecnico)).scalar_one_or_none()
+                
+                if mejor_tecnico:
+                    # Asignación automática al mejor técnico
+                    await asignar_emergencia_taller(
+                        emergencia_id=emergencia.id,
+                        taller_cod=cotizacion.idTaller,
+                        tecnicos_ids=[mejor_tecnico.id],
+                        db=self.db,
+                        id_sucursal=mejor_tecnico.idSucursal
+                    )
+                else:
+                    # Fallback si no hay técnicos activos, mantener en INICIADA
+                    await emergencia.update(self.db, obj_in={
+                        "idTaller": cotizacion.idTaller,
+                        "idEstado": 1
+                    })
+                    from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.historial_estado import HistorialEstado
+                    await HistorialEstado.create(self.db, obj_in={
+                        "idEmergencia": emergencia.id,
+                        "idEstado": 1
+                    })
+                    await self.db.commit()
 
             # 2. Notificar al taller ganador
             await manager.send_personal_message(
