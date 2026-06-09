@@ -105,8 +105,11 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
     switch (status.toUpperCase()) {
       case 'PENDIENTE': bg = Colors.grey; break;
       case 'ASIGNADO': bg = Colors.blue; break;
-      case 'EN_RUTA': bg = Colors.orange; break;
-      case 'ATENDIENDO': bg = Colors.green; break;
+      case 'EN_RUTA':
+      case 'EN_CAMINO':
+      case 'EN_RUTEO': bg = Colors.orange; break;
+      case 'ATENDIENDO':
+      case 'ATENDIDO': bg = Colors.green; break;
       case 'FINALIZADO': bg = AppColors.success; break;
       case 'PAGADO': bg = Colors.teal; break;
       default: bg = Colors.grey;
@@ -186,7 +189,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
                    },
                  ),
                  TSpacing.verticalLarge(),
-              ] else if (e['estado_actual']?.toString().toUpperCase() == 'EN_RUTA') ...[
+              ] else if (['EN_RUTA', 'EN_CAMINO', 'EN_RUTEO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
                  TButton(
                    label: 'Llegué al lugar / Comenzar Trabajo',
                    icon: Icons.build,
@@ -194,7 +197,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
                    onPressed: () => _updateState('ATENDIENDO'),
                  ),
                  TSpacing.verticalLarge(),
-              ] else if (e['estado_actual']?.toString().toUpperCase() == 'ATENDIENDO') ...[
+              ] else if (['ATENDIENDO', 'ATENDIDO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
                  TButton(
                    label: 'Finalizar y Ajustar Cotización',
                    icon: Icons.check_circle,
@@ -228,7 +231,7 @@ class _TechEmergencyDetailViewState extends State<TechEmergencyDetailView> {
                  TSpacing.verticalLarge(),
               ],
 
-              if (['ASIGNADO', 'EN_RUTA', 'ATENDIENDO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
+              if (['ASIGNADO', 'EN_RUTA', 'EN_CAMINO', 'EN_RUTEO', 'ATENDIENDO', 'ATENDIDO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
                  TButton(
                    label: 'Ver Mapa / Seguir Ruta',
                    icon: Icons.map,

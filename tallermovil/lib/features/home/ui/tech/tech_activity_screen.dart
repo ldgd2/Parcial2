@@ -45,7 +45,7 @@ class _TechActivityScreenState extends State<TechActivityScreen> {
         setState(() {
           _emergencies = data.where((e) {
             final estado = e['estado_actual']?.toString().toUpperCase() ?? '';
-            return ['EN_RUTA', 'EN_CAMINO', 'ATENDIENDO', 'ARREGLADO', 'FINALIZADO', 'PAGADO'].contains(estado);
+            return ['EN_RUTA', 'EN_CAMINO', 'EN_RUTEO', 'ATENDIENDO', 'ATENDIDO', 'ARREGLADO', 'FINALIZADO', 'PAGADO'].contains(estado);
           }).toList();
         });
       }
@@ -151,8 +151,13 @@ class _TechActivityScreenState extends State<TechActivityScreen> {
     Color bg;
     switch (status.toUpperCase()) {
       case 'ASIGNADO': bg = Colors.blue; break;
-      case 'EN_CAMINO': bg = Colors.orange; break;
-      case 'ARREGLADO': bg = Colors.green; break;
+      case 'EN_CAMINO':
+      case 'EN_RUTA':
+      case 'EN_RUTEO': bg = Colors.orange; break;
+      case 'ATENDIDO':
+      case 'ATENDIENDO': bg = Colors.purple; break;
+      case 'ARREGLADO':
+      case 'FINALIZADO': bg = Colors.green; break;
       default: bg = Colors.grey;
     }
     return Container(
