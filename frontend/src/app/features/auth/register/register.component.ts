@@ -14,6 +14,16 @@ import { ApiService } from '../../../core/api/api.service';
 import { StripeService } from '../../../core/services/stripe.service';
 import { StripeElements, Stripe } from '@stripe/stripe-js';
 
+interface Plan {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  precio_mensual: number;
+  max_sucursales: number;
+  max_tecnicos: number;
+  max_admins_sucursal: number;
+}
+
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -72,47 +82,31 @@ import { StripeElements, Stripe } from '@stripe/stripe-js';
           <!-- STEP 1: PLAN -->
           <div *ngIf="step === 1" @slideAnimation class="w-full">
             <h2 class="text-3xl font-extrabold uppercase mb-8 text-center">SELECCIONA TU PLAN OPERATIVO</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <!-- Free -->
-              <div class="border border-[#222222] bg-[#0a0a0a] p-6 cursor-pointer hover:border-[#FF5733] transition-colors"
-                   [class.border-[#FF5733]]="formData.plan_id === 1"
-                   [class.bg-[#111111]]="formData.plan_id === 1"
-                   (click)="selectPlan(1, 0)">
-                <h3 class="font-bold text-lg mb-2">GRATUITO</h3>
-                <div class="text-3xl font-extrabold mb-4">$0 <span class="text-xs text-zinc-500 font-normal">/mes</span></div>
+            
+            <div *ngIf="cargandoPlanes" class="flex justify-center items-center h-40">
+              <lucide-icon name="loader-2" class="animate-spin text-[#FF5733]" size="32"></lucide-icon>
+            </div>
+
+            <div *ngIf="!cargandoPlanes" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div *ngFor="let plan of planes; let i = index" 
+                   class="border border-[#222222] bg-[#0a0a0a] p-6 cursor-pointer hover:border-[#FF5733] transition-colors relative"
+                   [ngClass]="{'border-[#FF5733] bg-[#111111]': formData.plan_id === plan.id}"
+                   (click)="selectPlan(plan.id, plan.precio_mensual)">
+                
+                <div *ngIf="plan.precio_mensual > 0 && i === 1" class="absolute top-0 right-0 bg-[#FF5733] text-white text-[8px] font-bold px-2 py-0.5 uppercase tracking-widest">RECOMENDADO</div>
+                
+                <h3 class="font-bold text-lg mb-2 uppercase">{{ plan.nombre }}</h3>
+                <div class="text-3xl font-extrabold mb-4">\${{ plan.precio_mensual }} <span class="text-xs text-zinc-500 font-normal">/mes</span></div>
+                
                 <ul class="space-y-2 text-xs text-zinc-400 mb-6 font-mono">
-                  <li>- 1 Sucursal</li>
-                  <li>- 3 Técnicos</li>
-                </ul>
-              </div>
-              <!-- Pro -->
-              <div class="border border-[#222222] bg-[#0a0a0a] p-6 cursor-pointer hover:border-[#FF5733] transition-colors relative"
-                   [class.border-[#FF5733]]="formData.plan_id === 2"
-                   [class.bg-[#111111]]="formData.plan_id === 2"
-                   (click)="selectPlan(2, 49)">
-                <div class="absolute top-0 right-0 bg-[#FF5733] text-white text-[8px] font-bold px-2 py-0.5 uppercase tracking-widest">PRO</div>
-                <h3 class="font-bold text-lg mb-2">PROFESIONAL</h3>
-                <div class="text-3xl font-extrabold mb-4">$49 <span class="text-xs text-zinc-500 font-normal">/mes</span></div>
-                <ul class="space-y-2 text-xs text-zinc-400 mb-6 font-mono">
-                  <li>- 3 Sucursales</li>
-                  <li>- 15 Técnicos</li>
-                  <li>- Reportes Avanzados</li>
-                </ul>
-              </div>
-              <!-- Enterprise -->
-              <div class="border border-[#222222] bg-[#0a0a0a] p-6 cursor-pointer hover:border-[#FF5733] transition-colors"
-                   [class.border-[#FF5733]]="formData.plan_id === 3"
-                   [class.bg-[#111111]]="formData.plan_id === 3"
-                   (click)="selectPlan(3, 149)">
-                <h3 class="font-bold text-lg mb-2">CORPORATIVO</h3>
-                <div class="text-3xl font-extrabold mb-4">$149 <span class="text-xs text-zinc-500 font-normal">/mes</span></div>
-                <ul class="space-y-2 text-xs text-zinc-400 mb-6 font-mono">
-                  <li>- Sucursales Ilimitadas</li>
-                  <li>- Técnicos Ilimitados</li>
-                  <li>- API Access</li>
+                  <li>- {{ plan.max_sucursales === 9999 ? 'Sucursales Ilimitadas' : plan.max_sucursales + ' Sucursales' }}</li>
+                  <li>- {{ plan.max_tecnicos === 9999 ? 'Técnicos Ilimitados' : plan.max_tecnicos + ' Técnicos' }}</li>
+                  <li *ngIf="plan.precio_mensual > 0">- Reportes Avanzados</li>
+                  <li *ngIf="plan.precio_mensual >= 100">- API Access</li>
                 </ul>
               </div>
             </div>
+
             <div class="mt-8 flex justify-end">
               <button [disabled]="!formData.plan_id" (click)="nextStep()" class="bg-[#FF5733] disabled:opacity-50 text-white px-8 py-3 text-[10px] uppercase font-bold tracking-[.2em] hover:bg-[#e04c2c]">CONTINUAR -></button>
             </div>
@@ -229,6 +223,8 @@ import { StripeElements, Stripe } from '@stripe/stripe-js';
 })
 export class RegisterComponent implements OnInit {
   step = 1;
+  planes: Plan[] = [];
+  cargandoPlanes = true;
   
   formData = {
     nombre: '',
@@ -261,12 +257,30 @@ export class RegisterComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      if(params['plan']) {
-        const pId = parseInt(params['plan'], 10);
-        if([1,2,3].includes(pId)) {
-          this.selectPlan(pId, pId === 1 ? 0 : (pId === 2 ? 49 : 149));
-        }
+    this.cargarPlanes();
+  }
+
+  cargarPlanes() {
+    this.api.get<Plan[]>('/auth/planes').subscribe({
+      next: (data) => {
+        this.planes = data;
+        this.cargandoPlanes = false;
+        
+        // Check if there's a plan pre-selected in the URL
+        this.route.queryParams.subscribe(params => {
+          if(params['plan']) {
+            const pId = parseInt(params['plan'], 10);
+            const foundPlan = this.planes.find(p => p.id === pId);
+            if(foundPlan) {
+              this.selectPlan(foundPlan.id, foundPlan.precio_mensual);
+            }
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error cargando planes en registro', err);
+        this.cargandoPlanes = false;
+        this.errorMessage = 'No se pudieron cargar los planes de suscripción.';
       }
     });
   }
