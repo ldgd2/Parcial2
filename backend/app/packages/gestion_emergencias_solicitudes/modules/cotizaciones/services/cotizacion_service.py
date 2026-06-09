@@ -103,16 +103,7 @@ class CotizacionService:
             raise HTTPException(status_code=404, detail="Cotización no encontrada")
             
         if data.estado == "ACEPTADA":
-            # 1. Verificar Expiración (1 hora)
-            # Para evitar problemas de zona horaria (ej: db en UTC y servidor en UTC-4),
-            # convertimos ambos a naive UTC y sacamos el valor absoluto de la diferencia.
-            ahora_utc = datetime.now(timezone.utc).replace(tzinfo=None)
-            fecha_bd_utc = cotizacion.fecha_creacion.replace(tzinfo=None)
-            diferencia = ahora_utc - fecha_bd_utc
-            
-            # Usar valor absoluto en caso de que fecha_bd_utc esté en el futuro debido a la zona horaria
-            if abs(diferencia.total_seconds()) > 3600:
-                raise HTTPException(status_code=400, detail="La cotización ha expirado (más de 1 hora).")
+            # 1. (Eliminado) Expiración removida según solicitud del usuario
 
             # 2. Verificar que el Taller siga ACTIVO
             from sqlalchemy import select
