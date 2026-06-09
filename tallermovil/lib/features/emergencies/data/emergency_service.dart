@@ -61,10 +61,10 @@ class EmergencyService {
     try {
       final response = await apiClient.dio.get('/talleres/$codTaller/solicitudes');
       final List<dynamic> allRequests = response.data;
-      // Filtrar para mostrar solo las que están en proceso, completadas, o atendidas
+      // Filtrar para mostrar solo las que están en curso o completadas (según estados reales BD)
       return allRequests.where((e) {
         final estado = e['estado_actual']?.toString().toUpperCase() ?? '';
-        return ['ASIGNADO', 'EN_CAMINO', 'EN PROCESO', 'ARREGLADO', 'COMPLETADO', 'ATENDIDO'].contains(estado);
+        return ['ASIGNADO', 'EN_RUTA', 'ATENDIENDO', 'FINALIZADO', 'PAGADO'].contains(estado);
       }).cast<Map<String, dynamic>>().toList();
     } on DioException catch (e) {
       throw Exception(e.response?.data?['detail'] ?? 'Error al cargar historial del taller');

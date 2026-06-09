@@ -133,7 +133,10 @@ export class LoginComponent {
     this.authService.loginWeb(this.formData).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/app/dashboard']).then(success => {
+        const user = this.authService.currentUser();
+        const isSuperAdmin = !user?.taller;
+        const target = isSuperAdmin ? '/app/super/dashboard' : '/app/dashboard';
+        this.router.navigate([target]).then(success => {
           if (!success) {
             console.error('[Router] Navegación cancelada o fallida.');
           }

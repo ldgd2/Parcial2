@@ -83,7 +83,7 @@ import { toast } from 'ngx-sonner';
             <div class="flex items-center gap-4 border-l border-zinc-800 pl-8">
               <div class="text-right">
                 <div class="font-bold text-xs">{{ auth.currentUser()?.usuario?.nombre || 'Operador' }}</div>
-                <div class="font-bold text-[10px] uppercase tracking-widest text-zinc-600">{{ auth.currentUser()?.taller?.nombre || 'SaaS ADMIN' }}</div>
+                <div class="font-bold text-[10px] uppercase tracking-widest text-zinc-600">{{ auth.currentUser()?.taller?.nombre || 'Super Admin · Sistema' }}</div>
               </div>
               <div class="w-10 h-10 bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold uppercase">
                 {{ (auth.currentUser()?.usuario?.nombre || 'OP').substring(0, 2) }}
@@ -115,8 +115,12 @@ export class MainLayoutComponent implements OnInit {
 
     if (isSuperAdmin) {
       return [
-        { label: 'SaaS', icon: 'server', path: '/app/saas-admin/tenants', permission: '' },
-        { label: 'Suscripción Global', icon: 'credit-card', path: '/app/suscripcion', permission: '' }
+        { label: 'Control', icon: 'layout-dashboard', path: '/app/super/dashboard', permission: '' },
+        { label: 'Talleres', icon: 'building-2', path: '/app/super/tenants', permission: '' },
+        { label: 'Planes', icon: 'credit-card', path: '/app/super/planes', permission: '' },
+        { label: 'Restricciones', icon: 'shield', path: '/app/super/restricciones', permission: '' },
+        { label: 'Backups', icon: 'cloud-download', path: '/app/super/backups', permission: '' },
+        { label: 'Bitácora', icon: 'scroll-text', path: '/app/super/audit-log', permission: '' },
       ];
     }
 

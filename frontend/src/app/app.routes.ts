@@ -37,9 +37,36 @@ export const routes: Routes = [
         path: 'taller/:cod',
         loadComponent: () => import('./features/talleres/detalle/taller-detail.component').then(m => m.TallerDetailComponent)
       },
+      // ── Super Admin ────────────────────────────────────────────────────────
+      {
+        path: 'super/dashboard',
+        loadComponent: () => import('./features/super-admin/super-dashboard/super-dashboard.component').then(m => m.SuperDashboardComponent)
+      },
+      {
+        path: 'super/tenants',
+        loadComponent: () => import('./features/saas-admin/tenants-list/tenants-list.component').then(m => m.TenantsListComponent)
+      },
+      {
+        path: 'super/planes',
+        loadComponent: () => import('./features/super-admin/planes/planes.component').then(m => m.PlanesComponent)
+      },
+      {
+        path: 'super/audit-log',
+        loadComponent: () => import('./features/super-admin/audit-log/audit-log.component').then(m => m.AuditLogComponent)
+      },
+      {
+        path: 'super/backups',
+        loadComponent: () => import('./features/super-admin/backups/backups.component').then(m => m.BackupsComponent)
+      },
+      {
+        path: 'super/restricciones',
+        loadComponent: () => import('./features/super-admin/restricciones/restricciones.component').then(m => m.RestriccionesComponent)
+      },
+      // Alias legacy
       {
         path: 'saas-admin/tenants',
-        loadComponent: () => import('./features/saas-admin/tenants-list/tenants-list.component').then(m => m.TenantsListComponent)
+        redirectTo: 'super/tenants',
+        pathMatch: 'full'
       },
       {
         path: 'reportes/historial-vehicular',

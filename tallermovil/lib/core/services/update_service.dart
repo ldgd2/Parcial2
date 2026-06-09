@@ -15,7 +15,7 @@ class UpdateService {
       final storage = LocalStorage();
       final apiClient = ApiClient(localStorage: storage);
 
-      // 1. Obtener información de la versión actual
+      // 1. Obtener información de la versión actual instalada en el dispositivo
       final PackageInfo packageInfo = await PackageInfo.fromPlatform();
       final String currentVersion = packageInfo.version;
 
@@ -24,14 +24,19 @@ class UpdateService {
       final data = response.data;
 
       if (data != null && data['version'] != null) {
-        final remoteVersion = data['version'];
+        final remoteVersion = data['version'].toString().trim();
+        final localVersion = currentVersion.trim();
         final changelog = data['changelog'] ?? 'Mejoras y correcciones de errores.';
 
-        // Comparamos versiones (lógica simple asumiendo semver x.y.z)
-        if (_isNewerVersion(currentVersion, remoteVersion)) {
+        debugPrint('[UpdateService] versión local=$localVersion, versión servidor=$remoteVersion');
+
+        // Solo mostramos el dialogo si la versión remota es ESTRICTAMENTE mayor
+        if (_isNewerVersion(localVersion, remoteVersion)) {
           if (context.mounted) {
             _showUpdateDialog(context, remoteVersion, changelog, apiClient);
           }
+        } else {
+          debugPrint('[UpdateService] La app ya está actualizada. No es necesario descargar.');
         }
       }
     } catch (e) {
@@ -108,6 +113,10 @@ class _UpdateDialogWidgetState extends State<_UpdateDialogWidget> {
             setState(() {
               _progress = received / total;
             });
+          } else {
+            setState(() {
+              _progress = -1.0; // Indeterminate progress
+            });
           }
         },
       );
@@ -149,9 +158,15 @@ class _UpdateDialogWidgetState extends State<_UpdateDialogWidget> {
           TText.body(widget.changelog),
           const SizedBox(height: 24),
           if (_isDownloading) ...[
-            LinearProgressIndicator(value: _progress),
-            const SizedBox(height: 8),
-            Center(child: TText.label('${(_progress * 100).toStringAsFixed(1)}% completado')),
+            if (_progress == -1.0) ...[
+              const LinearProgressIndicator(),
+              const SizedBox(height: 8),
+              Center(child: TText.label('Descargando actualización...')),
+            ] else ...[
+              LinearProgressIndicator(value: _progress),
+              const SizedBox(height: 8),
+              Center(child: TText.label('${(_progress * 100).toStringAsFixed(1)}% completado')),
+            ]
           ]
         ],
       ),

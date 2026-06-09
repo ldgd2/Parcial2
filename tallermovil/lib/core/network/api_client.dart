@@ -124,13 +124,19 @@ class ApiClient {
           return handler.next(options);
         },
         onResponse: (response, handler) async {
-          // Si es un GET y fue exitoso, guardarlo en caché
-          if (response.requestOptions.method == 'GET' && response.statusCode == 200) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString(
-              'cache_\${response.requestOptions.uri.toString()}',
-              jsonEncode(response.data)
-            );
+          // Si es un GET y fue exitoso (y no es un stream como una descarga de archivo), guardarlo en caché
+          if (response.requestOptions.method == 'GET' && 
+              response.statusCode == 200 && 
+              response.requestOptions.responseType != ResponseType.stream) {
+            try {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString(
+                'cache_\${response.requestOptions.uri.toString()}',
+                jsonEncode(response.data)
+              );
+            } catch (e) {
+              print('Error caching response: $e');
+            }
           }
           return handler.next(response);
         },

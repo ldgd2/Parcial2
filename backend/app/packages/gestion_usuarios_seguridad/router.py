@@ -8,6 +8,7 @@ from app.packages.gestion_usuarios_seguridad.modules.usuarios_vehiculos.routers.
 from app.packages.gestion_usuarios_seguridad.modules.tenants.routers.sucursal_router import router as sucursal_router
 from app.packages.gestion_usuarios_seguridad.modules.tenants.routers.saas_router import router as saas_router
 from app.packages.gestion_usuarios_seguridad.modules.tenants.routers.usuario_tenant_router import router as usuario_tenant_router
+from app.packages.gestion_usuarios_seguridad.modules.tenants.routers.sistema_router import router as sistema_router
 
 router = APIRouter()
 
@@ -18,4 +19,5 @@ router.include_router(tecnicos_router)
 router.include_router(disponibilidad_router)
 router.include_router(sucursal_router, prefix="/sucursales", tags=["Sucursales"])
 router.include_router(saas_router, prefix="/saas/tenants", tags=["SaaS Tenants"])
+router.include_router(sistema_router, prefix="/saas/sistema", tags=["SaaS Sistema"])
 router.include_router(usuario_tenant_router, prefix="/usuarios-tenant", tags=["Usuarios (Tenant)"])

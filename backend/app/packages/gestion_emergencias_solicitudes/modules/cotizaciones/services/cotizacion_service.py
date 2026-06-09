@@ -96,12 +96,12 @@ class CotizacionService:
             raise HTTPException(status_code=404, detail="Cotización no encontrada")
             
         if data.estado == "ACEPTADA":
-            # 1. Verificar Expiración (10 min)
+            # 1. Verificar Expiración (1 hora)
             ahora = datetime.now()
             # Asumimos que fecha_creacion es naive local, o adaptamos según timezone
             diferencia = ahora - cotizacion.fecha_creacion
-            if diferencia > timedelta(minutes=10):
-                raise HTTPException(status_code=400, detail="La cotización ha expirado (más de 10 minutos).")
+            if diferencia > timedelta(hours=1):
+                raise HTTPException(status_code=400, detail="La cotización ha expirado (más de 1 hora).")
 
             # 2. Verificar que el Taller siga ACTIVO
             from sqlalchemy import select
