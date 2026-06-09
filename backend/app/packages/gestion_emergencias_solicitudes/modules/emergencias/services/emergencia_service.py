@@ -249,9 +249,10 @@ async def actualizar_estado_emergencia(
 ):
     emergencia = await Emergencia.get(db, emergencia_id)
     if not emergencia or emergencia.idTaller != taller_cod:
+        print(f"DEBUG 404: emergencia_idTaller={getattr(emergencia, 'idTaller', None)} vs taller_cod={taller_cod}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Emergencia no encontrada o no asignada a este taller.",
+            detail=f"Emergencia no encontrada o no asignada a este taller. (Taller: {getattr(emergencia, 'idTaller', None)}, Token: {taller_cod})",
         )
 
     # Verificar que el estado existe
@@ -262,9 +263,10 @@ async def actualizar_estado_emergencia(
         estado = await Estado.get(db, data.idEstado)
 
     if estado is None:
+        print(f"DEBUG 404: Estado no encontrado para data.estado_nombre={getattr(data, 'estado_nombre', None)} o data.idEstado={getattr(data, 'idEstado', None)}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Estado no válido.",
+            detail=f"Estado no válido: {getattr(data, 'estado_nombre', None)} / {getattr(data, 'idEstado', None)}",
         )
 
     emergencia = await emergencia.update(db, obj_in={"idEstado": estado.id})
@@ -548,6 +550,20 @@ async def asignar_emergencia_taller(emergencia_id: int, taller_cod: str, tecnico
                 "tiempo": str(tiempo_estimado)
             }
         )
+
+        # 6. Notificar a los técnicos asignados
+        for t_id in tecnicos_ids:
+            print(f"DEBUG: Notificando asignación al técnico {t_id}")
+            await NotificationService.enviar_notificacion_usuario(
+                db,
+                t_id,
+                "🚨 ¡Nueva Emergencia Asignada!",
+                f"El taller '{taller.nombre}' te ha asignado una emergencia. Por favor, revisa la aplicación.",
+                {
+                    "emergencia_id": str(emergencia_id),
+                    "tipo": "emergencia_asignada_tecnico"
+                }
+            )
         
         # [WS] Notificar asignación en tiempo real
         from app.core.socket_manager import manager

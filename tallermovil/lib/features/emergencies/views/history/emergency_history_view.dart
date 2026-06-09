@@ -162,13 +162,21 @@ class _EmergencyHistoryViewState extends State<EmergencyHistoryView> {
 
   Color _getStatusColor(String status, BuildContext context) {
     switch (status.toUpperCase()) {
-      case 'PENDIENTE': return AppColors.warning;
+      case 'PENDIENTE':
+        return AppColors.warning;
       case 'ASIGNADO':
-      case 'EN PROCESO': return Theme.of(context).colorScheme.primary;
-      case 'COMPLETADO':
-      case 'ATENDIDO': return AppColors.success;
-      case 'CANCELADO': return AppColors.danger;
-      default: return AppColors.textMuted;
+      case 'EN_RUTA':
+        return Theme.of(context).colorScheme.primary;
+      case 'ATENDIENDO':
+        return Colors.orange;
+      case 'FINALIZADO':
+      case 'PAGADO':
+        return AppColors.success;
+      case 'CANCELADO':
+      case 'RECHAZADO':
+        return AppColors.danger;
+      default:
+        return AppColors.textMuted;
     }
   }
 
@@ -178,13 +186,18 @@ class _EmergencyHistoryViewState extends State<EmergencyHistoryView> {
         return TBadge.warning('Pendiente');
       case 'ASIGNADO':
         return TBadge.info('Asignado');
-      case 'EN PROCESO':
-        return TBadge.info('En Proceso');
-      case 'COMPLETADO':
-      case 'ATENDIDO':
+      case 'EN_RUTA':
+        return TBadge.info('En Ruta');
+      case 'ATENDIENDO':
+        return TBadge.info('Atendiendo');
+      case 'FINALIZADO':
         return TBadge.success('Finalizado');
+      case 'PAGADO':
+        return TBadge.success('Pagado');
       case 'CANCELADO':
         return TBadge.error('Cancelado');
+      case 'RECHAZADO':
+        return TBadge.error('Rechazado');
       default:
         return TBadge.info(status);
     }
