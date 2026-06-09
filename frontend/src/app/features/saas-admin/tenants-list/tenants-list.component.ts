@@ -109,7 +109,7 @@ type StatusFilter = 'TODOS' | 'ACTIVO' | 'SUSPENDIDO' | 'CANCELADO';
 
             <tr *ngFor="let tenant of filteredTenants"
               class="hover:bg-zinc-900/30 transition-colors cursor-pointer"
-              [class.bg-zinc-900/20]="selectedTenant?.cod === tenant.cod">
+              [ngClass]="selectedTenant?.cod === tenant.cod ? 'bg-zinc-900/20' : ''">
 
               <td class="px-6 py-4">
                 <div class="font-bold text-xs uppercase tracking-wider text-white">{{ tenant.nombre }}</div>
@@ -679,8 +679,8 @@ export class TenantsListComponent implements OnInit {
         plan_id: v.plan_id || undefined,
       }).subscribe({
         next: (updated) => {
-          const idx = this.tenants.findIndex(t => t.cod === this.editingTenant!.cod);
-          if (idx !== -1) this.tenants[idx] = updated;
+          const idx = this.tenants().findIndex(t => t.cod === this.editingTenant!.cod);
+          if (idx !== -1) this.tenants.update(list => list.map((t, i) => i === idx ? updated : t));
           toast.success('Taller actualizado');
           this.saving = false;
           this.closeModal();
