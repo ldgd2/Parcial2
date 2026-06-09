@@ -257,13 +257,29 @@ async def actualizar_estado_emergencia(
 
     # Verificar que el estado existe
     estado = None
+    estado_map = {
+        "EN_RUTA": "EN_RUTEO",
+        "EN CAMINO": "EN_RUTEO",
+        "ATENDIENDO": "ATENDIDO",
+        "FINALIZAR": "FINALIZADO"
+    }
+    
     if getattr(data, "estado_nombre", None):
-        estado = await Estado.get_by_nombre(db, data.estado_nombre)
+        nombre_req = data.estado_nombre.upper()
+        nombre_mapped = estado_map.get(nombre_req, nombre_req)
+        estado = await Estado.get_by_nombre(db, nombre_mapped)
+        
+        # Auto-crear si no existe (soluciona DBs desincronizadas en VPS)
+        if estado is None:
+            print(f"DEBUG 404: Creando estado faltante automáticamente: {nombre_mapped}")
+            estado = Estado(nombre=nombre_mapped, descripcion=f"Estado {nombre_mapped}")
+            db.add(estado)
+            await db.flush()
+            
     elif getattr(data, "idEstado", None) is not None:
         estado = await Estado.get(db, data.idEstado)
 
     if estado is None:
-        print(f"DEBUG 404: Estado no encontrado para data.estado_nombre={getattr(data, 'estado_nombre', None)} o data.idEstado={getattr(data, 'idEstado', None)}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Estado no válido: {getattr(data, 'estado_nombre', None)} / {getattr(data, 'idEstado', None)}",
