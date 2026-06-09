@@ -22,7 +22,7 @@ router = APIRouter()
 
 # ── Auth guard ─────────────────────────────────────────────────────────────────
 
-def require_super_admin(current_user: dict = Depends(require_role("admin", "admin_sucursal"))):
+def require_super_admin(current_user: dict = Depends(require_role("super_admin"))):
     if current_user.get("taller") != "GLOBAL":
         raise HTTPException(status_code=403, detail="Solo Super Admin.")
     return current_user
@@ -318,28 +318,60 @@ async def exportar_tenant(
 
 @router.get("/exportar-global")
 async def exportar_global(
-    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(require_super_admin)
 ):
-    """Exporta un resumen de todos los tenants (sin contraseñas)."""
-    talleres = (await db.execute(select(Taller))).scalars().all()
-    usuarios_count = (await db.execute(select(func.count()).select_from(Usuario))).scalar() or 0
-    tecnicos_count = (await db.execute(select(func.count()).select_from(Tecnico))).scalar() or 0
+    """Exporta la base de datos completa como archivo binario de PostgreSQL (pg_dump custom format)."""
+    import os
+    import subprocess
+    import tempfile
+    from fastapi.responses import FileResponse
+    from starlette.background import BackgroundTask
+    from app.core.config import settings
 
-    payload = {
-        "exportado_en": datetime.now(timezone.utc).isoformat(),
-        "resumen": {
-            "total_talleres": len(talleres),
-            "total_usuarios": usuarios_count,
-            "total_tecnicos": tecnicos_count,
-        },
-        "talleres": [
-            {"cod": t.cod, "nombre": t.nombre, "direccion": t.direccion,
-             "estado": t.estado, "plan_id": t.plan_id}
-            for t in talleres
-        ],
-    }
-    return JSONResponse(
-        content=payload,
-        headers={"Content-Disposition": 'attachment; filename="backup_global.json"'},
-    )
+    # Crear un archivo temporal para el volcado
+    fd, filepath = tempfile.mkstemp(suffix=".backup", prefix="global_backup_")
+    os.close(fd)
+
+    try:
+        # Configurar variables de entorno para la contraseña
+        env = os.environ.copy()
+        env["PGPASSWORD"] = settings.DB_PASSWORD
+
+        # Comando pg_dump: -F c = Formato Custom (binario compatible con pg_restore)
+        comando = [
+            "pg_dump",
+            "-h", settings.DB_HOST,
+            "-p", str(settings.DB_PORT),
+            "-U", settings.DB_USER,
+            "-F", "c",
+            "-f", filepath,
+            settings.DB_NAME
+        ]
+
+        proceso = subprocess.run(
+            comando,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        if proceso.returncode != 0:
+            os.remove(filepath)
+            print(f"Error en pg_dump: {proceso.stderr}")
+            raise HTTPException(status_code=500, detail="Error al generar el respaldo binario de la base de datos.")
+
+        filename = f"backup_global_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.backup"
+        
+        # Enviar archivo y eliminarlo después de que se envíe (BackgroundTask)
+        return FileResponse(
+            path=filepath,
+            filename=filename,
+            media_type="application/octet-stream",
+            background=BackgroundTask(os.remove, filepath)
+        )
+
+    except Exception as e:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        raise HTTPException(status_code=500, detail=str(e))
