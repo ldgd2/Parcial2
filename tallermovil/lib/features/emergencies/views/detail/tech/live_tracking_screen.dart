@@ -17,6 +17,7 @@ class LiveTrackingScreen extends StatefulWidget {
   final double destLat;
   final double destLng;
   final String statusInicial;
+  final bool showAppBar;
 
   const LiveTrackingScreen({
     super.key,
@@ -24,6 +25,7 @@ class LiveTrackingScreen extends StatefulWidget {
     required this.destLat,
     required this.destLng,
     required this.statusInicial,
+    this.showAppBar = true,
   });
 
   @override
@@ -217,35 +219,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('Ruta de Asistencia'),
-        backgroundColor: Colors.black.withOpacity(0.5),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(_autoFollow ? Icons.my_location : Icons.location_disabled),
-            onPressed: () {
-              setState(() {
-                _autoFollow = !_autoFollow;
-                if (_autoFollow) {
-                  _mapController.move(_tecnicoPos, 16.0);
-                }
-              });
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(_autoFollow ? 'Centrado automático ACTIVADO' : 'Centrado automático DESACTIVADO'),
-                duration: const Duration(seconds: 1),
-              ));
-            },
-            tooltip: 'Centrar en mi ubicación',
-          )
-        ],
-      ),
-      body: Stack(
-        children: [
-          // MAPA GRANDOTE AL 100% DE PANTALLA
+    Widget body = Stack(
+      children: [
+        // MAPA GRANDOTE AL 100% DE PANTALLA
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -368,7 +344,38 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             ),
           ),
         ],
+      );
+    if (!widget.showAppBar) {
+      return body;
+    }
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text('Ruta de Asistencia'),
+        backgroundColor: Colors.black.withOpacity(0.5),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(_autoFollow ? Icons.my_location : Icons.location_disabled),
+            onPressed: () {
+              setState(() {
+                _autoFollow = !_autoFollow;
+                if (_autoFollow) {
+                  _mapController.move(_tecnicoPos, 16.0);
+                }
+              });
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(_autoFollow ? 'Centrado automático ACTIVADO' : 'Centrado automático DESACTIVADO'),
+                duration: const Duration(seconds: 1),
+              ));
+            },
+            tooltip: 'Centrar en mi ubicación',
+          )
+        ],
       ),
+      body: body,
     );
   }
 }

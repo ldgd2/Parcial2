@@ -161,12 +161,15 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
     final lat = e['latitud'] as double?;
     final lng = e['longitud'] as double?;
 
+    final bool isChatEnabled = ['ASIGNADO', 'EN_CAMINO', 'EN_RUTA', 'EN CAMINO', 'ARREGLADO', 'ATENDIDO', 'FINALIZADA', 'COMPLETADO'].contains(e['estado_actual']?.toString().toUpperCase()) || _cotizaciones.any((c) => c['estado'] == 'ACEPTADA');
+    final bool isMapEnabled = ['EN_CAMINO', 'EN_RUTA', 'EN CAMINO'].contains(e['estado_actual']?.toString().toUpperCase());
+
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
       appBar: AppBar(
         title: TText.h3('Detalle de Emergencia'),
-        bottom: const TabBar(tabs: [Tab(text: 'Detalle'), Tab(text: 'Cotizaciones'), Tab(text: 'Chat')]),
+        bottom: const TabBar(tabs: [Tab(text: 'Detalle'), Tab(text: 'Cotizaciones'), Tab(text: 'Chat'), Tab(text: 'Mapa')]),
         actions: [
           if (['PENDIENTE', 'INICIADA'].contains(e['estado_actual']?.toString().toUpperCase()))
             IconButton(
@@ -234,28 +237,6 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
             ),
             TSpacing.verticalLarge(),
 
-            // MAPA EN VIVO PARA EL CLIENTE
-            if (['ASIGNADO', 'EN_CAMINO', 'ARREGLADO'].contains(e['estado_actual']?.toString().toUpperCase())) ...[
-               TButton(
-                 label: 'Rastrear Técnico en Vivo',
-                 icon: Icons.map,
-                 variant: TButtonVariant.primary,
-                 onPressed: () {
-                   Navigator.push(
-                     context,
-                     MaterialPageRoute(
-                       builder: (_) => LiveTrackingScreen(
-                         emergenciaId: e['id'],
-                         destLat: e['latitud'] ?? 0.0,
-                         destLng: e['longitud'] ?? 0.0,
-                         statusInicial: e['estado_actual'] ?? 'PENDIENTE',
-                       ),
-                     ),
-                   ).then((_) => _refreshData());
-                 },
-               ),
-               TSpacing.verticalLarge(),
-            ],
 
             // SECCIÓN DE PAGO (Solo si está finalizado y TIENE MONTO)
             if ((['ATENDIDO', 'FINALIZADA'].contains(e['estado_actual']?.toString().toUpperCase()) || e['idPago'] != null) && (e['monto_pago'] ?? e['pago']?['monto']) != null) ...[
@@ -730,7 +711,48 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
           ),
         ),
         // TAB 3: CHAT
-        ChatView(emergenciaId: e['id'], showAppBar: false),
+        isChatEnabled 
+          ? ChatView(emergenciaId: e['id'], showAppBar: false)
+          : Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.speaker_notes_off, size: 64, color: AppColors.neutral100),
+                    TSpacing.verticalMedium(),
+                    TText.h3('Chat Desactivado', color: AppColors.textMuted),
+                    TSpacing.verticalSmall(),
+                    TText.body('El chat se habilitará una vez que se asigne un taller a tu emergencia.', color: AppColors.textMuted),
+                  ],
+                ),
+              ),
+            ),
+        
+        // TAB 4: MAPA EN VIVO
+        isMapEnabled 
+          ? LiveTrackingScreen(
+              emergenciaId: e['id'],
+              destLat: e['latitud'] ?? 0.0,
+              destLng: e['longitud'] ?? 0.0,
+              statusInicial: e['estado_actual'] ?? 'EN_CAMINO',
+              showAppBar: false,
+            )
+          : Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.location_off, size: 64, color: AppColors.neutral100),
+                    TSpacing.verticalMedium(),
+                    TText.h3('Mapa Desactivado', color: AppColors.textMuted),
+                    TSpacing.verticalSmall(),
+                    TText.body('El mapa en tiempo real se activará cuando el técnico indique que va en camino.', color: AppColors.textMuted),
+                  ],
+                ),
+              ),
+            ),
       ],
       ),
     ),
