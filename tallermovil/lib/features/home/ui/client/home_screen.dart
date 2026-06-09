@@ -11,6 +11,7 @@ import 'home_controller.dart';
 import '../../../emergencies/views/report_emergency/report_emergency_view.dart';
 import '../../../emergencies/views/report_emergency/emergency_upload_controller.dart';
 import '../../../../core/network/socket_service.dart';
+import '../../../../core/services/update_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,6 +32,11 @@ class _HomeScreenState extends State<HomeScreen> {
     
     // Conectar WebSocket desde el inicio para notificaciones y chat en tiempo real
     SocketService().connect();
+
+    // Comprobar actualizaciones
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UpdateService.checkForUpdates(context);
+    });
   }
 
   @override

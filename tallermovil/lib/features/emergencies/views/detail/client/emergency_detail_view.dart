@@ -21,6 +21,7 @@ import 'quote_review_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../tech/live_tracking_screen.dart';
 import 'rating_dialog.dart';
+import '../../../../../core/network/socket_service.dart';
 
 class EmergencyDetailView extends StatefulWidget {
   final Map<String, dynamic> emergency;
@@ -51,6 +52,19 @@ class _EmergencyDetailViewState extends State<EmergencyDetailView> {
         setState(() {
           isPlaying = state == PlayerState.playing;
         });
+      }
+    });
+
+    _socketSubscription = SocketService().stream.listen((msg) {
+      if (msg['type'] == 'nueva_cotizacion' || msg['type'] == 'cotizacion_ajustada') {
+        if (msg['emergencia_id'].toString() == widget.emergency['id'].toString()) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(msg['mensaje'] ?? '¡Nueva actualización de cotización!')),
+            );
+          }
+          _refreshData();
+        }
       }
     });
 

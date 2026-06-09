@@ -116,16 +116,26 @@ Responde con este formato exacto:
         clean_json = re.sub(r'```json\s*|\s*```', '', content).strip()
         data = json.loads(clean_json)
         
-        # Asegurar que motivo_rechazo no sea nulo
-        if "motivo_rechazo" not in data or data["motivo_rechazo"] is None:
+        # Llenar nulos comunes devueltos por la IA
+        for key in ["titulo_emergencia", "resumen_taller", "recomendaciones_taller"]:
+            if data.get(key) is None:
+                data[key] = ""
+        if data.get("motivo_rechazo") is None:
             data["motivo_rechazo"] = ""
+        if data.get("id_categoria") is None:
+            data["id_categoria"] = categorias_disponibles[0]['id'] if categorias_disponibles else 1
+        if data.get("id_prioridad") is None:
+            data["id_prioridad"] = prioridades_disponibles[0]['id'] if prioridades_disponibles else 1
+        if data.get("ficha_tecnica") is None:
+            data["ficha_tecnica"] = {
+                "diagnostico_probable": "", "posibles_causas": [],
+                "piezas_necesarias": [], "repuestos_sugeridos": [], "protocolo_tecnico": []
+            }
             
         return AnalisisEstructuradoIA(**data)
 
     except Exception as e:
-        import traceback
-        print(f"Fallo total de IA (Timeout o Error): {str(e)}")
-        traceback.print_exc()
+        print(f"⚠️ Reintento/Fallo de IA (Timeout o Error de Formato): {str(e)}")
         
         # Fallback manual para no bloquear la app
         return AnalisisEstructuradoIA(

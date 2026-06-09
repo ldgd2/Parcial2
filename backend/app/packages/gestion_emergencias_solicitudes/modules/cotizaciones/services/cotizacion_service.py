@@ -20,30 +20,46 @@ class CotizacionService:
     async def create_cotizacion(self, id_emergencia: int, id_taller: str, data: CotizacionCreate):
         # Verificar si ya existe una de este taller para esta emergencia
         existente = await self.repo.get_by_emergencia_and_taller(id_emergencia, id_taller)
-        if existente:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El taller ya ha emitido una cotización para esta emergencia"
-            )
             
         subtotal_productos = sum(item.precio * item.cantidad for item in data.lista_productos)
         subtotal_servicios = sum(item.precio for item in data.lista_servicios)
         total_general = subtotal_productos + subtotal_servicios
 
-        cotizacion = await self.repo.create(obj_in={
-            "idEmergencia": id_emergencia,
-            "idTaller": id_taller,
-            "descripcion_servicio": data.descripcion_servicio,
-            "moneda": data.moneda,
-            "lista_productos": [item.dict() for item in data.lista_productos],
-            "lista_servicios": [item.dict() for item in data.lista_servicios],
-            "subtotal_productos": subtotal_productos,
-            "subtotal_servicios": subtotal_servicios,
-            "total_general": total_general,
-            "tiempo_estimado": data.tiempo_estimado,
-            "condiciones": data.condiciones,
-            "estado": "PENDIENTE"
-        })
+        if existente:
+            if existente.estado == "ACEPTADA":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="La cotización ya fue aceptada. No se puede emitir otra."
+                )
+            
+            # Actualizamos la cotización existente y la ponemos en PENDIENTE
+            cotizacion = await self.repo.update(db_obj=existente, obj_in={
+                "descripcion_servicio": data.descripcion_servicio,
+                "moneda": data.moneda,
+                "lista_productos": [item.dict() for item in data.lista_productos],
+                "lista_servicios": [item.dict() for item in data.lista_servicios],
+                "subtotal_productos": subtotal_productos,
+                "subtotal_servicios": subtotal_servicios,
+                "total_general": total_general,
+                "tiempo_estimado": data.tiempo_estimado,
+                "condiciones": data.condiciones,
+                "estado": "PENDIENTE"
+            })
+        else:
+            cotizacion = await self.repo.create(obj_in={
+                "idEmergencia": id_emergencia,
+                "idTaller": id_taller,
+                "descripcion_servicio": data.descripcion_servicio,
+                "moneda": data.moneda,
+                "lista_productos": [item.dict() for item in data.lista_productos],
+                "lista_servicios": [item.dict() for item in data.lista_servicios],
+                "subtotal_productos": subtotal_productos,
+                "subtotal_servicios": subtotal_servicios,
+                "total_general": total_general,
+                "tiempo_estimado": data.tiempo_estimado,
+                "condiciones": data.condiciones,
+                "estado": "PENDIENTE"
+            })
         
         from sqlalchemy import select
         from sqlalchemy.orm import joinedload
@@ -53,7 +69,23 @@ class CotizacionService:
             .where(self.repo.model.id == cotizacion.id)
             .execution_options(populate_existing=True)
         )
-        return result.scalar_one()
+        cot_with_taller = result.scalar_one()
+
+        # Notificar al cliente
+        res_emergencia = await self.db.execute(select(Emergencia).where(Emergencia.id == id_emergencia))
+        emergencia = res_emergencia.scalar_one_or_none()
+        if emergencia:
+            from app.packages.inteligencia_artificial_automatizacion.modules.notificaciones.services.notification_service import NotificationService
+            taller_nombre = cot_with_taller.taller.nombre if (hasattr(cot_with_taller, 'taller') and cot_with_taller.taller) else "Un taller"
+            await NotificationService.enviar_notificacion_usuario(
+                self.db,
+                emergencia.idCliente,
+                "Nueva Cotización",
+                f"¡{taller_nombre} te ha enviado una cotización!",
+                {"type": "nueva_cotizacion", "emergencia_id": id_emergencia}
+            )
+
+        return cot_with_taller
 
     async def get_cotizaciones_by_emergencia(self, id_emergencia: int):
         return await self.repo.get_by_emergencia(id_emergencia)
