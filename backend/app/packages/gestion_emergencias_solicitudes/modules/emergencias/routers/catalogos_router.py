@@ -41,3 +41,12 @@ async def crear_especialidad(
     await db.commit()
     await db.refresh(nueva)
     return nueva
+
+from app.packages.gestion_emergencias_solicitudes.modules.emergencias.models.estado import Estado
+
+@router.get("/estados")
+async def listar_estados(db: AsyncSession = Depends(get_db)):
+    """Lista todos los estados (DEBUG)"""
+    result = await db.execute(select(Estado.id, Estado.nombre))
+    return [{"id": r.id, "nombre": r.nombre} for r in result.fetchall()]
+
